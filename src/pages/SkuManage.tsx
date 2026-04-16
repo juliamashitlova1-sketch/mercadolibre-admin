@@ -239,11 +239,15 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
 
   const imp = Number(form.impressions) || 0;
   const cli = Number(form.clicks) || 0;
-  const spend = Number(form.adSpend) || 0;
+  const spendUsd = Number(form.adSpend) || 0;
+  const spendMxn = spendUsd * 17.15;
   const salesVal = Number(form.sales) || 0;
-  const autoCpc = spend > 0 && cli > 0 ? ((spend * 7.2) / cli).toFixed(2) + '美元' : '0.00美元';
-  const autoRoas = spend > 0 && salesVal > 0 ? (salesVal / spend).toFixed(2) : '0.00';
-  const autoAcos = spend > 0 && salesVal > 0 ? (spend / salesVal * 100).toFixed(2) + '%' : '0.00%';
+  
+  // 广告消耗以 USD 输入，CPC 也是 USD 视角
+  const autoCpc = spendUsd > 0 && cli > 0 ? (spendUsd / cli).toFixed(2) + ' USD' : '0.00 USD';
+  // ACOS 和 ROAS 用比索与比索进行对比
+  const autoRoas = spendMxn > 0 && salesVal > 0 ? (salesVal / spendMxn).toFixed(2) : '0.00';
+  const autoAcos = spendMxn > 0 && salesVal > 0 ? ((spendMxn / salesVal) * 100).toFixed(2) + '%' : '0.00%';
 
   const inputCls = "w-full h-11 px-4 text-sm border-slate-200 rounded-xl bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.04)]";
   const autoInputCls = "w-full h-11 px-4 text-sm bg-gradient-to-r from-slate-50 to-slate-100/80 border border-slate-200/50 rounded-xl font-mono tracking-wide";
@@ -267,16 +271,16 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
         slow_stock: Number(form.slowStock) || 0,
         selling_price: Number(form.sellingPrice) || 0,
         unit_profit_excl_ads: Number(form.unitProfitExclAds) || 0,
-        ad_spend: Number(form.adSpend) || 0,
+        ad_spend: spendMxn,
         impressions: Number(form.impressions) || 0,
         clicks: Number(form.clicks) || 0,
         ad_orders: Number(form.adOrders) || 0,
       }, { onConflict: 'doc_id' });
       if (error) throw error;
 
-      const cpcNum = cli > 0 ? (spend * 7.2 / cli) : 0;
-      const roasNum = salesVal > 0 ? (salesVal / spend) : 0;
-      const acosNum = salesVal > 0 ? (spend / salesVal * 100) : 0;
+      const cpcNum = cli > 0 ? (spendUsd / cli) : 0;
+      const roasNum = spendMxn > 0 ? (salesVal / spendMxn) : 0;
+      const acosNum = salesVal > 0 ? ((spendMxn / salesVal) * 100) : 0;
       await supabase.from('sku_stats').update({ cpc: cpcNum, roas: roasNum, acos: acosNum }).eq('doc_id', docId);
 
       setMsg('保存成功！'); setMsgType('success');
@@ -357,7 +361,7 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
               <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">广告与竞争</span>
             </h3>
             <div className="grid grid-cols-4 gap-3 mb-4">
-              <div><label className={labelCls}>广告消耗</label><input type="number" value={form.adSpend} onChange={e=>handleChange('adSpend',e.target.value)} className={inputCls} placeholder="0"/></div>
+              <div><label className={labelCls}>广告消耗 (USD)</label><input type="number" step="0.01" value={form.adSpend} onChange={e=>handleChange('adSpend',e.target.value)} className={inputCls} placeholder="0"/></div>
               <div><label className={labelCls}>曝光</label><input type="number" value={form.impressions} onChange={e=>handleChange('impressions',e.target.value)} className={inputCls} placeholder="0"/></div>
               <div><label className={labelCls}>点击</label><input type="number" value={form.clicks} onChange={e=>handleChange('clicks',e.target.value)} className={inputCls} placeholder="0"/></div>
               <div><label className={labelCls}>广告订单</label><input type="number" value={form.adOrders} onChange={e=>handleChange('adOrders',e.target.value)} className={inputCls} placeholder="0"/></div>

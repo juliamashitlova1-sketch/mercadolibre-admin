@@ -101,6 +101,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
 
   useEffect(() => {
     if (watchedAdSpend && watchedClicks) {
+      // watchedAdSpend 是美元 (USD)
       setValue('cpc', Number((watchedAdSpend / watchedClicks).toFixed(2)));
     } else {
       setValue('cpc', 0);
@@ -109,8 +110,10 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
 
   useEffect(() => {
     if (watchedSales && watchedAdSpend) {
-      setValue('roas', Number((watchedSales / watchedAdSpend).toFixed(2)));
-      setValue('acos', Number(((watchedAdSpend / watchedSales) * 100).toFixed(2)));
+      // 销售额是比索 (MXN)，广告费输入为美元 (USD)，计算时需统一汇率
+      const adSpendMxn = watchedAdSpend * 17.15;
+      setValue('roas', Number((watchedSales / adSpendMxn).toFixed(2)));
+      setValue('acos', Number(((adSpendMxn / watchedSales) * 100).toFixed(2)));
     } else {
       setValue('roas', 0);
       setValue('acos', 0);
@@ -139,7 +142,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         stock: data.stock || 0,
         avg_sales_since_listing: data.avgSalesSinceListing || 0,
         slow_stock: data.slowStock || 0,
-        ad_spend: data.adSpend || 0,
+        ad_spend: (data.adSpend || 0) * 17.15,
         impressions: data.impressions || 0,
         clicks: data.clicks || 0,
         cpc: data.cpc || 0,
@@ -285,7 +288,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
             
             <div className="grid grid-cols-4 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="adSpend" className="text-xs">广告消耗</Label>
+                <Label htmlFor="adSpend" className="text-xs">广告消耗 (USD)</Label>
                 <Input type="number" step="0.01" {...register('adSpend', { valueAsNumber: true })} className="h-8 text-xs" />
               </div>
               <div className="space-y-1.5">

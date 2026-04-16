@@ -21,3 +21,5 @@ firebase-*.json
 *.swp
 *.swo
 *~
+
+.vercel

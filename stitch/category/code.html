@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-tint": "#3a6b00",
+                "surface-bright": "#fafaf1",
+                "on-error-container": "#6e1400",
+                "on-secondary-fixed": "#6f2342",
+                "on-tertiary-container": "#5c4900",
+                "surface-container-lowest": "#ffffff",
+                "on-primary": "#eeffd7",
+                "background": "#fafaf1",
+                "error-container": "#fd795a",
+                "tertiary": "#745c00",
+                "inverse-surface": "#0d0f0a",
+                "on-primary-container": "#325c00",
+                "tertiary-dim": "#665100",
+                "primary-container": "#a1fa49",
+                "inverse-on-surface": "#9c9e96",
+                "inverse-primary": "#a4fd4c",
+                "surface": "#fafaf1",
+                "primary-fixed-dim": "#94eb3b",
+                "on-secondary-container": "#863655",
+                "on-secondary": "#fff7f7",
+                "on-secondary-fixed-variant": "#923f5f",
+                "error": "#a73b21",
+                "secondary-container": "#ffd9e2",
+                "primary-dim": "#335e00",
+                "surface-container-low": "#f3f5e9",
+                "secondary": "#974362",
+                "error-dim": "#791903",
+                "surface-variant": "#e0e4d5",
+                "surface-container-highest": "#e0e4d5",
+                "surface-dim": "#d8dccc",
+                "on-surface": "#2f3429",
+                "on-tertiary-fixed-variant": "#675200",
+                "on-primary-fixed-variant": "#386700",
+                "secondary-fixed-dim": "#ffc5d5",
+                "outline-variant": "#afb4a5",
+                "on-primary-fixed": "#254800",
+                "on-error": "#fff7f6",
+                "primary": "#3a6b00",
+                "tertiary-fixed-dim": "#eec540",
+                "surface-container": "#edefe2",
+                "tertiary-container": "#fdd34d",
+                "tertiary-fixed": "#fdd34d",
+                "on-background": "#2f3429",
+                "on-tertiary-fixed": "#463600",
+                "primary-fixed": "#a1fa49",
+                "on-surface-variant": "#5c6154",
+                "secondary-fixed": "#ffd9e2",
+                "surface-container-high": "#e7eadc",
+                "secondary-dim": "#883756",
+                "on-tertiary": "#fff8ee",
+                "outline": "#787c6f"
+            },
+            "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Plus Jakarta Sans"],
+                "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-[#fafaf1] dark:bg-stone-900 fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 no-border tonal-shift bg-[#edefe2] dark:bg-stone-800">
+<div class="flex items-center gap-3">
+<button class="text-lime-700 dark:text-lime-400 hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+<h1 class="Fresh Curator text-lg font-bold text-lime-900 dark:text-lime-100 font-['Plus_Jakarta_Sans'] tracking-tight">生鲜管家</h1>
+<div class="flex items-center">
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a friendly user for profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5HvdSSHRcKCrqrq9tTLa3SYkGZ86q30VwoU-VoxVpYuJFj0ueUseYP1hxhHHISLRW5vPea7GdQSNi0RjvBzvx2ptKZBIob8AB8Z6maeshptcVetErYMLKgRJiKyFHbbyxCIOsEoW4DeuEAY8lkvIQXvgxIo40QZ62w4Dz2kDDhVT63PD08NF1fExAjWFPxxuE7bx0RwTbwwcy60wXxgbGTe6xM9Br_h3aNXqOGeXIAHHyyGt8iQ_J-yhCbqccwG6kY3MZwV76nAKs"/>
+</div>
+</div>
+</header>
+<main class="pt-16 pb-24 flex min-h-screen">
+<!-- Left: Vertical Category List -->
+<aside class="w-24 md:w-32 bg-surface-container-low fixed left-0 h-full overflow-y-auto no-scrollbar pt-4">
+<nav class="flex flex-col gap-2 px-2 pb-32">
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm font-medium">全部</span>
+</a>
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm font-medium text-center">团购产品</span>
+</a>
+<!-- Active Category: Hotpot sets -->
+<a class="flex flex-col items-center py-4 px-2 text-lime-700 font-bold bg-surface-container-lowest rounded-xl shadow-sm border-r-4 border-primary" href="#">
+<span class="text-sm text-center">火锅烤肉套装</span>
+</a>
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm text-center">安格斯类</span>
+</a>
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm text-center">鲜肉类</span>
+</a>
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm text-center">海鲜类</span>
+</a>
+<a class="flex flex-col items-center py-4 text-stone-500 hover:opacity-80 transition-opacity" href="#">
+<span class="text-sm text-center">蘸料类</span>
+</a>
+</nav>
+</aside>
+<!-- Right: Product List -->
+<section class="ml-24 md:ml-32 flex-1 p-4 md:p-6 bg-surface">
+<div class="mb-6">
+<h2 class="text-2xl font-extrabold text-on-surface tracking-tight">火锅套餐</h2>
+<p class="text-on-surface-variant text-sm mt-1">为您精选的完美一餐</p>
+</div>
+<!-- Bento-inspired Product Grid -->
+<div class="grid grid-cols-1 @container gap-6">
+<!-- Product Card 1 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col md:flex-row gap-4 p-4 shadow-sm group">
+<div class="w-full md:w-48 h-48 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="premium single portion hotpot set with thin sliced marbled beef fresh greens and mushroom variety" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgpvCkMXQwQmC6YtWKA4QCjwIjeso7ZkPpqi_GCK-Y-EOnre0q0jEQ6au7MbwrV6SCs0wbzqPQ1tDqOJc2-E9fHK8b6NFuxjUIndhaoxui7puw9359AnE4pqdNLXqhGz8S8X5XhTvisVIUwAPctftivU9d-vXaYeJJwBPD8nWmJ2NntLTN7RT2XCGz6zlN4dzOhpixv2REr562B9UE-Xb9OoSS_2NM8Ql0tdIZ2j50DQ2C08te3e6-coXrc5QXfZiOHlwP19NqxEb4"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="text-lg font-bold text-on-surface leading-tight">火锅套餐A（单人餐）</h3>
+<span class="bg-secondary-container text-on-secondary-container text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">热销</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">包含安格斯肥牛卷，什锦蘑菇拼盘，以及我们的特色麻辣底料。</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<span class="text-xl font-extrabold text-primary">¥88.00</span>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="add_shopping_cart">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col md:flex-row gap-4 p-4 shadow-sm group">
+<div class="w-full md:w-48 h-48 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="deluxe family sized hotpot platter with premium seafood array wagyu beef and assorted organic vegetables" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdbhBeIdB4wom0fAPRQcEOmx7VuvxH6SjwhVZOUssc8ILK4p8hHx_jJjZ2WMXfqFFTn-0PTjhf8njVfglYNmxVEmvfCDO075qrn2_1oZuV-iru7Qp6vDF2_a-B9eIZOaVJxFnLfZmcVxlc9CGsqTWdHKxgRxKi_-H7onpcg-GfujdJG3YWuAYdDT4XR3Tdz5ItIxQ-9w-HsaGZtgNG923FCUEqe3-N-lG8ODS7gRTJyirpsF4Z27hvA_C0JG-AO_BQJwzUELknjSNg"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<h3 class="text-lg font-bold text-on-surface leading-tight">豪华家庭聚会套装</h3>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">4-6人共享的极致盛宴。包含高档海鲜和手工切割和牛。</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<span class="text-xl font-extrabold text-primary">¥398.00</span>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="add_shopping_cart">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col md:flex-row gap-4 p-4 shadow-sm group">
+<div class="w-full md:w-48 h-48 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="vibrant vegetarian hotpot selection with silken tofu lotus root wood ear mushrooms and leafy greens" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUrW0bSzhvlc9N9EfPrzv5H9aZ_lDEhnRIu8LTH6jVnT2Iw2BUWAYfjOyt7-M1KG3hG38djM7o6YeHx9WZ2jXJ1sd3KLfPh7FVvlnS8e__e-Gd9LGeLZGslX5yTYnq3SZj-yhng2bZs-D1JBD4fNXbcSgqIgYUXRRs-1twalF1KvpplSWYx4jTXN0_IUZBPutf7dfmUiJsQBi31wseTdNk-pJIe-cTAiM1ualKftV_ZuvU5iQqoQy9S2wNxKMzaEUOCJ2YdLDZDoRN"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<h3 class="text-lg font-bold text-on-surface leading-tight">田园蔬菜套装</h3>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">轻盈营养，包含12种季节性有机绿叶菜和高品质嫩豆腐。</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<span class="text-xl font-extrabold text-primary">¥64.00</span>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="add_shopping_cart">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col md:flex-row gap-4 p-4 shadow-sm group">
+<div class="w-full md:w-48 h-48 rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="traditional spicy sichuan hotpot base ingredients with dried chilis and aromatic spices in a rustic bowl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbRpBUzLkl--nY-T5cc8zquGuLHdfWTuUlzEkOJgpopqvBiFB_sgD0MNirproSSfFKajRURkgM8nB1N-FDyHzy5PvPRkqpQnhu17sDlWm13d9edgvOrqbqPE8whuQkzAndcnO7krWI63DRsB4cxULx6LucMGXYnQdtM39jy6KB6h6x26-r5an5A6dt6BkhZAZPwPWhjKPKShJ6e4d7023zqeeRT8s9S_vJc44m9lwWFHNL4uqxgDqdoHiH6i42mHBVqpSsOIZjSFCf"/>
+</div>
+<div class="flex flex-col justify-between flex-1 py-1">
+<div>
+<h3 class="text-lg font-bold text-on-surface leading-tight">川味麻辣牛肉组合</h3>
+<p class="text-on-surface-variant text-sm mt-2 line-clamp-2">嗜辣星人必备，大理石花纹牛肉搭配我们获奖的牛油火锅底料。</p>
+</div>
+<div class="flex items-center justify-between mt-4">
+<span class="text-xl font-extrabold text-primary">¥112.00</span>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="add_shopping_cart">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl fixed bottom-0 w-full rounded-t-[3rem] shadow-[0px_-12px_32px_rgba(47,52,41,0.06)] no-border tonal-shift">
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">首页</span>
+</a>
+<a class="flex flex-col items-center justify-center text-lime-700 dark:text-lime-400 bg-lime-100/50 dark:bg-lime-900/30 rounded-full px-4 py-1 hover:text-lime-600 transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">分类</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 transition-transform duration-200 relative" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">购物车</span>
+<span class="absolute top-0 right-1 bg-error text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center">2</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">我的</span>
+</a>
+</nav>
+</body></html>

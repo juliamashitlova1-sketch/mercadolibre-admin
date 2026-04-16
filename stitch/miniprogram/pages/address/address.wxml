@@ -1,0 +1,44 @@
+<view class="ap">
+  <scroll-view scroll-y class="alist" enhanced show-scrollbar="{{false}}">
+    <block wx:for="{{addrs}}" wx:key="id">
+      <view class="acard {{ci===index?'active':''}} anim-fade-in" style="animation-delay:{{index*0.05}}s">
+        <view class="amain" bindtap="selAddr" data-i="{{index}}">
+          <view class="ahdr">
+            <text class="an">{{item.userName}}</text>
+            <text class="ap">{{item.telNumber}}</text>
+            <view class="at-wrap">
+              <text class="at" wx:if="{{index===0 || item.isDefault}}">默认</text>
+            </view>
+          </view>
+          <text class="ad">{{item.provinceName}}{{item.cityName}}{{item.countyName}}{{item.detailInfo}}</text>
+        </view>
+        <view class="aacts">
+          <view class="aa" catchtap="editA" data-i="{{index}}" hover-class="aa-press">
+            <view class="css-pen"></view>
+            <text class="atx">编辑</text>
+          </view>
+          <view class="aa del" catchtap="delA" data-i="{{index}}" hover-class="aa-press">
+            <view class="css-trash"></view>
+            <text class="atx">删除</text>
+          </view>
+        </view>
+        <view class="amark" wx:if="{{ci===index}}"><view class="css-check-mark"></view></view>
+      </view>
+    </block>
+
+    <view wx:if="{{addrs.length===0}}" class="empty anim-fade-in">
+      <view class="css-pin-xl"></view>
+      <text class="et">暂无收货地址</text>
+      <text class="ed">请点击下方按钮一键填入微信地址，我们将安全地为您保存</text>
+    </view>
+
+    <view style="height:180rpx"></view>
+  </scroll-view>
+
+  <view class="bot safe-area-bottom">
+    <button class="abtn" bindtap="addNew" hover-class="abtn-press">
+      <view class="css-plus-white"></view>
+      新增微信收货地址
+    </button>
+  </view>
+</view>

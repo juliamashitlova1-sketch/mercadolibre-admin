@@ -1,0 +1,94 @@
+/* ====== 全局设计令牌 ====== */
+page {
+  --clr-primary: #3a6b00;
+  --clr-primary-light: #a1fa49;
+  --clr-primary-bg: #e8f5d8;
+  --clr-bg: #f5f6f0;
+  --clr-card: #ffffff;
+  --clr-text: #1a1d15;
+  --clr-text-secondary: #5c6154;
+  --clr-text-muted: #9ca394;
+  --clr-border: #e8ebdf;
+  --clr-danger: #d32f2f;
+  --clr-accent: #fdd34d;
+  --radius-sm: 12rpx;
+  --radius-md: 20rpx;
+  --radius-lg: 28rpx;
+  --radius-pill: 9999rpx;
+  --shadow-sm: 0 2rpx 8rpx rgba(47,52,41,0.04);
+  --shadow-md: 0 8rpx 24rpx rgba(47,52,41,0.06);
+  --shadow-lg: 0 16rpx 48rpx rgba(47,52,41,0.10);
+
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ====== 安全区域 ====== */
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ====== 通用文本 ====== */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.text-line2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ====== 清除 button 默认样式 ====== */
+button::after { border: none; }
+
+/* ====== SVG-style CSS Icons ====== */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44rpx;
+  height: 44rpx;
+  flex-shrink: 0;
+}
+.icon-sm { width: 32rpx; height: 32rpx; }
+.icon-lg { width: 56rpx; height: 56rpx; }
+
+/* 通用圆形图标容器 */
+.icon-circle {
+  width: 72rpx; height: 72rpx;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ====== 微动画 ====== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.anim-fade-in {
+  animation: fadeInUp 0.35s ease-out both;
+}
+.anim-scale-in {
+  animation: scaleIn 0.25s ease-out both;
+}
+
+/* ====== 骨架屏 ====== */
+.skeleton {
+  background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}

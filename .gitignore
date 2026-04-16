@@ -1,0 +1,23 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# 密钥和凭证（防止泄露到Git）
+serviceAccountKey*.json
+firebase-*.json
+*.pem
+*.key
+
+# IDE配置
+.vscode/
+.idea/
+
+# 临时文件
+*.swp
+*.swo
+*~

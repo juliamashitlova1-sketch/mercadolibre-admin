@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>购物车 - Fresh Curator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#3a6b00",
+                    "surface-bright": "#fafaf1",
+                    "on-error-container": "#6e1400",
+                    "on-secondary-fixed": "#6f2342",
+                    "on-tertiary-container": "#5c4900",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary": "#eeffd7",
+                    "background": "#fafaf1",
+                    "error-container": "#fd795a",
+                    "tertiary": "#745c00",
+                    "inverse-surface": "#0d0f0a",
+                    "on-primary-container": "#325c00",
+                    "tertiary-dim": "#665100",
+                    "primary-container": "#a1fa49",
+                    "inverse-on-surface": "#9c9e96",
+                    "inverse-primary": "#a4fd4c",
+                    "surface": "#fafaf1",
+                    "primary-fixed-dim": "#94eb3b",
+                    "on-secondary-container": "#863655",
+                    "on-secondary": "#fff7f7",
+                    "on-secondary-fixed-variant": "#923f5f",
+                    "error": "#a73b21",
+                    "secondary-container": "#ffd9e2",
+                    "primary-dim": "#335e00",
+                    "surface-container-low": "#f3f5e9",
+                    "secondary": "#974362",
+                    "error-dim": "#791903",
+                    "surface-variant": "#e0e4d5",
+                    "surface-container-highest": "#e0e4d5",
+                    "surface-dim": "#d8dccc",
+                    "on-surface": "#2f3429",
+                    "on-tertiary-fixed-variant": "#675200",
+                    "on-primary-fixed-variant": "#386700",
+                    "secondary-fixed-dim": "#ffc5d5",
+                    "outline-variant": "#afb4a5",
+                    "on-primary-fixed": "#254800",
+                    "on-error": "#fff7f6",
+                    "primary": "#3a6b00",
+                    "tertiary-fixed-dim": "#eec540",
+                    "surface-container": "#edefe2",
+                    "tertiary-container": "#fdd34d",
+                    "tertiary-fixed": "#fdd34d",
+                    "on-background": "#2f3429",
+                    "on-tertiary-fixed": "#463600",
+                    "primary-fixed": "#a1fa49",
+                    "on-surface-variant": "#5c6154",
+                    "secondary-fixed": "#ffd9e2",
+                    "surface-container-high": "#e7eadc",
+                    "secondary-dim": "#883756",
+                    "on-tertiary": "#fff8ee",
+                    "outline": "#787c6f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<nav class="bg-[#fafaf1] dark:bg-stone-900 flex justify-between items-center w-full px-6 py-3 docked full-width top-0 z-40">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-lime-700 dark:text-lime-400 cursor-pointer">search</span>
+</div>
+<h1 class="text-lg font-bold text-lime-900 dark:text-lime-100 font-['Plus_Jakarta_Sans'] tracking-tight">Fresh Curator</h1>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-surface-container">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="close-up of a friendly young person's avatar with a soft bokeh background and warm natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAe8buJu7bK0VsMTMLMSaB0p8sW3rru7HAJviJstvsFb5YlkkYgbFMAUbOqRUT88aLML8xz75a5qYSlF0SotyGj2isjodslPcSEyt_ErnMc46iibpv29l_ibMI5HC_3JJusQ57ZiMX8uATIf6VQvaaFlJEghR0QL7h2DguI32WojpXPlyHiP1Mzh3m1zP5z2TRcFQgT7x2rLA6zjnbP_SZltxjvMS9JR6ft458pAwQaTgnEcpZlc3Np3dbzknoeHf90mY7ZDwDPV-vA"/>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-8 pb-32">
+<!-- Empty State Illustration -->
+<div class="relative mb-10 w-64 h-64 flex items-center justify-center">
+<div class="absolute inset-0 bg-primary-container/20 rounded-full blur-3xl"></div>
+<img alt="Empty Cart Illustration" class="relative z-10 w-full h-auto drop-shadow-2xl" data-alt="cute playful 3d illustration of a smiling wicker basket with organic green leaves inside, soft pastel lighting on a clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAepP5s2A06DVXZENoR_-5BMezoyTPesIQxdHDmh0W1tl4KZ2vR4cd31iKhsrqpqE4QVPZUjSKy11Zn7KZwRnMOuW6AHkPSv2kmTEAkLHxCmPnsKVaHj0HB-LNkdl6yzeeZCfnMSuOXox6AWYvCzoV9kPldgGu66O2jgnx4o2HRWbUEPxEGJnGUi2nuQo0C5kWH3f5cehbOX6A38a1RS-QA0-jDaJbJt41dTqiqOhpj-y2yN5bFvt8oL6TrwIhNRGeLqnReI9x9_Qr0"/>
+</div>
+<!-- Empty State Text -->
+<div class="text-center space-y-3 mb-8">
+<h2 class="text-2xl font-extrabold text-on-surface tracking-tight">您的购物车空空如也~</h2>
+<p class="text-on-surface-variant max-w-[280px] mx-auto text-sm leading-relaxed">您还没有在篮子里添加我们精选的有机美食呢。</p>
+</div>
+<!-- Action Button -->
+<button class="px-10 py-3.5 rounded-full border-2 border-primary text-primary font-bold text-sm tracking-wide hover:bg-primary/5 active:scale-95 transition-all duration-200">去逛逛</button>
+<!-- Suggested Categories (Bento Style) -->
+<div class="mt-16 w-full max-w-md grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-5 rounded-lg flex flex-col items-center justify-center text-center space-y-2 shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-orange-600">nutrition</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">精选好物</span>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-lg flex flex-col items-center justify-center text-center space-y-2 shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-lime-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-lime-700">spa</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">有机健康</span>
+</div>
+</div>
+</main>
+<!-- Checkout Bar (Floating above BottomNavBar) -->
+<div class="fixed bottom-[96px] left-0 w-full px-4 z-40">
+<div class="max-w-2xl mx-auto bg-white/90 dark:bg-stone-800/90 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between shadow-[0px_12px_32px_rgba(47,52,41,0.08)]">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase tracking-tighter text-stone-400">合计</span>
+<span class="text-xl font-extrabold text-on-surface">¥0.00</span>
+</div>
+<button class="bg-stone-200 dark:bg-stone-700 text-stone-400 dark:text-stone-500 font-bold px-8 py-3 rounded-full cursor-not-allowed opacity-70" disabled="">结算</button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-t-[3rem] shadow-[0px_-12px_32px_rgba(47,52,41,0.06)]">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">首页</span>
+</a>
+<!-- Category -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">grid_view</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">分类</span>
+</a>
+<!-- Cart (Active) -->
+<a class="flex flex-col items-center justify-center text-lime-700 dark:text-lime-400 bg-lime-100/50 dark:bg-lime-900/30 rounded-full px-4 py-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">购物车</span>
+</a>
+<!-- Me -->
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">我的</span>
+</a>
+</nav>
+</body></html>

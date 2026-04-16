@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fresh Curator - Organic Fresh Food</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#3a6b00",
+                    "surface-bright": "#fafaf1",
+                    "on-error-container": "#6e1400",
+                    "on-secondary-fixed": "#6f2342",
+                    "on-tertiary-container": "#5c4900",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary": "#eeffd7",
+                    "background": "#fafaf1",
+                    "error-container": "#fd795a",
+                    "tertiary": "#745c00",
+                    "inverse-surface": "#0d0f0a",
+                    "on-primary-container": "#325c00",
+                    "tertiary-dim": "#665100",
+                    "primary-container": "#a1fa49",
+                    "inverse-on-surface": "#9c9e96",
+                    "inverse-primary": "#a4fd4c",
+                    "surface": "#fafaf1",
+                    "primary-fixed-dim": "#94eb3b",
+                    "on-secondary-container": "#863655",
+                    "on-secondary": "#fff7f7",
+                    "on-secondary-fixed-variant": "#923f5f",
+                    "error": "#a73b21",
+                    "secondary-container": "#ffd9e2",
+                    "primary-dim": "#335e00",
+                    "surface-container-low": "#f3f5e9",
+                    "secondary": "#974362",
+                    "error-dim": "#791903",
+                    "surface-variant": "#e0e4d5",
+                    "surface-container-highest": "#e0e4d5",
+                    "surface-dim": "#d8dccc",
+                    "on-surface": "#2f3429",
+                    "on-tertiary-fixed-variant": "#675200",
+                    "on-primary-fixed-variant": "#386700",
+                    "secondary-fixed-dim": "#ffc5d5",
+                    "outline-variant": "#afb4a5",
+                    "on-primary-fixed": "#254800",
+                    "on-error": "#fff7f6",
+                    "primary": "#3a6b00",
+                    "tertiary-fixed-dim": "#eec540",
+                    "surface-container": "#edefe2",
+                    "tertiary-container": "#fdd34d",
+                    "tertiary-fixed": "#fdd34d",
+                    "on-background": "#2f3429",
+                    "on-tertiary-fixed": "#463600",
+                    "primary-fixed": "#a1fa49",
+                    "on-surface-variant": "#5c6154",
+                    "secondary-fixed": "#ffd9e2",
+                    "surface-container-high": "#e7eadc",
+                    "secondary-dim": "#883756",
+                    "on-tertiary": "#fff8ee",
+                    "outline": "#787c6f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fafaf1; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .editorial-shadow { box-shadow: 0px 12px 32px rgba(47, 52, 41, 0.06); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="text-on-surface">
+<!-- TopAppBar -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-[#fafaf1] dark:bg-stone-900 flex justify-between items-center w-full px-6 py-3 no-border tonal-shift bg-[#edefe2] dark:bg-stone-800">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lime-700 dark:text-lime-400">search</span>
+<span class="font-['Plus_Jakarta_Sans'] tracking-tight text-lg font-bold text-lime-900 dark:text-lime-100">Fresh Curator</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1 text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-full">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span class="text-xs font-medium">绿谷广场</span>
+</div>
+<img alt="Profile" class="w-8 h-8 rounded-full border-2 border-surface-container-highest" data-alt="Close-up portrait of a friendly man with a warm smile, soft natural lighting, professional and approachable aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBr2Ij-Dx84NPnMPL7iOTUqbJg0pwNqByA481jrt4EvH3zID_8nRTzIEbk1otdzjC9tAwb7Ky5xgIPUWVDxhGzweFWljIsGpchLJ6CKCHZJa35UpwYOW24SaCFGRtHV8Zo-012vW4RNHPKFXhhnGoY_IEFSU91BX5C1Q0WpO4rhl1mthwwEG--Gye9TKjkn890teS_o63noTvwLVB2vwh8E3IAGyAt3I6yLVAI7iAEb19XuJGyB9TFhVDpA5T_m9gynhhs-dCtrj1lZ"/>
+</div>
+</nav>
+<main class="pt-20 pb-32 px-5 space-y-8 max-w-md mx-auto">
+<!-- Search Bar Section -->
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+</div>
+<input class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/15 focus:ring-primary/40 rounded-xl pl-12 pr-4 py-4 text-sm transition-all duration-300 editorial-shadow" placeholder="搜索新鲜有机食材..." type="text"/>
+</div>
+<!-- Membership Banner -->
+<section class="relative overflow-hidden rounded-lg h-44 bg-gradient-to-br from-primary to-primary-dim p-6 flex flex-col justify-between editorial-shadow">
+<div class="z-10">
+<h2 class="text-2xl font-extrabold text-on-primary tracking-tight leading-tight">积分当钱花</h2>
+<p class="text-on-primary/80 text-sm mt-1">加入馆长俱乐部，享受专属礼遇</p>
+</div>
+<div class="z-10 flex items-center justify-between">
+<button class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-bold text-sm hover:opacity-90 transition-opacity">立即充值</button>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-[10px] border border-white/30">VIP</div>
+</div>
+</div>
+<!-- Decorative image element -->
+<div class="absolute -right-4 -bottom-4 w-32 h-32 opacity-30">
+<span class="material-symbols-outlined text-9xl text-primary-container" style="font-variation-settings: 'FILL' 1;">stars</span>
+</div>
+</section>
+<!-- Category Grid -->
+<section>
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-headline font-bold text-lg text-on-surface">分类</h3>
+<span class="text-primary text-xs font-bold uppercase tracking-widest">查看全部</span>
+</div>
+<div class="grid grid-cols-5 gap-2">
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">肉类</span>
+</div>
+<span class="text-[11px] font-bold text-on-surface-variant">肉类</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">牛肉</span>
+</div>
+<span class="text-[11px] font-bold text-on-surface-variant">牛肉</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">面点</span>
+</div>
+<span class="text-[11px] font-bold text-on-surface-variant">面点</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-lime-100 flex items-center justify-center text-lime-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">休闲零食</span>
+</div>
+<span class="text-[11px] font-bold text-on-surface-variant">休闲零食</span>
+</div>
+<div class="flex flex-col items-center gap-2 group">
+<div class="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">火锅</span>
+</div>
+<span class="text-[11px] font-bold text-on-surface-variant">火锅</span>
+</div>
+</div>
+</section>
+<!-- Delivery Modes (Asymmetric Bento) -->
+<section class="grid grid-cols-2 gap-4">
+<div class="col-span-1 bg-surface-container-lowest rounded-lg p-5 flex flex-col justify-between editorial-shadow min-h-[160px] relative overflow-hidden group">
+<div>
+<h4 class="font-headline font-extrabold text-xl leading-tight">外送到家</h4>
+<p class="text-xs text-on-surface-variant mt-1">30分钟内送达</p>
+</div>
+<div class="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-8xl">local_shipping</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center self-end mt-4">
+<span class="material-symbols-outlined text-on-primary-container">arrow_forward</span>
+</div>
+</div>
+<div class="col-span-1 bg-surface-container rounded-lg p-5 flex flex-col justify-between min-h-[160px] relative overflow-hidden group">
+<div>
+<h4 class="font-headline font-extrabold text-xl leading-tight">到店自提</h4>
+<p class="text-xs text-on-surface-variant mt-1">5分钟后可取</p>
+</div>
+<div class="absolute -right-2 -bottom-2 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-8xl">storefront</span>
+</div>
+<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center self-end mt-4">
+<span class="material-symbols-outlined text-on-surface">shopping_bag</span>
+</div>
+</div>
+</section>
+<!-- Featured Section -->
+<section>
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-headline font-bold text-lg text-on-surface">店长精选</h3>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-lg editorial-shadow">
+<div class="w-24 h-24 rounded-md overflow-hidden flex-shrink-0">
+<img alt="Organic Vegetables" class="w-full h-full object-cover" data-alt="Assortment of fresh organic root vegetables with soil remnants, warm natural morning light, rustic wood background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6pVA0ZNj8M4JMu6caj9hbqEKD3LGG5Xm9ZcpG9Yi2qGqPctAbCwH_IQwg_6osjxL6GEUDiEtDI87OTJh9lkjoBpQ0RnBDAsFBnrjuCoZTn_nyr9MUTpFI0yDl128W4N71uQztAH-WukKTRbEVrcPGksRlLpZi1XRYa4JNAvwmc3uL5rhr-xhIfIV85Od2W7Bkl4UcJadF9k4LZtXbbgMjPBfulH42rN8m9OSGTFNhi1M5lCmsyfqrjbM0RXBoYfHQm0yt0MWFGXV_"/>
+</div>
+<div class="flex-grow">
+<span class="text-[10px] font-bold text-primary tracking-widest uppercase">有机农场</span>
+<h5 class="text-sm font-bold text-on-surface mb-1">高品质传家宝番茄</h5>
+<div class="flex items-center gap-2">
+<span class="text-lg font-extrabold text-on-surface">$12.90</span>
+<span class="text-[10px] text-on-surface-variant line-through">$18.00</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-lg editorial-shadow">
+<div class="w-24 h-24 rounded-md overflow-hidden flex-shrink-0">
+<img alt="Fresh Meat" class="w-full h-full object-cover" data-alt="Close-up of premium marbled raw beef steak on a slate board, dramatic top lighting, culinary professional style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjxp92FPgw4Yjhf1V7XuzVHWrsLm5mAktlsF7Kva-jCzRDuMkdXfEw3TSES3fdM8rCO4YBkvjjW2VtjT1I0AqbilTxIdP5jyLImEgFNVEagNe2ilS3SDFA1m0LSs7yJ4fyabJpUVGmi08trKA8RnSLVNeEQuQA3Kwu1LfgFQFW3mW1JwqbGB0hLPQOq6pQhkr8Tz4WiPGAu7E1gTJ65-CTOY9gjX-8jULrNwplxvuejkfVfkc_rXKvXkovbHUCG8-VCcdItnyXWVM"/>
+</div>
+<div class="flex-grow">
+<span class="text-[10px] font-bold text-secondary tracking-widest uppercase">草饲养殖</span>
+<h5 class="text-sm font-bold text-on-surface mb-1">澳洲肉眼牛排</h5>
+<div class="flex items-center gap-2">
+<span class="text-lg font-extrabold text-on-surface">$24.50</span>
+<span class="text-[10px] text-on-surface-variant line-through">$30.00</span>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl rounded-t-[3rem] shadow-[0px_-12px_32px_rgba(47,52,41,0.06)]">
+<a class="flex flex-col items-center justify-center text-lime-700 dark:text-lime-400 bg-lime-100/50 dark:bg-lime-900/30 rounded-full px-4 py-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">首页</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">分类</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">购物车</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-400 dark:text-stone-500 hover:text-lime-600 transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-medium tracking-wide">我的</span>
+</a>
+</nav>
+</body></html>

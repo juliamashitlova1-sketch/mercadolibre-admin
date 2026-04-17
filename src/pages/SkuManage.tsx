@@ -232,19 +232,21 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
           .from('sku-images')
           .getPublicUrl(fileName);
 
-        // 2. Update the latest record in database
+        // 2. Update the dedicated sku_images table (global, not tied to date)
+        const { error: imgUpsertError } = await supabase
+          .from('sku_images')
+          .upsert({ sku, image_url: publicUrl, updated_at: new Date().toISOString() }, { onConflict: 'sku' });
+        
+        if (imgUpsertError) throw imgUpsertError;
+
+        // 3. Also update the latest record's image_url for backward compatibility
         const latestRecord = allSkuData.filter(s => s.sku === sku).sort((a,b) => b.date.localeCompare(a.date))[0];
         
         if (latestRecord) {
-          const { error: updateError } = await supabase
+          await supabase
             .from('sku_stats')
             .update({ image_url: publicUrl })
             .eq('doc_id', `${sku}_${latestRecord.date}`);
-          
-          if (updateError) throw updateError;
-        } else {
-          // If no record exists, create a stub record or just alert
-          console.warn('No record found to attach image to.');
         }
 
         onSaveSuccess();
@@ -261,16 +263,22 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     if (!confirm(`确定要删除 SKU 「${sku}」的图片吗？`)) return;
     setUploading(sku);
     try {
-      // 1. Find the latest record to update
+      // 1. Delete from the dedicated sku_images table
+      const { error: imgDeleteError } = await supabase
+        .from('sku_images')
+        .delete()
+        .eq('sku', sku);
+      
+      if (imgDeleteError) throw imgDeleteError;
+      
+      // 2. Also clear image_url from the latest record for backward compatibility
       const latestRecord = allSkuData.filter(s => s.sku === sku).sort((a,b) => b.date.localeCompare(a.date))[0];
       
       if (latestRecord) {
-        const { error: updateError } = await supabase
+        await supabase
           .from('sku_stats')
           .update({ image_url: null })
           .eq('doc_id', `${sku}_${latestRecord.date}`);
-        
-        if (updateError) throw updateError;
       }
       
       onSaveSuccess();
@@ -286,6 +294,8 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     if (!confirm(`确认删除 SKU「${sku}」的所有记录？`)) return;
     setDeleting(sku);
     const { error } = await supabase.from('sku_stats').delete().like('doc_id', `${sku}_%`);
+    // Also delete from sku_images table
+    await supabase.from('sku_images').delete().eq('sku', sku);
     if (error) setMsg(`删除失败: ${error.message}`);
     else { setMsg('已删除'); onSaveSuccess(); setTimeout(() => setMsg(''), 2000); }
     setDeleting(null);
@@ -460,6 +470,15 @@ function CreateSkuView({ onBack, onSuccess, onSaveSuccess }: {
         image_url: imageUrl || undefined
       }, { onConflict: 'doc_id' });
       if (error) throw error;
+
+      // Also write to sku_images table for global image lookup
+      if (imageUrl) {
+        await supabase.from('sku_images').upsert({
+          sku: form.sku.trim(),
+          image_url: imageUrl,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'sku' });
+      }
 
       try {
         const meta = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');

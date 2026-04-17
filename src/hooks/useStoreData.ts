@@ -19,6 +19,17 @@ export function useSkuData() {
     const { data: allHistory } = await supabase
       .from('sku_stats')
       .select('sku, orders');
+
+    // Fetch SKU images from the dedicated metadata table
+    let skuImageMap: Record<string, string> = {};
+    const { data: imagesData } = await supabase
+      .from('sku_images')
+      .select('sku, image_url');
+    if (imagesData) {
+      imagesData.forEach((row: any) => {
+        if (row.image_url) skuImageMap[row.sku] = row.image_url;
+      });
+    }
       
     if (error) { 
       console.error('Error fetching SKU stats:', error); 
@@ -55,7 +66,7 @@ export function useSkuData() {
       inProductionStock: row.in_production_stock || 0,
       leadTimeDays: row.lead_time_days || 7,
       competitors: row.competitors || [],
-      imageUrl: row.image_url || '',
+      imageUrl: skuImageMap[row.sku] || row.image_url || '',
     }));
 
     const sumOrders: Record<string, number> = {};

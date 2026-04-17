@@ -169,6 +169,15 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         console.error('Supabase 保存错误:', error);
         throw new Error(error.message || '数据库保存失败');
       }
+
+      // Also write to sku_images table for global image lookup
+      if (data.imageUrl) {
+        await supabase.from('sku_images').upsert({
+          sku: data.sku,
+          image_url: data.imageUrl,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'sku' });
+      }
       console.log('保存成功！');
       onSuccess();
       onOpenChange(false);

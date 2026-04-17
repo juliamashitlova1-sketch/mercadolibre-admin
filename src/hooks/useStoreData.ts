@@ -143,6 +143,13 @@ export function useSkuData() {
 
   useEffect(() => { 
     refreshSkuData(); 
+
+    // Subscribe to sku_images changes for real-time image sync across devices
+    const channel = supabase.channel('sku-images-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sku_images' }, () => refreshSkuData())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [refreshSkuData, refreshKey]);
 
   return { 

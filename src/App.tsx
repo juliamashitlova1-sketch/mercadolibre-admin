@@ -60,7 +60,7 @@ class AppErrorBoundary extends React.Component<any, any> {
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-transparent text-white font-sans">
         <AppErrorBoundary>
           <AppContent />
         </AppErrorBoundary>

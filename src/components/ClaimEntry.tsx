@@ -7,8 +7,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
+import { getMexicoDateTimeString } from '../lib/time';
 
 const claimSchema = z.object({
   orderId: z.string().min(1, '订单号必填'),
@@ -32,7 +32,7 @@ export default function ClaimEntry({ open, onOpenChange, onSuccess }: ClaimEntry
       request: '',
       productName: '',
       handlingMethod: '',
-      handlingTime: format(new Date(), 'yyyy-MM-dd HH:mm'),
+      handlingTime: getMexicoDateTimeString(),
     }
   });
 

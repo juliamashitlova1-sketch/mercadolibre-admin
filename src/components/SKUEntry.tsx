@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { SKUStats } from '../types';
 import { useEffect, useState } from 'react';
+import { getMexicoDateString } from '../lib/time';
+import { USD_TO_MXN } from '../constants';
 
 const skuSchema = z.object({
   sku: z.string().min(1),
@@ -34,6 +36,7 @@ const skuSchema = z.object({
   inTransitStock: z.number().min(0),
   inProductionStock: z.number().min(0),
   leadTimeDays: z.number().min(0),
+  imageUrl: z.string().optional(),
   competitors: z.array(z.object({
     id: z.string(),
     url: z.string().url().or(z.string().length(0)),
@@ -59,11 +62,11 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
     values: sku ? {
       ...sku,
       competitors: sku.competitors || [],
-      date: format(new Date(), 'yyyy-MM-dd')
+      date: getMexicoDateString()
     } : {
       sku: '',
       skuName: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
+      date: getMexicoDateString(),
       sales: 0,
       orders: 0,
       stock: 0,
@@ -82,6 +85,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
       inTransitStock: 0,
       inProductionStock: 0,
       leadTimeDays: 7,
+      imageUrl: '',
       competitors: [],
     }
   });
@@ -93,6 +97,8 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
 
   const watchedAdSpend = watch('adSpend');
   const watchedClicks = watch('clicks');
+  const watchedAdOrders = watch('adOrders');
+  const watchedPrice = watch('sellingPrice');
   const watchedSales = watch('sales');
   const watchedCpc = watch('cpc');
   const watchedRoas = watch('roas');
@@ -109,16 +115,16 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
   }, [watchedAdSpend, watchedClicks, setValue]);
 
   useEffect(() => {
-    if (watchedSales && watchedAdSpend) {
-      // 销售额是比索 (MXN)，广告费输入为美元 (USD)，计算时需统一汇率
-      const adSpendMxn = watchedAdSpend * 17.15;
-      setValue('roas', Number((watchedSales / adSpendMxn).toFixed(2)));
-      setValue('acos', Number(((adSpendMxn / watchedSales) * 100).toFixed(2)));
+    if (watchedAdOrders && watchedPrice && watchedAdSpend) {
+      // 核心修正：ACOS/ROAS 基于广告带来的订单计算
+      const adSalesUsd = (watchedAdOrders * watchedPrice) / USD_TO_MXN;
+      setValue('roas', Number((adSalesUsd / watchedAdSpend).toFixed(2)));
+      setValue('acos', Number(((watchedAdSpend / adSalesUsd) * 100).toFixed(2)));
     } else {
       setValue('roas', 0);
       setValue('acos', 0);
     }
-  }, [watchedSales, watchedAdSpend, setValue]);
+  }, [watchedAdOrders, watchedPrice, watchedAdSpend, setValue]);
 
   // Reset form when opening with new sku or closing
   useEffect(() => {
@@ -155,6 +161,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         in_transit_stock: data.inTransitStock || 0,
         in_production_stock: data.inProductionStock || 0,
         lead_time_days: data.leadTimeDays || 7,
+        image_url: data.imageUrl || undefined,
         competitors: data.competitors || [],
       }, { onConflict: 'doc_id' });
       
@@ -214,10 +221,31 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-end">
               <div className="space-y-1.5">
                 <Label htmlFor="date" className="text-xs">日期</Label>
                 <Input type="date" {...register('date')} className="h-8 text-xs" />
+              </div>
+              <div className="flex items-center gap-2 mb-0.5">
+                 <div className="relative w-8 h-8 rounded border border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group/entryimg">
+                    {watch('imageUrl') ? (
+                       <>
+                          <img src={watch('imageUrl')} className="w-full h-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); setValue('imageUrl', ''); }}
+                            className="absolute inset-0 bg-rose-500/80 text-white flex items-center justify-center opacity-0 group-hover/entryimg:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                       </>
+                    ) : (
+                       <Plus className="w-3 h-3 text-slate-400" />
+                    )}
+                 </div>
+                 <Label className="text-[10px] text-slate-500">
+                    {watch('imageUrl') ? '已有关联图片' : '未关联图片'}
+                 </Label>
               </div>
             </div>
 
@@ -341,7 +369,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
                   currentPrice: 0, 
                   reviewCount: 0, 
                   rating: 0, 
-                  lastUpdated: format(new Date(), 'yyyy-MM-dd') 
+                  lastUpdated: getMexicoDateString() 
                 })}
               >
                 <Plus className="w-3 h-3" /> 添加竞品

@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { SKUStats } from '../types';
+import { getMexicoDateString } from '../lib/time';
 
 const DRAFT_KEY = 'meikeduo_daily_entry_draft';
 
@@ -53,7 +54,7 @@ export default function DataEntry({ open, onOpenChange, onSuccess, skuData }: Da
   const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch, reset } = useForm({
     resolver: zodResolver(dailySchema),
     defaultValues: {
-      date: format(new Date(), 'yyyy-MM-dd'),
+      date: getMexicoDateString(),
       totalSales: 0,
       totalOrders: 0,
       adSpend: 0,

@@ -1,17 +1,37 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { SKUStats } from '../types';
 import { useOutletContext } from 'react-router-dom';
+import { getMexicoDateString } from '../lib/time';
+import DateRangeFilter, { filterByDateRange } from '../components/DateRangeFilter';
 
 interface ContextType {
   skuData: SKUStats[];
+  allSkuData: SKUStats[];
   onEditSku: (sku: SKUStats) => void;
 }
 
 export default function Competitors() {
-  const { skuData, onEditSku } = useOutletContext<ContextType>();
+  const { skuData, allSkuData, onEditSku } = useOutletContext<ContextType>();
+  const todayStr = getMexicoDateString();
+
+  const [startDate, setStartDate] = useState(todayStr);
+  const [endDate, setEndDate] = useState(todayStr);
+
+  // 筛选范围内每个 SKU 最新的快照（含竞品数据）
+  const filteredSkuData = useMemo(() => {
+    const filtered = filterByDateRange(allSkuData, startDate, endDate);
+    const latestPerSku: Record<string, SKUStats> = {};
+    filtered.forEach(item => {
+      if (!latestPerSku[item.sku] || item.date > latestPerSku[item.sku].date) {
+        latestPerSku[item.sku] = item;
+      }
+    });
+    return Object.values(latestPerSku);
+  }, [allSkuData, startDate, endDate]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,8 +45,10 @@ export default function Competitors() {
         </div>
       </header>
 
+      <DateRangeFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />
+
       <div className="grid grid-cols-1 gap-6">
-        {skuData.map((sku) => (
+        {filteredSkuData.length > 0 ? filteredSkuData.map((sku) => (
           <Card key={sku.sku} className="border-border shadow-sm bg-card rounded-xl overflow-hidden">
             <CardHeader className="bg-slate-50/50 py-3 flex flex-row items-center justify-between">
               <div className="flex items-center gap-3">
@@ -97,7 +119,7 @@ export default function Competitors() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-4 text-xs text-text-sub italic">
-                        暂无监控竞品，点击右上角“更新竞品数据”添加
+                        暂无监控竞品，点击右上角"更新竞品数据"添加
                       </TableCell>
                     </TableRow>
                   )}
@@ -105,7 +127,9 @@ export default function Competitors() {
               </Table>
             </CardContent>
           </Card>
-        ))}
+        )) : (
+          <div className="text-center py-12 text-slate-400 text-sm">所选日期范围内暂无 SKU 数据</div>
+        )}
       </div>
     </div>
   );

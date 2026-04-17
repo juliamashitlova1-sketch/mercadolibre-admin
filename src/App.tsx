@@ -15,6 +15,7 @@ import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
 import ClaimEntry from './components/ClaimEntry';
 import OperationEntry from './components/OperationEntry';
+import Login from './components/Login';
 
 import { useSkuData, useDailyStats, useClaims, useOperationLogs } from './hooks/useStoreData';
 import { SKUStats } from './types';
@@ -58,6 +59,12 @@ class AppErrorBoundary extends React.Component<any, any> {
 }
 
 export default function App() {
+  const [auth, setAuth] = useState(sessionStorage.getItem('milyfly_auth') === 'true');
+
+  if (!auth) {
+    return <Login onLogin={() => setAuth(true)} />;
+  }
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-transparent text-white font-sans">
@@ -70,10 +77,10 @@ export default function App() {
 }
 
 function AppContent() {
-  const { skuData, refreshSkuData } = useSkuData();
+  const { skuData, allSkuData, refreshSkuData } = useSkuData();
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
-  const { operationLogs } = useOperationLogs();
+  const { operationLogs, refreshLogs } = useOperationLogs();
 
   const [isEntryOpen, setIsEntryOpen] = useState(false);
   const [isSkuEntryOpen, setIsSkuEntryOpen] = useState(false);
@@ -83,10 +90,12 @@ function AppContent() {
 
   const contextValue = {
     skuData,
+    allSkuData,
     dailyData,
     claims,
     operationLogs,
     refreshSkuData,
+    refreshLogs,
     onOpenDataEntry: () => setIsEntryOpen(true),
     onAddClaim: () => setIsClaimEntryOpen(true),
     onAddLog: () => setIsOperationEntryOpen(true),
@@ -117,7 +126,7 @@ function AppContent() {
       <DataEntry open={isEntryOpen} onOpenChange={setIsEntryOpen} skuData={skuData} onSuccess={() => console.log('Data saved')} />
       <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} onSuccess={() => refreshSkuData()} />
       <ClaimEntry open={isClaimEntryOpen} onOpenChange={setIsClaimEntryOpen} onSuccess={() => console.log('Claim saved')} />
-      <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} skuData={skuData} onSuccess={() => console.log('Operation log saved')} />
+      <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} skuData={skuData} onSuccess={() => { refreshLogs(); console.log('Operation log saved'); }} />
     </>
   );
 }

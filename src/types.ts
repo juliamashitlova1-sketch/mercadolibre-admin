@@ -42,6 +42,8 @@ export interface Competitor {
 export interface SKUStats {
   sku: string;
   skuName: string; // SKU 中文名称
+  listedAt?: string; // 产品上架时间
+  imageUrl?: string; // 产品主图 (Base64/URL)
   date: string;
   sales: number;
   orders: number;

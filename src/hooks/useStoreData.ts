@@ -5,6 +5,7 @@ import { parseISO } from 'date-fns';
 
 export function useSkuData() {
   const [skuData, setSkuData] = useState<SKUStats[]>([]);
+  const [allSkuData, setAllSkuData] = useState<SKUStats[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refreshSkuData = useCallback(async () => {
@@ -12,17 +13,28 @@ export function useSkuData() {
       .from('sku_stats')
       .select('*')
       .order('date', { ascending: false })
-      .limit(200);
+      .limit(1000); // Increased limit to ensure more context is available for each SKU
+      
+    // Fetch full history of orders for ALL SKUs to calculate lifetime average
+    const { data: allHistory } = await supabase
+      .from('sku_stats')
+      .select('sku, orders');
       
     if (error) { 
       console.error('Error fetching SKU stats:', error); 
       return; 
     }
 
+    let metaDict: Record<string, { listedAt?: string }> = {};
+    try {
+      metaDict = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
+    } catch {}
+
     const mapped = (data || []).map((row: any) => ({
       id: row.id,
       sku: row.sku,
       skuName: row.sku_name || '',
+      listedAt: metaDict[row.sku]?.listedAt,
       date: row.date,
       sales: row.sales || 0,
       orders: row.orders || 0,
@@ -43,15 +55,78 @@ export function useSkuData() {
       inProductionStock: row.in_production_stock || 0,
       leadTimeDays: row.lead_time_days || 7,
       competitors: row.competitors || [],
+      imageUrl: row.image_url || '',
     }));
 
+    const sumOrders: Record<string, number> = {};
+    (allHistory || []).forEach(item => {
+      sumOrders[item.sku] = (sumOrders[item.sku] || 0) + (item.orders || 0);
+    });
+
     const latestPerSku: Record<string, SKUStats> = {};
-    mapped.forEach(item => {
-      if (!latestPerSku[item.sku] || parseISO(item.date) > parseISO(latestPerSku[item.sku].date)) {
-        latestPerSku[item.sku] = item;
+    let localMetaDict: Record<string, { listedAt?: string; name?: string; purchasePrice?: any }> = {};
+    try { localMetaDict = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}'); } catch {}
+    
+    const skuMetadataMap: Record<string, { name?: string; purchasePrice?: number; listedAt?: string }> = {};
+
+    // Initialize with local storage (High Priority)
+    Object.keys(localMetaDict).forEach(sku => {
+      skuMetadataMap[sku] = {
+        name: localMetaDict[sku].name,
+        purchasePrice: Number(localMetaDict[sku].purchasePrice) || 0,
+        listedAt: localMetaDict[sku].listedAt
+      };
+    });
+
+    // 1. Supplement with database history (Lower Priority - fill gaps)
+    [...mapped].reverse().forEach(item => {
+      if (!skuMetadataMap[item.sku]) skuMetadataMap[item.sku] = {};
+      if (!skuMetadataMap[item.sku].name && item.skuName && item.skuName !== '未命名资产') {
+        skuMetadataMap[item.sku].name = item.skuName;
+      }
+      if (!skuMetadataMap[item.sku].purchasePrice && item.purchasePrice > 0) {
+        skuMetadataMap[item.sku].purchasePrice = item.purchasePrice;
+      }
+      if (!skuMetadataMap[item.sku].listedAt && item.listedAt) {
+        skuMetadataMap[item.sku].listedAt = item.listedAt;
       }
     });
 
+    // Sync back to local storage if gaps were filled
+    let needsSync = false;
+    Object.keys(skuMetadataMap).forEach(s => {
+      if (!localMetaDict[s] || (!localMetaDict[s].name && skuMetadataMap[s].name)) {
+        localMetaDict[s] = { ...localMetaDict[s], ...skuMetadataMap[s] };
+        needsSync = true;
+      }
+    });
+    if (needsSync) localStorage.setItem('milyfly_sku_metadata', JSON.stringify(localMetaDict));
+
+    // 2. Identify the latest daily record for operational stats
+    mapped.forEach(item => {
+      if (!latestPerSku[item.sku] || parseISO(item.date) > parseISO(latestPerSku[item.sku].date)) {
+        latestPerSku[item.sku] = { ...item };
+      }
+    });
+
+    // 3. Merge metadata into the latest records
+    Object.values(latestPerSku).forEach(sku => {
+      const meta = skuMetadataMap[sku.sku];
+      if (meta?.name) sku.skuName = meta.name;
+      if (meta?.purchasePrice) sku.purchasePrice = meta.purchasePrice;
+      if (meta?.listedAt) sku.listedAt = meta.listedAt;
+      
+      sku.leadTimeDays = 90;
+      let days = 1;
+      const finalListedAt = sku.listedAt || meta?.listedAt;
+      if (finalListedAt && !isNaN(new Date(finalListedAt).getTime())) {
+        const diffTime = Math.abs(new Date().getTime() - new Date(finalListedAt).getTime());
+        days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      }
+      sku.avgSalesSinceListing = Number((sumOrders[sku.sku] / days).toFixed(2));
+    });
+
+    setAllSkuData(mapped);
     setSkuData(Object.values(latestPerSku));
   }, []);
 
@@ -61,6 +136,7 @@ export function useSkuData() {
 
   return { 
     skuData, 
+    allSkuData,
     refreshSkuData: () => setRefreshKey(k => k + 1) 
   };
 }
@@ -150,29 +226,47 @@ export function useClaims() {
 
 export function useOperationLogs() {
   const [operationLogs, setOperationLogs] = useState<OperationLog[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      const { data, error } = await supabase
-        .from('operation_logs')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(100);
-        
-      if (!error) {
-        setOperationLogs((data || []).map((row: any) => ({
+  const fetchLogs = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('operation_logs')
+      .select('*')
+      .order('date', { ascending: false })
+      .limit(100);
+      
+    if (!error) {
+      setOperationLogs((data || []).map((row: any) => {
+        let skuVal = row.sku || ''; // Fallback for missing column
+        let descriptionVal = row.details || '';
+        let actionTypeVal: any = 'Price';
+
+        // Try to parse details if it contains the full JSON data
+        try {
+          if (row.details && row.details.startsWith('{')) {
+            const parsed = JSON.parse(row.details);
+            if (!skuVal && parsed.sku) skuVal = parsed.sku;
+            if (parsed.actionType) actionTypeVal = parsed.actionType;
+            if (parsed.description) descriptionVal = parsed.description;
+          }
+        } catch (e) {
+          console.error('Error parsing log details:', e);
+        }
+
+        return {
           id: row.id,
           date: row.date,
+          sku: skuVal,
           action: row.action,
-          sku: row.sku,
-          details: row.details,
           createdAt: row.created_at,
-          actionType: row.action,
-          description: row.details,
-        })));
-      }
-    };
+          actionType: actionTypeVal,
+          description: descriptionVal,
+        };
+      }));
+    }
+  }, []);
 
+  useEffect(() => {
     fetchLogs();
     
     const channel = supabase.channel('operation-logs-changes')
@@ -180,7 +274,10 @@ export function useOperationLogs() {
       .subscribe();
       
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [fetchLogs, refreshKey]);
 
-  return { operationLogs };
+  return { 
+    operationLogs,
+    refreshLogs: () => setRefreshKey(k => k + 1)
+  };
 }

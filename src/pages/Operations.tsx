@@ -2,18 +2,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { OperationLog } from '../types';
 import { useOutletContext } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 interface ContextType {
   operationLogs: OperationLog[];
   onAddLog: () => void;
+  refreshLogs: () => void;
 }
 
 export default function Operations() {
-  const { operationLogs, onAddLog } = useOutletContext<ContextType>();
+  const { operationLogs, onAddLog, refreshLogs } = useOutletContext<ContextType>();
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('确定要删除这条记录吗？')) return;
+    try {
+      const { error } = await supabase.from('operation_logs').delete().eq('id', id);
+      if (error) throw error;
+      refreshLogs();
+    } catch (error) {
+      console.error('Error deleting log:', error);
+      alert('删除失败，请稍后重试');
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,6 +55,7 @@ export default function Operations() {
                 <TableHead className="text-[11px] h-10">类型</TableHead>
                 <TableHead className="text-[11px] h-10">操作详情</TableHead>
                 <TableHead className="text-[11px] h-10">记录时间</TableHead>
+                <TableHead className="text-[11px] h-10 text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -60,11 +75,21 @@ export default function Operations() {
                     </TableCell>
                     <TableCell className="text-xs max-w-[400px] whitespace-pre-wrap">{log.description}</TableCell>
                     <TableCell className="text-xs text-text-sub">{format(parseISO(log.createdAt), 'MM/dd HH:mm')}</TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-400 hover:text-rose-600 transition-colors"
+                        onClick={() => handleDelete(log.id)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-text-sub text-xs">
+                  <TableCell colSpan={6} className="text-center py-10 text-text-sub text-xs">
                     暂无操作记录，点击上方按钮开始记录
                   </TableCell>
                 </TableRow>

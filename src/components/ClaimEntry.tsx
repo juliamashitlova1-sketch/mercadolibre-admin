@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '../lib/supabase';
 import { getMexicoDateTimeString } from '../lib/time';
+import { Claim } from '../types';
+import { useEffect } from 'react';
 
 const claimSchema = z.object({
   orderId: z.string().min(1, '订单号必填'),
@@ -22,9 +24,10 @@ interface ClaimEntryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  claim?: Claim | null;
 }
 
-export default function ClaimEntry({ open, onOpenChange, onSuccess }: ClaimEntryProps) {
+export default function ClaimEntry({ open, onOpenChange, onSuccess, claim }: ClaimEntryProps) {
   const { register, handleSubmit, formState: { isSubmitting, errors }, reset } = useForm({
     resolver: zodResolver(claimSchema),
     defaultValues: {
@@ -36,22 +39,57 @@ export default function ClaimEntry({ open, onOpenChange, onSuccess }: ClaimEntry
     }
   });
 
+  useEffect(() => {
+    if (open) {
+      if (claim) {
+        reset({
+          orderId: claim.orderId,
+          request: claim.request,
+          productName: claim.productName,
+          handlingMethod: claim.handlingMethod,
+          handlingTime: claim.handlingTime,
+        });
+      } else {
+        reset({
+          orderId: '',
+          request: '',
+          productName: '',
+          handlingMethod: '',
+          handlingTime: getMexicoDateTimeString(),
+        });
+      }
+    }
+  }, [open, claim, reset]);
+
   const onSubmit = async (data: any) => {
     try {
-      const { error } = await supabase.from('claims').insert([{
-        doc_id: `claim_${Date.now()}`,
+      const payload = {
+        doc_id: claim?.id ? undefined : `claim_${Date.now()}`,
         claim_id: data.orderId,
         order_number: data.orderId,
+        product_name: data.productName,
         reason: `${data.request} | ${data.handlingMethod} @ ${data.handlingTime}`,
         status: 'open',
-        details: JSON.stringify(data),
-      }]);
-      if (error) throw error;
+        details: data,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = claim?.id 
+        ? await supabase.from('claims').update(payload).eq('id', claim.id)
+        : await supabase.from('claims').insert([payload]);
+
+      if (error) {
+        console.error('Save error:', error);
+        alert(`保存失败: ${error.message}`);
+        return;
+      }
+      alert('纠纷记录已成功保存！');
       onSuccess();
       onOpenChange(false);
       reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving claim:', error);
+      alert(`保存出错: ${error.message}`);
     }
   };
 
@@ -92,7 +130,7 @@ export default function ClaimEntry({ open, onOpenChange, onSuccess }: ClaimEntry
 
           <div className="space-y-1.5">
             <Label htmlFor="handlingTime" className="text-xs">处理时间</Label>
-            <Input {...register('handlingTime')} className="h-8 text-xs" />
+            <Input {...register('handlingTime')} type="date" className="h-8 text-xs" />
             {errors.handlingTime && <p className="text-[10px] text-danger">{errors.handlingTime.message as string}</p>}
           </div>
         </form>

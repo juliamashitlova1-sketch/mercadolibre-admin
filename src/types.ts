@@ -6,7 +6,7 @@ export interface DailyStats {
   exchangeRate: number;
   questions: number;
   claims: number;
-  reputation: 'green' | 'yellow' | 'red';
+  reputation: '绿色店铺' | '领导者店铺' | '白银店铺' | '黄金店铺' | '铂金店铺' | 'green' | 'yellow' | 'red' | 'Verde (极佳)';
   calculatedProfit?: number; // 汇总后的真实净利润
 }
 
@@ -63,6 +63,7 @@ export interface SKUStats {
   inTransitStock: number; // 在途库存
   inProductionStock: number; // 生产中库存
   leadTimeDays: number; // 头程时效 (天)
+  status?: string; // 销售状态 (在售, 在途, ...)
   competitors?: Competitor[]; // 竞品列表
 }
 

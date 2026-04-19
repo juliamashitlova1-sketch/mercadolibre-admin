@@ -51,7 +51,7 @@ export default function SkuManage() {
   const [step, setStep] = useState<'list' | 'new' | 'daily'>('list');
   const [selectedSku, setSelectedSku] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [skuList, setSkuList] = useState<{sku: string; name: string; purchasePrice: string}[]>([]);
+  const [skuList, setSkuList] = useState<{sku: string; name: string; purchasePrice: string; imageUrl: string}[]>([]);
 
   useEffect(() => {
     let metaDict: Record<string, { listedAt?: string; name?: string; purchasePrice?: string }> = {};
@@ -92,6 +92,7 @@ export default function SkuManage() {
   return <SkuListView 
     skuList={skuList} 
     allSkuData={allSkuData}
+    skuData={skuData}
     onCreateNew={() => setStep('new')} 
     onFillDaily={(sku) => { setSelectedSku(sku); setSelectedDate(null); setStep('daily'); }}
     onEditDaily={(sku, date) => { setSelectedSku(sku); setSelectedDate(date); setStep('daily'); }}
@@ -173,9 +174,10 @@ function StatusDropdown({ sku, current, options, style, onChange }: {
 }
 
 // --- 子组件1：SKU列表 ---
-function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDaily, onSaveSuccess }: {
+function SkuListView({ skuList, allSkuData, skuData, onCreateNew, onFillDaily, onEditDaily, onSaveSuccess }: {
   skuList: {sku: string; name: string; purchasePrice: string; imageUrl: string}[],
   allSkuData: SKUStats[],
+  skuData: SKUStats[],
   onCreateNew: () => void, onFillDaily: (sku: string) => void, onEditDaily: (sku: string, date: string) => void, onSaveSuccess: () => void
 }) {
   const [msg, setMsg] = useState('');
@@ -189,14 +191,39 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     { value: '停售', color: 'bg-rose-50 text-rose-600 border-rose-200' },
   ];
 
-  const [skuStatuses, setSkuStatuses] = useState<Record<string, string>>(() => {
-    try { return JSON.parse(localStorage.getItem('milyfly_sku_statuses') || '{}'); } catch { return {}; }
-  });
+  useEffect(() => {
+    const statuses: Record<string, string> = {};
+    skuList.forEach(item => {
+      // Find the status from skuData
+      const s = skuData.find(d => d.sku === item.sku);
+      if (s?.status) statuses[item.sku] = s.status;
+      else if (!statuses[item.sku]) statuses[item.sku] = '在售';
+    });
+    setSkuStatuses(statuses);
+  }, [skuList, skuData]);
 
-  const handleStatusChange = (sku: string, status: string) => {
-    const next = { ...skuStatuses, [sku]: status };
-    setSkuStatuses(next);
-    localStorage.setItem('milyfly_sku_statuses', JSON.stringify(next));
+  const [skuStatuses, setSkuStatuses] = useState<Record<string, string>>({});
+
+  const handleStatusChange = async (sku: string, status: string) => {
+    // 1. Optimistic UI update
+    setSkuStatuses(prev => ({ ...prev, [sku]: status }));
+    
+    // 2. Persist to shared DB
+    try {
+      const { error } = await supabase
+        .from('sku_metadata')
+        .upsert({ sku, status, updated_at: new Date().toISOString() }, { onConflict: 'sku' });
+      
+      if (error) throw error;
+      
+      // Secondary backup for responsiveness
+      const next = { ...skuStatuses, [sku]: status };
+      localStorage.setItem('milyfly_sku_statuses', JSON.stringify(next));
+      
+      onSaveSuccess(); // Trigger refresh to sync all computers
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
   };
 
   const getStatusStyle = (sku: string) => {
@@ -212,42 +239,20 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     
     compressImage(files[0], async (base64) => {
       try {
-        // 1. Upload to Supabase Storage
-        const file = files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${sku}_${Date.now()}.${fileExt}`;
-        const filePath = `sku-images/${fileName}`;
-
-        // Convert base64 to Blob for upload
-        const res = await fetch(base64);
-        const blob = await res.blob();
-
-        const { error: uploadError, data } = await supabase.storage
-          .from('sku-images')
-          .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('sku-images')
-          .getPublicUrl(fileName);
-
-        // 2. Update the dedicated sku_images table (global, not tied to date)
+        // 1. Save base64 directly to the shared sku_metadata table
         const { error: imgUpsertError } = await supabase
-          .from('sku_images')
-          .upsert({ sku, image_url: publicUrl, updated_at: new Date().toISOString() }, { onConflict: 'sku' });
+          .from('sku_metadata')
+          .upsert({ sku, image_url: base64, updated_at: new Date().toISOString() }, { onConflict: 'sku' });
         
         if (imgUpsertError) throw imgUpsertError;
-
-        // 3. Also update the latest record's image_url for backward compatibility
-        const latestRecord = allSkuData.filter(s => s.sku === sku).sort((a,b) => b.date.localeCompare(a.date))[0];
         
-        if (latestRecord) {
-          await supabase
-            .from('sku_stats')
-            .update({ image_url: publicUrl })
-            .eq('doc_id', `${sku}_${latestRecord.date}`);
-        }
+        // 2. Local cache for instant availability
+        try {
+          const meta = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
+          if (!meta[sku]) meta[sku] = {};
+          meta[sku].image = base64;
+          localStorage.setItem('milyfly_sku_metadata', JSON.stringify(meta));
+        } catch {}
 
         onSaveSuccess();
       } catch (err: any) {
@@ -263,23 +268,22 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     if (!confirm(`确定要删除 SKU 「${sku}」的图片吗？`)) return;
     setUploading(sku);
     try {
-      // 1. Delete from the dedicated sku_images table
+      // 1. Delete from shared metadata
       const { error: imgDeleteError } = await supabase
-        .from('sku_images')
-        .delete()
+        .from('sku_metadata')
+        .update({ image_url: null })
         .eq('sku', sku);
       
       if (imgDeleteError) throw imgDeleteError;
       
-      // 2. Also clear image_url from the latest record for backward compatibility
-      const latestRecord = allSkuData.filter(s => s.sku === sku).sort((a,b) => b.date.localeCompare(a.date))[0];
-      
-      if (latestRecord) {
-        await supabase
-          .from('sku_stats')
-          .update({ image_url: null })
-          .eq('doc_id', `${sku}_${latestRecord.date}`);
-      }
+      // 2. Remove from local storage to keep sync
+      try {
+        const meta = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
+        if (meta[sku] && meta[sku].image) {
+          delete meta[sku].image;
+          localStorage.setItem('milyfly_sku_metadata', JSON.stringify(meta));
+        }
+      } catch {}
       
       onSaveSuccess();
     } catch (err: any) {
@@ -294,8 +298,8 @@ function SkuListView({ skuList, allSkuData, onCreateNew, onFillDaily, onEditDail
     if (!confirm(`确认删除 SKU「${sku}」的所有记录？`)) return;
     setDeleting(sku);
     const { error } = await supabase.from('sku_stats').delete().like('doc_id', `${sku}_%`);
-    // Also delete from sku_images table
-    await supabase.from('sku_images').delete().eq('sku', sku);
+    // Also delete from shared metadata
+    await supabase.from('sku_metadata').delete().eq('sku', sku);
     if (error) setMsg(`删除失败: ${error.message}`);
     else { setMsg('已删除'); onSaveSuccess(); setTimeout(() => setMsg(''), 2000); }
     setDeleting(null);
@@ -440,25 +444,9 @@ function CreateSkuView({ onBack, onSuccess, onSaveSuccess }: {
     if (!form.sku.trim()) { setMsg('SKU is required.'); setMsgType('error'); return; }
     setSaving(true); setMsg('');
     try {
-      // Upload image if provided
-      let imageUrl = '';
-      if (form.image) {
-        try {
-          const fileName = `${form.sku.trim()}_${Date.now()}.jpg`;
-          const res = await fetch(form.image);
-          const blob = await res.blob();
-          const { error: uploadError } = await supabase.storage
-            .from('sku-images')
-            .upload(fileName, blob, { contentType: 'image/jpeg' });
-          
-          if (!uploadError) {
-            const { data } = supabase.storage.from('sku-images').getPublicUrl(fileName);
-            imageUrl = data.publicUrl;
-          }
-        } catch (err) {
-          console.error('Image upload failed during SKU creation:', err);
-        }
-      }
+      // Image is already stored as base64 in form.image, passing it as imageUrl
+      // if it exists, but we strip it from sku_stats to avoid column errors
+      let imageUrl = form.image || '';
 
       const docId = `${form.sku.trim()}_${getMexicoDateString()}`;
       const { error } = await supabase.from('sku_stats').upsert({
@@ -466,26 +454,27 @@ function CreateSkuView({ onBack, onSuccess, onSaveSuccess }: {
         sku_name: form.skuName.trim() || '未命名',
         date: getMexicoDateString(),
         purchase_price: Number(form.purchasePrice) || 0,
-        sales: 0, orders: 0, stock: 0,
-        image_url: imageUrl || undefined
+        sales: 0, orders: 0, stock: 0
       }, { onConflict: 'doc_id' });
       if (error) throw error;
 
-      // Also write to sku_images table for global image lookup
-      if (imageUrl) {
-        await supabase.from('sku_images').upsert({
-          sku: form.sku.trim(),
-          image_url: imageUrl,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'sku' });
-      }
+      // Also write to shared metadata table for global sync
+      await supabase.from('sku_metadata').upsert({
+        sku: form.sku.trim(),
+        name: form.skuName.trim() || '未命名',
+        purchase_price: Number(form.purchasePrice) || 0,
+        listed_at: form.listedAt,
+        image_url: imageUrl || undefined,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'sku' });
 
       try {
         const meta = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
         meta[form.sku.trim()] = { 
           listedAt: form.listedAt,
           name: form.skuName.trim(),
-          purchasePrice: form.purchasePrice
+          purchasePrice: form.purchasePrice,
+          image: imageUrl || undefined
         };
         localStorage.setItem('milyfly_sku_metadata', JSON.stringify(meta));
       } catch {}
@@ -613,7 +602,7 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
     slowStock: existingData?.slowStock !== undefined ? String(existingData.slowStock) : '',
     sellingPrice: existingData?.sellingPrice !== undefined ? String(existingData.sellingPrice) : '', 
     unitProfitExclAds: existingData?.unitProfitExclAds !== undefined ? String(existingData.unitProfitExclAds) : '',
-    adSpend: existingData?.adSpend !== undefined ? String((existingData.adSpend / 17.15).toFixed(2)) : '', 
+    adSpend: existingData?.adSpend !== undefined ? String((existingData.adSpend / USD_TO_MXN).toFixed(2)) : '', 
     impressions: existingData?.impressions !== undefined ? String(existingData.impressions) : '', 
     clicks: existingData?.clicks !== undefined ? String(existingData.clicks) : '', 
     adOrders: existingData?.adOrders !== undefined ? String(existingData.adOrders) : '',

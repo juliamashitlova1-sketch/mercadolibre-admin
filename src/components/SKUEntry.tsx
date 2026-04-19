@@ -148,7 +148,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         stock: data.stock || 0,
         avg_sales_since_listing: data.avgSalesSinceListing || 0,
         slow_stock: data.slowStock || 0,
-        ad_spend: (data.adSpend || 0) * 17.15,
+        ad_spend: (data.adSpend || 0) * USD_TO_MXN,
         impressions: data.impressions || 0,
         clicks: data.clicks || 0,
         cpc: data.cpc || 0,
@@ -161,7 +161,6 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         in_transit_stock: data.inTransitStock || 0,
         in_production_stock: data.inProductionStock || 0,
         lead_time_days: data.leadTimeDays || 7,
-        image_url: data.imageUrl || undefined,
         competitors: data.competitors || [],
       }, { onConflict: 'doc_id' });
       
@@ -170,13 +169,34 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
         throw new Error(error.message || '数据库保存失败');
       }
 
-      // Also write to sku_images table for global image lookup
+      // Metadata Sync (Important for Cross-Device Consistency)
+      const metadataPayload: any = {
+        sku: data.sku,
+        name: data.skuName || undefined,
+        purchase_price: data.purchasePrice || undefined,
+        updated_at: new Date().toISOString()
+      };
+      
       if (data.imageUrl) {
-        await supabase.from('sku_images').upsert({
-          sku: data.sku,
-          image_url: data.imageUrl,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'sku' });
+         metadataPayload.image_url = data.imageUrl;
+      }
+
+      await supabase.from('sku_metadata').upsert(metadataPayload, { onConflict: 'sku' });
+
+      // Local cache management
+      try {
+        const meta = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
+        if (!meta[data.sku]) meta[data.sku] = {};
+        if (data.skuName) meta[data.sku].name = data.skuName;
+        if (data.purchasePrice) meta[data.sku].purchasePrice = data.purchasePrice;
+        if (data.imageUrl) meta[data.sku].image = data.imageUrl;
+        else if (sku && sku.imageUrl) delete meta[data.sku].image;
+        localStorage.setItem('milyfly_sku_metadata', JSON.stringify(meta));
+      } catch {}
+
+      if (!data.imageUrl && sku && sku.imageUrl) {
+        // Specifically unset image in DB if it was cleared
+        await supabase.from('sku_metadata').update({ image_url: null }).eq('sku', data.sku);
       }
       console.log('保存成功！');
       onSuccess();

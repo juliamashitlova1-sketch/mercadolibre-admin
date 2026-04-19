@@ -11,10 +11,20 @@ export const getMexicoDateString = (): string => {
 /** 返回墨西哥城当地时间字符串，格式: X月X日 HH:mm */
 export const getMexicoTimeString = (): string => {
   const now = new Date();
-  const month = now.toLocaleString('zh-CN', { timeZone: 'America/Mexico_City', month: 'numeric' });
-  const day = now.toLocaleString('zh-CN', { timeZone: 'America/Mexico_City', day: 'numeric' });
-  const time = now.toLocaleString('en-GB', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hour12: false });
-  return `${month}月${day}日 ${time}`;
+  const format = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'America/Mexico_City',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const parts = format.formatToParts(now);
+  const partMap: Record<string, string> = {};
+  parts.forEach(p => partMap[p.type] = p.value);
+  
+  return `${partMap.month}月${partMap.day}日 ${partMap.hour}:${partMap.minute}`;
 };
 
 /** 返回墨西哥城当地日期时间字符串，格式: yyyy-MM-dd HH:mm */

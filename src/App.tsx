@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
+import { supabase } from './lib/supabase';
 import Overview from './pages/Overview';
 import SkuManage from './pages/SkuManage';
 import Orders from './pages/Orders';
@@ -10,6 +11,8 @@ import Competitors from './pages/Competitors';
 import Finance from './pages/Finance';
 import Health from './pages/Health';
 import Operations from './pages/Operations';
+import AiBrain from './pages/AiBrain';
+import Pricing from './pages/Pricing';
 
 import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
@@ -18,7 +21,7 @@ import OperationEntry from './components/OperationEntry';
 import Login from './components/Login';
 
 import { useSkuData, useDailyStats, useClaims, useOperationLogs } from './hooks/useStoreData';
-import { SKUStats } from './types';
+import { SKUStats, Claim } from './types';
 
 class AppErrorBoundary extends React.Component<any, any> {
   constructor(props: any) {
@@ -87,6 +90,7 @@ function AppContent() {
   const [isClaimEntryOpen, setIsClaimEntryOpen] = useState(false);
   const [isOperationEntryOpen, setIsOperationEntryOpen] = useState(false);
   const [selectedSku, setSelectedSku] = useState<SKUStats | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
 
   const contextValue = {
     skuData,
@@ -97,11 +101,44 @@ function AppContent() {
     refreshSkuData,
     refreshLogs,
     onOpenDataEntry: () => setIsEntryOpen(true),
-    onAddClaim: () => setIsClaimEntryOpen(true),
+    onAddClaim: () => {
+      setSelectedClaim(null);
+      setIsClaimEntryOpen(true);
+    },
     onAddLog: () => setIsOperationEntryOpen(true),
     onEditSku: (sku: SKUStats | null) => {
       setSelectedSku(sku);
       setIsSkuEntryOpen(true);
+    },
+    onEditClaim: (claim: Claim) => {
+      setSelectedClaim(claim);
+      setIsClaimEntryOpen(true);
+    },
+    onDeleteClaim: async (id: string) => {
+      if (!confirm('确定要删除这条记录吗？')) return;
+      const { error } = await supabase.from('claims').delete().eq('id', id);
+      if (error) {
+        console.error('Delete error:', error);
+        alert('删除失败');
+      } else {
+        alert('已删除');
+      }
+    },
+    onUpdateReputation: async (newReputation: string) => {
+      const today = new Date().toISOString().split('T')[0];
+      const { error } = await supabase
+        .from('daily_stats')
+        .upsert({ 
+          date: today, 
+          reputation: newReputation 
+        }, { onConflict: 'date' });
+      
+      if (error) {
+        console.error('Error updating reputation:', error);
+        alert('更新店铺状态失败');
+      } else {
+        alert('店铺状态已更新');
+      }
     }
   };
 
@@ -119,13 +156,19 @@ function AppContent() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
+            <Route path="/ai-brain" element={<AiBrain />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/pricing/new" element={<Pricing />} />
+            <Route path="/pricing/list" element={<Pricing />} />
+            <Route path="/pricing/success" element={<Pricing />} />
+            <Route path="/pricing/staging" element={<Pricing />} />
           </Route>
         </Route>
       </Routes>
 
       <DataEntry open={isEntryOpen} onOpenChange={setIsEntryOpen} skuData={skuData} onSuccess={() => console.log('Data saved')} />
       <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} onSuccess={() => refreshSkuData()} />
-      <ClaimEntry open={isClaimEntryOpen} onOpenChange={setIsClaimEntryOpen} onSuccess={() => console.log('Claim saved')} />
+      <ClaimEntry open={isClaimEntryOpen} onOpenChange={setIsClaimEntryOpen} claim={selectedClaim} onSuccess={() => console.log('Claim updated')} />
       <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} skuData={skuData} onSuccess={() => { refreshLogs(); console.log('Operation log saved'); }} />
     </>
   );

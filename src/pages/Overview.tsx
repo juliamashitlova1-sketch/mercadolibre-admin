@@ -35,7 +35,7 @@ export default function Overview() {
       byDate[item.date].sales += item.sales || 0;
       byDate[item.date].orders += item.orders || 0;
       byDate[item.date].adSpend += item.adSpend || 0;
-      byDate[item.date].profitCNY += (item.orders || 0) * (item.unitProfitExclAds || 0);
+      byDate[item.date].profitCNY += (item.orders || 0) * (item.unitProfitExclAds || 0) - (item.adSpend || 0) * MXN_TO_CNY;
     });
 
     const totalSales = filtered.reduce((s, d) => s + (d.sales || 0), 0);
@@ -52,8 +52,7 @@ export default function Overview() {
     const tacos = totalSalesUSD > 0 ? (totalAdSpendUSD / totalSalesUSD) * 100 : 0;
     
     const grossProfitCNY = filtered.reduce((s, d) => s + (d.orders || 0) * (d.unitProfitExclAds || 0), 0);
-    const adSpendCNY = totalAdSpend * MXN_TO_CNY;
-    const netProfitCNY = grossProfitCNY - adSpendCNY;
+    const netProfitCNY = grossProfitCNY - totalAdSpend * MXN_TO_CNY;
     const totalSalesCNY = totalSales * MXN_TO_CNY;
     const profitMargin = totalSalesCNY > 0 ? (netProfitCNY / totalSalesCNY) * 100 : 0;
 

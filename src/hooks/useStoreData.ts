@@ -20,14 +20,32 @@ export function useSkuData() {
       .from('sku_stats')
       .select('sku, orders');
 
-    // Fetch SKU images from the dedicated metadata table
-    let skuImageMap: Record<string, string> = {};
-    const { data: imagesData } = await supabase
-      .from('sku_images')
-      .select('sku, image_url');
-    if (imagesData) {
-      imagesData.forEach((row: any) => {
-        if (row.image_url) skuImageMap[row.sku] = row.image_url;
+    // 1. Fetch Shared SKU Metadata (the new Single Source of Truth)
+    let skuMetadataMap: Record<string, { name?: string; purchasePrice?: number; listedAt?: string; status?: string; imageUrl?: string }> = {};
+    const { data: metaData, error: metaError } = await supabase
+      .from('sku_metadata')
+      .select('*');
+    
+    if (metaData) {
+      metaData.forEach((row: any) => {
+        skuMetadataMap[row.sku] = {
+          name: row.name,
+          purchasePrice: Number(row.purchase_price) || 0,
+          listedAt: row.listed_at,
+          status: row.status,
+          imageUrl: row.image_url
+        };
+      });
+    }
+
+    // Fallback: Fetch legacy images if sku_metadata is incomplete
+    const { data: legacyImages } = await supabase.from('sku_images').select('sku, image_url');
+    if (legacyImages) {
+      legacyImages.forEach((row: any) => {
+        if (!skuMetadataMap[row.sku]) skuMetadataMap[row.sku] = {};
+        if (!skuMetadataMap[row.sku].imageUrl) {
+          skuMetadataMap[row.sku].imageUrl = row.image_url;
+        }
       });
     }
       
@@ -36,106 +54,114 @@ export function useSkuData() {
       return; 
     }
 
-    let metaDict: Record<string, { listedAt?: string }> = {};
-    try {
-      metaDict = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}');
+    if (metaError) {
+      // Non-fatal: Might happen if the user hasn't run the migration yet
+      console.warn('SKU Metadata table not found or accessible, falling back to local storage and stats:', metaError);
+    }
+
+    // 2. Legacy Migration & Self-Rescue (localStorage -> DB)
+    let localMetaDict: Record<string, { listedAt?: string; name?: string; purchasePrice?: any; image?: string }> = {};
+    let localStatusDict: Record<string, string> = {};
+    try { 
+      localMetaDict = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}'); 
+      localStatusDict = JSON.parse(localStorage.getItem('milyfly_sku_statuses') || '{}');
     } catch {}
 
-    const mapped = (data || []).map((row: any) => ({
-      id: row.id,
-      sku: row.sku,
-      skuName: row.sku_name || '',
-      listedAt: metaDict[row.sku]?.listedAt,
-      date: row.date,
-      sales: row.sales || 0,
-      orders: row.orders || 0,
-      stock: row.stock || 0,
-      avgSalesSinceListing: row.avg_sales_since_listing || 0,
-      slowStock: row.slow_stock || 0,
-      adSpend: row.ad_spend || 0,
-      impressions: row.impressions || 0,
-      clicks: row.clicks || 0,
-      cpc: row.cpc || 0,
-      roas: row.roas || 0,
-      acos: row.acos || 0,
-      adOrders: row.ad_orders || 0,
-      purchasePrice: row.purchase_price || 0,
-      sellingPrice: row.selling_price || 0,
-      unitProfitExclAds: row.unit_profit_excl_ads || 0,
-      inTransitStock: row.in_transit_stock || 0,
-      inProductionStock: row.in_production_stock || 0,
-      leadTimeDays: row.lead_time_days || 7,
-      competitors: row.competitors || [],
-      imageUrl: skuImageMap[row.sku] || row.image_url || '',
-    }));
+    Object.keys(localMetaDict).forEach(sku => {
+      const local = localMetaDict[sku];
+      const remote = skuMetadataMap[sku];
+      
+      // If DB is missing info that I have locally, sync it UP
+      if (local && (!remote || !remote.name || !remote.listedAt || !remote.status)) {
+        const payload = {
+          sku: sku,
+          name: remote?.name || local.name || '',
+          purchase_price: remote?.purchasePrice || Number(local.purchasePrice) || 0,
+          listed_at: remote?.listedAt || local.listedAt || null,
+          status: remote?.status || localStatusDict[sku] || '在售',
+          image_url: remote?.imageUrl || local.image || '',
+          updated_at: new Date().toISOString()
+        };
+        
+        // Optimistically update map
+        skuMetadataMap[sku] = {
+          name: payload.name,
+          purchasePrice: payload.purchase_price,
+          listedAt: payload.listed_at || undefined,
+          status: payload.status,
+          imageUrl: payload.image_url
+        };
+
+        // Async sync to DB
+        supabase.from('sku_metadata').upsert(payload, { onConflict: 'sku' }).then(({ error: sErr }) => {
+          if (sErr) console.error('Auto-sync failed for', sku, sErr);
+        });
+      }
+    });
+
+    // 3. Map Daily Records
+    const mapped = (data || []).map((row: any) => {
+      const meta = skuMetadataMap[row.sku];
+      return {
+        id: row.id,
+        sku: row.sku,
+        skuName: meta?.name || row.sku_name || '',
+        listedAt: meta?.listedAt || row.listed_at, // Use meta with fallback
+        date: row.date,
+        sales: row.sales || 0,
+        orders: row.orders || 0,
+        stock: row.stock || 0,
+        avgSalesSinceListing: row.avg_sales_since_listing || 0,
+        slowStock: row.slow_stock || 0,
+        adSpend: row.ad_spend || 0,
+        impressions: row.impressions || 0,
+        clicks: row.clicks || 0,
+        cpc: row.cpc || 0,
+        roas: row.roas || 0,
+        acos: row.acos || 0,
+        adOrders: row.ad_orders || 0,
+        purchasePrice: meta?.purchasePrice || row.purchase_price || 0,
+        sellingPrice: row.selling_price || 0,
+        unitProfitExclAds: row.unit_profit_excl_ads || 0,
+        inTransitStock: row.in_transit_stock || 0,
+        inProductionStock: row.in_production_stock || 0,
+        leadTimeDays: row.lead_time_days || 90,
+        competitors: row.competitors || [],
+        imageUrl: meta?.imageUrl || row.image_url || '',
+        status: meta?.status || '在售'
+      };
+    });
 
     const sumOrders: Record<string, number> = {};
     (allHistory || []).forEach(item => {
       sumOrders[item.sku] = (sumOrders[item.sku] || 0) + (item.orders || 0);
     });
 
+    // 4. Identify the latest daily record for operational stats
     const latestPerSku: Record<string, SKUStats> = {};
-    let localMetaDict: Record<string, { listedAt?: string; name?: string; purchasePrice?: any }> = {};
-    try { localMetaDict = JSON.parse(localStorage.getItem('milyfly_sku_metadata') || '{}'); } catch {}
-    
-    const skuMetadataMap: Record<string, { name?: string; purchasePrice?: number; listedAt?: string }> = {};
-
-    // Initialize with local storage (High Priority)
-    Object.keys(localMetaDict).forEach(sku => {
-      skuMetadataMap[sku] = {
-        name: localMetaDict[sku].name,
-        purchasePrice: Number(localMetaDict[sku].purchasePrice) || 0,
-        listedAt: localMetaDict[sku].listedAt
-      };
-    });
-
-    // 1. Supplement with database history (Lower Priority - fill gaps)
-    [...mapped].reverse().forEach(item => {
-      if (!skuMetadataMap[item.sku]) skuMetadataMap[item.sku] = {};
-      if (!skuMetadataMap[item.sku].name && item.skuName && item.skuName !== '未命名资产') {
-        skuMetadataMap[item.sku].name = item.skuName;
-      }
-      if (!skuMetadataMap[item.sku].purchasePrice && item.purchasePrice > 0) {
-        skuMetadataMap[item.sku].purchasePrice = item.purchasePrice;
-      }
-      if (!skuMetadataMap[item.sku].listedAt && item.listedAt) {
-        skuMetadataMap[item.sku].listedAt = item.listedAt;
-      }
-    });
-
-    // Sync back to local storage if gaps were filled
-    let needsSync = false;
-    Object.keys(skuMetadataMap).forEach(s => {
-      if (!localMetaDict[s] || (!localMetaDict[s].name && skuMetadataMap[s].name)) {
-        localMetaDict[s] = { ...localMetaDict[s], ...skuMetadataMap[s] };
-        needsSync = true;
-      }
-    });
-    if (needsSync) localStorage.setItem('milyfly_sku_metadata', JSON.stringify(localMetaDict));
-
-    // 2. Identify the latest daily record for operational stats
     mapped.forEach(item => {
       if (!latestPerSku[item.sku] || parseISO(item.date) > parseISO(latestPerSku[item.sku].date)) {
         latestPerSku[item.sku] = { ...item };
       }
     });
 
-    // 3. Merge metadata into the latest records
+    // 5. Final Calculation (Agreement between all machines)
     Object.values(latestPerSku).forEach(sku => {
-      const meta = skuMetadataMap[sku.sku];
-      if (meta?.name) sku.skuName = meta.name;
-      if (meta?.purchasePrice) sku.purchasePrice = meta.purchasePrice;
-      if (meta?.listedAt) sku.listedAt = meta.listedAt;
-      
       sku.leadTimeDays = 90;
       let days = 1;
-      const finalListedAt = sku.listedAt || meta?.listedAt;
-      if (finalListedAt && !isNaN(new Date(finalListedAt).getTime())) {
-        const diffTime = Math.abs(new Date().getTime() - new Date(finalListedAt).getTime());
+      if (sku.listedAt && !isNaN(new Date(sku.listedAt).getTime())) {
+        const diffTime = Math.abs(new Date().getTime() - new Date(sku.listedAt).getTime());
         days = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
       }
       sku.avgSalesSinceListing = Number((sumOrders[sku.sku] / days).toFixed(2));
     });
+
+    // 6. Push statuses back to localStorage only as a secondary cache for UI responsiveness
+    const freshStatusDict: Record<string, string> = {};
+    Object.values(latestPerSku).forEach(s => {
+       if (s.status) freshStatusDict[s.sku] = s.status;
+    });
+    localStorage.setItem('milyfly_sku_statuses', JSON.stringify(freshStatusDict));
 
     setAllSkuData(mapped);
     setSkuData(Object.values(latestPerSku));
@@ -186,7 +212,7 @@ export function useDailyStats() {
         exchangeRate: row.exchange_rate || 0.35,
         questions: row.questions || 0,
         claims: row.claims || 0,
-        reputation: row.reputation || 'green',
+        reputation: row.reputation || '绿色店铺',
         calculatedProfit: row.calculated_profit,
       }));
       setDailyData(mapped);
@@ -221,7 +247,7 @@ export function useClaims() {
           id: row.id,
           orderId: row.order_number || '',
           request: row.reason?.split('|')[0] || '',
-          productName: '',
+          productName: row.product_name || '',
           handlingMethod: row.reason?.split('|')[1]?.trim().split('@')[0] || '',
           handlingTime: row.reason?.split('@')[1]?.trim() || '',
           createdAt: row.created_at,

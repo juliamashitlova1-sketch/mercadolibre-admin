@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { SKUStats } from '../types';
+import logo from '../assets/logo.png';
 import { STOCK_HEALTH_THRESHOLD } from '../constants';
 import {
   LayoutDashboard, Package, ShoppingCart, 
   Archive, TrendingUp, Crosshair, 
   DollarSign, AlertTriangle, Activity,
-  Search, Bell, Command, Settings, PlusCircle, Compass
+  Search, Bell, Command, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox
 } from 'lucide-react';
 import { getMexicoTimeString } from '../lib/time';
 
@@ -27,6 +28,55 @@ const MilyflyLogo = ({ className = 'w-6 h-6' }) => (
     <circle cx="45" cy="84" r="5" fill="#DF5B18" />
   </svg>
 );
+
+function CurrencyConverter() {
+  const [base, setBase] = useState<'USD' | 'MXN' | 'CNY'>('USD');
+  const [val, setVal] = useState<string>('');
+  
+  const rates = {
+    USD: { MXN: 19.85, CNY: 7.24 },
+    MXN: { USD: 0.05, CNY: 0.365 },
+    CNY: { USD: 0.138, MXN: 2.74 }
+  };
+
+  const calculate = (to: 'USD' | 'MXN' | 'CNY') => {
+    if (!val || isNaN(Number(val))) return '0.00';
+    if (to === base) return Number(val).toFixed(2);
+    // @ts-ignore
+    return (Number(val) * (rates[base][to] || 1)).toFixed(2);
+  };
+
+  return (
+    <div className="flex items-center gap-2 group/conv">
+      <select 
+        value={base} 
+        onChange={(e) => setBase(e.target.value as any)}
+        className="bg-transparent text-[10px] font-bold text-slate-500 outline-none cursor-pointer hover:text-sky-600 transition-colors"
+      >
+        <option value="USD">USD $</option>
+        <option value="MXN">MXN $</option>
+        <option value="CNY">CNY ¥</option>
+      </select>
+      <input 
+        type="text" 
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        placeholder="输入数值"
+        className="w-16 bg-slate-50/50 text-[11px] font-mono font-bold text-slate-700 outline-none px-1.5 py-0.5 rounded border border-transparent focus:border-sky-200 transition-all placeholder:text-slate-300"
+      />
+      <div className="flex items-center gap-2 pr-1 opacity-60 group-hover/conv:opacity-100 transition-opacity">
+        {['USD', 'MXN', 'CNY'].filter(c => c !== base).map(c => (
+          <div key={c} className="flex items-center gap-1">
+            <span className="text-[9px] font-medium text-slate-400 uppercase">{c}</span>
+            <span className="text-[11px] font-mono font-bold text-slate-600">
+              {calculate(c as any)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface LayoutProps {
   skuData: SKUStats[];
@@ -60,6 +110,19 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
     { id: '/finance', label: '财务报表', icon: DollarSign },
     { id: '/health', label: '账号健康', icon: AlertTriangle },
     { id: '/operations', label: '操作日志', icon: Activity },
+    { id: '/ai-brain', label: 'AI 智能大脑', icon: Brain, color: 'text-purple-500' },
+    { 
+      id: '/pricing', 
+      label: '新品核价', 
+      icon: Calculator, 
+      color: 'text-emerald-500',
+      children: [
+        { id: '/pricing/new', label: '待核价 (计算器)', icon: PlusCircle },
+        { id: '/pricing/list', label: '已核价清单', icon: History },
+        { id: '/pricing/success', label: '核价成功区', icon: CheckCircle, shadow: 'shadow-[0_0_10px_rgba(16,185,129,0.2)]' },
+        { id: '/pricing/staging', label: '暂存箱', icon: Inbox },
+      ]
+    },
   ];
 
   return (
@@ -68,8 +131,8 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
         <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
           <div className="px-6 pt-8 pb-6 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center shadow-sm">
-              <MilyflyLogo className="w-6 h-6" />
+            <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
+              <img src={logo} alt="MILYFLY Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div className="font-extrabold text-xl text-slate-800 tracking-tight font-heading mt-1">
               MILYFLY
@@ -79,25 +142,54 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
           <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isPricingActive = location.pathname.startsWith('/pricing');
+              const isActive = item.children ? isPricingActive : location.pathname === item.id;
+              
               return (
-                <NavLink
-                  key={item.id}
-                  to={item.id}
-                  className={({ isActive }) => `
-                    w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group
-                    ${isActive 
-                      ? 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent'}
-                  `}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-[18px] h-[18px] opacity-80 group-hover:opacity-100 transition-opacity" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge && item.badge === '需补货' && (
-                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <div key={item.id} className="flex flex-col gap-1">
+                  <NavLink
+                    to={item.children ? item.children[0].id : item.id}
+                    className={() => `
+                      w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group
+                      ${isActive 
+                        ? 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm' 
+                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent'}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-[18px] h-[18px] opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ''}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && item.badge === '需补货' && (
+                      <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    )}
+                  </NavLink>
+
+                  {/* Sub-menu items */}
+                  {item.children && isPricingActive && (
+                    <div className="flex flex-col gap-1 ml-6 mt-1 mb-2 border-l-2 border-slate-100 pl-2">
+                      {item.children.map(child => {
+                        const ChildIcon = child.icon;
+                        const isChildActive = location.pathname === child.id;
+                        return (
+                          <NavLink
+                            key={child.id}
+                            to={child.id}
+                            className={() => `
+                              flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
+                              ${isChildActive 
+                                ? 'text-sky-600 bg-sky-50/50' 
+                                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'}
+                            `}
+                          >
+                            <ChildIcon className="w-3.5 h-3.5" />
+                            <span>{child.label}</span>
+                          </NavLink>
+                        );
+                      })}
+                    </div>
                   )}
-                </NavLink>
+                </div>
               );
             })}
           </nav>
@@ -130,9 +222,17 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
             <span>MILYFLY 控制台</span>
             <span className="text-slate-300">/</span>
             <span className="text-slate-800 capitalize font-semibold">{location.pathname === '/' ? '总览看板' : location.pathname.substring(1).replace('-', ' ')}</span>
-            <div className="ml-4 flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 rounded-full shadow-sm text-sky-700 text-xs font-mono font-bold tracking-tight">
-              <Compass className="w-3.5 h-3.5 animate-pulse text-sky-500" />
-              <span>墨西哥当地时间：{currentTime}</span>
+            
+            <div className="ml-4 flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 rounded-full shadow-sm text-sky-700 text-xs font-mono font-bold tracking-tight">
+                <Compass className="w-3.5 h-3.5 animate-pulse text-sky-500" />
+                <span>墨西哥当地时间：{currentTime}</span>
+              </div>
+              
+              {/* 汇率转换小工具 */}
+              <div className="flex items-center bg-white border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
+                 <CurrencyConverter />
+              </div>
             </div>
           </div>
 

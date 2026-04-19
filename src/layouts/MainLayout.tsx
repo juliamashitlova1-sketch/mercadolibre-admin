@@ -81,10 +81,12 @@ function CurrencyConverter() {
 
 interface LayoutProps {
   skuData: SKUStats[];
+  uiVersion: 'v1' | 'v2';
+  onToggleUi: () => void;
   onAddSku: () => void;
 }
 
-export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
+export default function MainLayout({ skuData, uiVersion, onToggleUi, onAddSku }: LayoutProps) {
   const [currentTime, setCurrentTime] = useState(getMexicoTimeString());
   const location = useLocation();
 
@@ -129,15 +131,15 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
   ];
 
   return (
-    <div className="flex h-screen bg-transparent overflow-hidden selection:bg-sky-100 selection:text-sky-900">
+    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-[#020617] text-slate-300' : 'bg-transparent'}`}>
       {/* Floating Sidebar */}
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
-        <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
-          <div className="px-6 pt-8 pb-6 flex items-center gap-3">
+        <aside className={`w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden ${uiVersion === 'v2' ? 'bg-[#0f172a]/90 backdrop-blur-xl border-slate-800' : ''}`}>
+          <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-pointer group" onClick={onToggleUi}>
             <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
-              <img src={logo} alt="MILYFLY Logo" className="w-full h-full object-contain p-1" />
+              <MilyflyLogo className={`w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110 ${uiVersion === 'v2' ? 'drop-shadow-[0_0_8px_rgba(223,91,24,0.5)]' : ''}`} />
             </div>
-            <div className="font-extrabold text-xl text-slate-800 tracking-tight font-heading mt-1">
+            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
               MILYFLY
             </div>
           </div>
@@ -153,10 +155,14 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
                   <NavLink
                     to={item.children ? item.children[0].id : item.id}
                     className={() => `
-                      w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group
+                      w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 group
                       ${isActive 
-                        ? 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm' 
-                        : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent'}
+                        ? (uiVersion === 'v2' 
+                            ? 'bg-sky-500/10 text-white border border-sky-500/30' 
+                            : 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm') 
+                        : (uiVersion === 'v2'
+                            ? 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
+                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent')}
                     `}
                   >
                     <div className="flex items-center gap-3">
@@ -181,8 +187,8 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
                             className={() => `
                               flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
                               ${isChildActive 
-                                ? 'text-sky-600 bg-sky-50/50' 
-                                : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'}
+                                ? (uiVersion === 'v2' ? 'text-sky-400 bg-sky-500/10' : 'text-sky-600 bg-sky-50/50') 
+                                : (uiVersion === 'v2' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
                             `}
                           >
                             <ChildIcon className="w-3.5 h-3.5" />
@@ -198,17 +204,17 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
           </nav>
 
           <div className="p-4 mt-auto">
-            <div className="glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer">
+            <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
               <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
                 <span>管理员</span>
-                <Settings className="w-3 h-3 text-slate-400 group-hover:text-slate-700 transition-colors hover:rotate-90 duration-500" />
+                <Settings className={`w-3 h-3 text-slate-400 group-hover:text-slate-700 transition-colors hover:rotate-90 duration-500 ${uiVersion === 'v2' ? 'group-hover:text-sky-400' : ''}`} />
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-sky-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ${uiVersion === 'v2' ? 'bg-sky-600' : 'bg-sky-500'}`}>
                   JC
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-slate-800">Juan Carlos</div>
+                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>Juan Carlos</div>
                   <div className="text-[10px] text-slate-500 font-mono tracking-wider">Store Manager</div>
                 </div>
               </div>
@@ -221,14 +227,14 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Dynamic Island Top Bar Container */}
         <header className="h-[72px] shrink-0 flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-2 text-slate-500 font-medium text-sm">
+          <div className={`flex items-center gap-2 font-medium text-sm ${uiVersion === 'v2' ? 'text-slate-400' : 'text-slate-500'}`}>
             <span>MILYFLY 控制台</span>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-800 capitalize font-semibold">{location.pathname === '/' ? '总览看板' : location.pathname.substring(1).replace('-', ' ')}</span>
+            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'text-slate-800'}`}>{location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace('-', ' ')}</span>
             
             <div className="ml-4 flex items-center gap-3">
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 rounded-full shadow-sm text-sky-700 text-xs font-mono font-bold tracking-tight">
-                <Compass className="w-3.5 h-3.5 animate-pulse text-sky-500" />
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-xs font-mono font-bold tracking-tight border ${uiVersion === 'v2' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' : 'bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-100 text-sky-700'}`}>
+                <Compass className={`w-3.5 h-3.5 animate-pulse ${uiVersion === 'v2' ? 'text-sky-300' : 'text-sky-500'}`} />
                 <span>墨西哥当地时间：{currentTime}</span>
               </div>
               

@@ -82,6 +82,9 @@ export default function App() {
 }
 
 function AppContent() {
+  const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>(() => {
+    return (localStorage.getItem('milyfly_ui_version') as 'v1' | 'v2') || 'v1';
+  });
   const { skuData, allSkuData, refreshSkuData } = useSkuData();
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
@@ -106,6 +109,11 @@ function AppContent() {
     refreshExpenses,
     fakeOrders,
     cargoDamage,
+    uiVersion,
+    setUiVersion: (v: 'v1' | 'v2') => {
+      setUiVersion(v);
+      localStorage.setItem('milyfly_ui_version', v);
+    },
     onOpenDataEntry: () => setIsEntryOpen(true),
     onAddClaim: () => {
       setSelectedClaim(null);
@@ -151,7 +159,11 @@ function AppContent() {
   return (
     <>
       <Routes>
-        <Route element={<MainLayout skuData={skuData} onAddSku={() => { setSelectedSku(null); setIsSkuEntryOpen(true); }} />}>
+        <Route element={<MainLayout skuData={skuData} uiVersion={uiVersion} onToggleUi={() => {
+          const next = uiVersion === 'v1' ? 'v2' : 'v1';
+          setUiVersion(next);
+          localStorage.setItem('milyfly_ui_version', next);
+        }} onAddSku={() => { setSelectedSku(null); setIsSkuEntryOpen(true); }} />}>
           <Route element={<ContextWrapper contextValue={contextValue} />}>
             <Route path="/" element={<Overview />} />
             <Route path="/sku-manage" element={<SkuManage />} />

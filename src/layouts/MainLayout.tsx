@@ -12,6 +12,7 @@ import {
   CreditCard, PackageX
 } from 'lucide-react';
 import { getMexicoTimeString } from '../lib/time';
+import DataExporter from '../components/DataExporter';
 
 const MilyflyLogo = ({ className = 'w-6 h-6' }) => (
   <svg viewBox="0 0 100 90" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -81,12 +82,18 @@ function CurrencyConverter() {
 
 interface LayoutProps {
   skuData: SKUStats[];
+  dailyData: any[];
+  fakeOrders: any[];
+  cargoDamage: any[];
   uiVersion: 'v1' | 'v2';
   onToggleUi: () => void;
   onAddSku: () => void;
 }
 
-export default function MainLayout({ skuData, uiVersion, onToggleUi, onAddSku }: LayoutProps) {
+export default function MainLayout({ 
+  skuData, dailyData, fakeOrders, cargoDamage, 
+  uiVersion, onToggleUi, onAddSku 
+}: LayoutProps) {
   const [currentTime, setCurrentTime] = useState(getMexicoTimeString());
   const location = useLocation();
 
@@ -134,10 +141,10 @@ export default function MainLayout({ skuData, uiVersion, onToggleUi, onAddSku }:
     <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-[#020617] text-slate-300' : 'bg-transparent'}`}>
       {/* Floating Sidebar */}
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
-        <aside className={`w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden ${uiVersion === 'v2' ? 'bg-[#0f172a]/90 backdrop-blur-xl border-slate-800' : ''}`}>
-          <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-pointer group" onClick={onToggleUi}>
+        <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
+          <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-default group">
             <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
-              <MilyflyLogo className={`w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110 ${uiVersion === 'v2' ? 'drop-shadow-[0_0_8px_rgba(223,91,24,0.5)]' : ''}`} />
+              <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
             <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
               MILYFLY
@@ -242,6 +249,14 @@ export default function MainLayout({ skuData, uiVersion, onToggleUi, onAddSku }:
               <div className="flex items-center bg-white border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
                  <CurrencyConverter />
               </div>
+
+              {/* 全局数据导出 */}
+              <DataExporter 
+                skuData={skuData} 
+                dailyData={dailyData} 
+                fakeOrders={fakeOrders} 
+                cargoDamage={cargoDamage} 
+              />
             </div>
           </div>
 

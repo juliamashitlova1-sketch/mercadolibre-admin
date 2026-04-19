@@ -76,3 +76,24 @@ export interface CalculatedMetrics {
   profit: number;
   profitMargin: number;
 }
+
+export interface FakeOrder {
+  id: string;
+  date: string;
+  sku: string;
+  skuName: string;
+  reviewFeeCNY: number;
+  refundAmountUSD: number;
+  createdAt?: string;
+}
+
+export interface CargoDamage {
+  id: string;
+  sku: string;
+  skuName: string;
+  date: string;
+  quantity: number;
+  reason: '送仓差异' | '货代丢失' | '退货无法二次利用';
+  skuValueCNY: number;
+  createdAt?: string;
+}

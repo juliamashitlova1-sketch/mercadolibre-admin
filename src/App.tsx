@@ -13,6 +13,8 @@ import Health from './pages/Health';
 import Operations from './pages/Operations';
 import AiBrain from './pages/AiBrain';
 import Pricing from './pages/Pricing';
+import FakeOrders from './pages/FakeOrders';
+import CargoDamage from './pages/CargoDamage';
 
 import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
@@ -156,6 +158,8 @@ function AppContent() {
             <Route path="/finance" element={<Finance />} />
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
+            <Route path="/fake-orders" element={<FakeOrders />} />
+            <Route path="/cargo-damage" element={<CargoDamage />} />
             <Route path="/ai-brain" element={<AiBrain />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/pricing/new" element={<Pricing />} />

@@ -8,7 +8,8 @@ import {
   LayoutDashboard, Package, ShoppingCart, 
   Archive, TrendingUp, Crosshair, 
   DollarSign, AlertTriangle, Activity,
-  Search, Bell, Command, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox
+  Search, Bell, Command, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
+  CreditCard, PackageX
 } from 'lucide-react';
 import { getMexicoTimeString } from '../lib/time';
 
@@ -106,6 +107,8 @@ export default function MainLayout({ skuData, onAddSku }: LayoutProps) {
     { id: '/orders', label: '订单管理', icon: ShoppingCart },
     { id: '/inventory', label: '库存管理', icon: Archive, badge: inventoryStatus },
     { id: '/ads', label: '广告优化', icon: TrendingUp },
+    { id: '/fake-orders', label: '刷单支出', icon: CreditCard },
+    { id: '/cargo-damage', label: '货损支出', icon: PackageX },
     { id: '/competitors', label: '竞品监控', icon: Crosshair },
     { id: '/finance', label: '财务报表', icon: DollarSign },
     { id: '/health', label: '账号健康', icon: AlertTriangle },

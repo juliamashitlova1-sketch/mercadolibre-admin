@@ -160,6 +160,7 @@ function AppContent() {
             dailyData={dailyData}
             fakeOrders={fakeOrders}
             cargoDamage={cargoDamage}
+            operationLogs={operationLogs}
             uiVersion={uiVersion} 
             onToggleUi={() => {}} 
             onAddSku={() => { setSelectedSku(null); setIsSkuEntryOpen(true); }} 

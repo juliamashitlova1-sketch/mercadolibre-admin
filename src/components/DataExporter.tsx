@@ -8,9 +8,10 @@ interface DataExporterProps {
   dailyData: any[];
   fakeOrders: any[];
   cargoDamage: any[];
+  operationLogs: any[];
 }
 
-export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDamage }: DataExporterProps) {
+export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDamage, operationLogs }: DataExporterProps) {
   const [startDate, setStartDate] = useState(format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isExporting, setIsExporting] = useState(false);
@@ -34,6 +35,11 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
 
       const filteredCargoDamage = cargoDamage.filter(d => {
         const dDate = parseISO(d.date);
+        return isWithinInterval(dDate, { start, end });
+      });
+
+      const filteredLogs = operationLogs.filter(d => {
+        const dDate = parseISO(d.date || d.created_at);
         return isWithinInterval(dDate, { start, end });
       });
 
@@ -90,6 +96,16 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
       }));
       const wsDamage = XLSX.utils.json_to_sheet(damageSheetData);
       XLSX.utils.book_append_sheet(wb, wsDamage, "货损记录");
+
+      // Sheet 5: Operation Logs (操作日志)
+      const logSheetData = filteredLogs.map(d => ({
+        '时间': d.date || format(parseISO(d.created_at), 'yyyy-MM-dd'),
+        'SKU': d.sku_id || '-',
+        '操作内容': d.content || '-',
+        '记录人': d.operator || '管理员'
+      }));
+      const wsLogs = XLSX.utils.json_to_sheet(logSheetData);
+      XLSX.utils.book_append_sheet(wb, wsLogs, "操作日志");
 
       // 3. Download File
       const fileName = `MILYFLY_Export_${startDate}_to_${endDate}.xlsx`;

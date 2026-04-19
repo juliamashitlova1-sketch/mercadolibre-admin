@@ -85,13 +85,14 @@ interface LayoutProps {
   dailyData: any[];
   fakeOrders: any[];
   cargoDamage: any[];
+  operationLogs: any[];
   uiVersion: 'v1' | 'v2';
   onToggleUi: () => void;
   onAddSku: () => void;
 }
 
 export default function MainLayout({ 
-  skuData, dailyData, fakeOrders, cargoDamage, 
+  skuData, dailyData, fakeOrders, cargoDamage, operationLogs,
   uiVersion, onToggleUi, onAddSku 
 }: LayoutProps) {
   const [currentTime, setCurrentTime] = useState(getMexicoTimeString());
@@ -256,6 +257,7 @@ export default function MainLayout({
                 dailyData={dailyData} 
                 fakeOrders={fakeOrders} 
                 cargoDamage={cargoDamage} 
+                operationLogs={operationLogs}
               />
             </div>
           </div>

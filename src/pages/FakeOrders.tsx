@@ -21,8 +21,6 @@ export default function FakeOrders() {
     date: getMexicoDateString(),
     sku: '',
     skuName: '',
-    reviewFeeCNY: 0,
-    refundAmountUSD: 0
   });
 
   const fetchData = async () => {
@@ -80,8 +78,6 @@ export default function FakeOrders() {
         date: getMexicoDateString(),
         sku: '',
         skuName: '',
-        reviewFeeCNY: 0,
-        refundAmountUSD: 0
       });
       fetchData();
     }
@@ -123,8 +119,6 @@ export default function FakeOrders() {
             date: getMexicoDateString(),
             sku: '',
             skuName: '',
-            reviewFeeCNY: 0,
-            refundAmountUSD: 0
           });
           setIsEditing(true);
         }} className="gap-2 shadow-sm">
@@ -168,9 +162,10 @@ export default function FakeOrders() {
                 <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">测评费 (CNY)</Label>
                 <Input 
                   type="number" 
+                  step="any"
                   placeholder="人民币支出" 
-                  value={currentRecord.reviewFeeCNY} 
-                  onChange={e => setCurrentRecord({...currentRecord, reviewFeeCNY: Number(e.target.value)})}
+                  value={currentRecord.reviewFeeCNY ?? ''} 
+                  onChange={e => setCurrentRecord({...currentRecord, reviewFeeCNY: e.target.value === '' ? undefined : Number(e.target.value)})}
                   className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg"
                 />
               </div>
@@ -178,9 +173,10 @@ export default function FakeOrders() {
                 <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">回款金额 (USD)</Label>
                 <Input 
                   type="number" 
+                  step="any"
                   placeholder="美元回款" 
-                  value={currentRecord.refundAmountUSD} 
-                  onChange={e => setCurrentRecord({...currentRecord, refundAmountUSD: Number(e.target.value)})}
+                  value={currentRecord.refundAmountUSD ?? ''} 
+                  onChange={e => setCurrentRecord({...currentRecord, refundAmountUSD: e.target.value === '' ? undefined : Number(e.target.value)})}
                   className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg"
                 />
               </div>

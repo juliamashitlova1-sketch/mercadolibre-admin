@@ -22,9 +22,7 @@ export default function CargoDamagePage() {
     date: getMexicoDateString(),
     sku: '',
     skuName: '',
-    quantity: 0,
     reason: '送仓差异',
-    skuValueCNY: 0
   });
 
   const fetchData = async () => {
@@ -83,9 +81,7 @@ export default function CargoDamagePage() {
         date: getMexicoDateString(),
         sku: '',
         skuName: '',
-        quantity: 0,
         reason: '送仓差异',
-        skuValueCNY: 0
       });
       fetchData();
     }
@@ -122,9 +118,7 @@ export default function CargoDamagePage() {
             date: getMexicoDateString(),
             sku: '',
             skuName: '',
-            quantity: 0,
             reason: '送仓差异',
-            skuValueCNY: 0
           });
           setIsEditing(true);
         }} className="gap-2 bg-rose-600 hover:bg-rose-700 shadow-sm transition-all">
@@ -168,8 +162,9 @@ export default function CargoDamagePage() {
                 <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">数量</Label>
                 <Input 
                   type="number" 
-                  value={currentRecord.quantity} 
-                  onChange={e => setCurrentRecord({...currentRecord, quantity: Number(e.target.value)})}
+                  step="any"
+                  value={currentRecord.quantity ?? ''} 
+                  onChange={e => setCurrentRecord({...currentRecord, quantity: e.target.value === '' ? undefined : Number(e.target.value)})}
                   className="bg-white border-rose-100 focus:border-rose-300 transition-all rounded-lg"
                 />
               </div>
@@ -193,9 +188,9 @@ export default function CargoDamagePage() {
                 <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">单件货值 (CNY)</Label>
                 <Input 
                   type="number" 
-                  step="0.01"
-                  value={currentRecord.skuValueCNY} 
-                  onChange={e => setCurrentRecord({...currentRecord, skuValueCNY: Number(e.target.value)})}
+                  step="any"
+                  value={currentRecord.skuValueCNY ?? ''} 
+                  onChange={e => setCurrentRecord({...currentRecord, skuValueCNY: e.target.value === '' ? undefined : Number(e.target.value)})}
                   className="bg-white border-rose-100 focus:border-rose-300 transition-all rounded-lg"
                 />
               </div>

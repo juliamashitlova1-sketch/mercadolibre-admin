@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { SKUStats } from '../types';
-import { MXN_TO_CNY } from '../constants';
+import { SKUStats, FakeOrder, CargoDamage } from '../types';
+import { MXN_TO_CNY, USD_TO_MXN } from '../constants';
 import { useOutletContext } from 'react-router-dom';
 import { getMexicoDateString } from '../lib/time';
 import DateRangeFilter, { filterByDateRange } from '../components/DateRangeFilter';
@@ -11,36 +10,40 @@ import DateRangeFilter, { filterByDateRange } from '../components/DateRangeFilte
 interface ContextType {
   skuData: SKUStats[];
   allSkuData: SKUStats[];
+  fakeOrders: FakeOrder[];
+  cargoDamage: CargoDamage[];
 }
 
 export default function Finance() {
-  const { skuData, allSkuData } = useOutletContext<ContextType>();
+  const { allSkuData, fakeOrders, cargoDamage } = useOutletContext<ContextType>();
   const todayStr = getMexicoDateString();
 
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
 
-  const filtered = useMemo(() => filterByDateRange(allSkuData, startDate, endDate), [allSkuData, startDate, endDate]);
+  const filteredSkuData = useMemo(() => filterByDateRange(allSkuData, startDate, endDate), [allSkuData, startDate, endDate]);
+  const filteredFakeOrders = useMemo(() => filterByDateRange(fakeOrders, startDate, endDate), [fakeOrders, startDate, endDate]);
+  const filteredCargoDamage = useMemo(() => filterByDateRange(cargoDamage, startDate, endDate), [cargoDamage, startDate, endDate]);
 
   const { dailyFinance, skuFinance, totalProfitCNY, totalSalesCNY } = useMemo(() => {
-    const byDate: Record<string, { sales: number; adSpend: number; orders: number; profitCNY: number }> = {};
-    const bySku: Record<string, { sku: string; name: string; sales: number; adSpend: number; orders: number; profitCNY: number; imageUrl?: string }> = {};
+    const byDate: Record<string, { sales: number; adSpend: number; orders: number; profitCNY: number; expenseCNY: number }> = {};
+    const bySku: Record<string, { sku: string; name: string; sales: number; adSpend: number; orders: number; profitCNY: number; expenseCNY: number; imageUrl?: string }> = {};
 
-    filtered.forEach(item => {
-      // 逐日聚合
-      if (!byDate[item.date]) byDate[item.date] = { sales: 0, adSpend: 0, orders: 0, profitCNY: 0 };
+    // 1. 处理 SKU 运营数据 (销售与广告)
+    filteredSkuData.forEach(item => {
+      if (!byDate[item.date]) byDate[item.date] = { sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
       byDate[item.date].sales += item.sales || 0;
       byDate[item.date].adSpend += item.adSpend || 0;
       byDate[item.date].orders += item.orders || 0;
+      // 毛利 (不含广告): 订单 * 单件毛利
       byDate[item.date].profitCNY += (item.orders || 0) * (item.unitProfitExclAds || 0);
 
-      // 按 SKU 聚合
       const skuKey = item.sku || 'UNATTRIBUTED';
       if (!bySku[skuKey]) {
         bySku[skuKey] = { 
           sku: skuKey, 
           name: item.skuName || (item.sku ? item.sku : '未归属广告/其它支出'), 
-          sales: 0, adSpend: 0, orders: 0, profitCNY: 0,
+          sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0,
           imageUrl: item.imageUrl
         };
       }
@@ -48,19 +51,56 @@ export default function Finance() {
       s.sales += item.sales || 0;
       s.adSpend += item.adSpend || 0;
       s.orders += item.orders || 0;
-      // 利润计算: 订单数 * 单件人民币利润 - 广告消耗 * 汇率
+      // SKU 利润: 订单 * 单件毛利 - 广告支出(换算)
       s.profitCNY += (item.orders || 0) * (item.unitProfitExclAds || 0) - (item.adSpend || 0) * MXN_TO_CNY;
+    });
+
+    // 2. 处理刷单支出
+    filteredFakeOrders.forEach(item => {
+      const cost = (item.reviewFeeCNY || 0) - (item.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY;
+      
+      if (!byDate[item.date]) byDate[item.date] = { sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+      byDate[item.date].expenseCNY += cost;
+
+      const skuKey = item.sku || 'FAKE_ORDER';
+      if (!bySku[skuKey]) {
+        bySku[skuKey] = { sku: skuKey, name: item.skuName || '刷单/测评', sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+      }
+      bySku[skuKey].expenseCNY += cost;
+    });
+
+    // 3. 处理货损支出
+    filteredCargoDamage.forEach(item => {
+      const cost = (item.quantity || 0) * (item.skuValueCNY || 0);
+      
+      if (!byDate[item.date]) byDate[item.date] = { sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+      byDate[item.date].expenseCNY += cost;
+
+      const skuKey = item.sku || 'CARGO_DAMAGE';
+      if (!bySku[skuKey]) {
+        bySku[skuKey] = { sku: skuKey, name: item.skuName || '货损异常', sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+      }
+      bySku[skuKey].expenseCNY += cost;
     });
 
     const dailySorted = Object.entries(byDate)
       .map(([date, d]) => ({
-        date, sales: d.sales, adSpend: d.adSpend, orders: d.orders,
-        profitCNY: d.profitCNY - d.adSpend * MXN_TO_CNY,
+        date, 
+        sales: d.sales, 
+        adSpend: d.adSpend, 
+        orders: d.orders,
+        // 最终净利润 = 毛利 - 广告支出 - 额外支出(刷单+货损)
+        profitCNY: d.profitCNY - (d.adSpend * MXN_TO_CNY) - d.expenseCNY,
         salesCNY: d.sales * MXN_TO_CNY,
       }))
       .sort((a, b) => b.date.localeCompare(a.date));
 
     const skuSorted = Object.values(bySku)
+      .map(s => ({
+        ...s,
+        // SKU 净利润 = (基础毛利-广告) - 额外支出
+        profitCNY: s.profitCNY - s.expenseCNY
+      }))
       .sort((a, b) => b.profitCNY - a.profitCNY);
 
     const tProfit = dailySorted.reduce((s, d) => s + d.profitCNY, 0);
@@ -72,104 +112,116 @@ export default function Finance() {
       totalProfitCNY: tProfit, 
       totalSalesCNY: tSales 
     };
-  }, [filtered]);
+  }, [filteredSkuData, filteredFakeOrders, filteredCargoDamage]);
 
   const isSingleDay = startDate === endDate && startDate;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-2">
       <header>
-        <h2 className="text-2xl font-bold text-slate-800">财务与结算台账</h2>
-        <p className="text-slate-500 text-sm">从 SKU 运营数据自动聚合的逐日盈亏核算</p>
+        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">财务与结算台账</h2>
+        <p className="text-slate-500 text-sm">已统筹 SKU 运营、广告、刷单及货损的综合盈亏核算</p>
       </header>
 
       <DateRangeFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="stat-card">
-          <div className="stat-label">{isSingleDay ? '当日' : '累计'}净利润</div>
-          <div className="stat-value text-emerald-600">¥{totalProfitCNY.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} <span className="text-xs font-normal text-slate-500">CNY</span></div>
+        <div className="bg-white border border-slate-100 shadow-sm p-6 rounded-2xl ring-1 ring-slate-50">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{isSingleDay ? '当日' : '期间'}净利润</div>
+          <div className={`text-2xl font-black ${totalProfitCNY >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            ¥{totalProfitCNY.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="text-xs font-bold text-slate-300 ml-1.5 uppercase">CNY</span>
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">平均利润率</div>
-          <div className="stat-value">{totalSalesCNY > 0 ? ((totalProfitCNY / totalSalesCNY) * 100).toFixed(1) : '0'}%</div>
+        <div className="bg-white border border-slate-100 shadow-sm p-6 rounded-2xl ring-1 ring-slate-50">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">平均净利润率</div>
+          <div className="text-2xl font-black text-slate-800">
+            {totalSalesCNY > 0 ? ((totalProfitCNY / totalSalesCNY) * 100).toFixed(1) : '0'}%
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">汇率 (MXN/CNY)</div>
-          <div className="stat-value text-sky-500">{MXN_TO_CNY}</div>
+        <div className="bg-white border border-slate-100 shadow-sm p-6 rounded-2xl ring-1 ring-slate-50">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">关键汇率汇率</div>
+          <div className="flex items-center gap-3">
+             <div>
+              <span className="text-[10px] text-slate-400 mr-1">MXN:</span>
+              <span className="text-lg font-bold text-sky-500">{MXN_TO_CNY}</span>
+             </div>
+             <div className="w-px h-4 bg-slate-100"></div>
+             <div>
+              <span className="text-[10px] text-slate-400 mr-1">USD:</span>
+              <span className="text-lg font-bold text-indigo-500">{USD_TO_MXN}</span>
+             </div>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左侧：每日汇总 */}
-        <Card className="border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-          <CardHeader className="pb-3 border-b border-slate-50">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <Card className="border-slate-100 shadow-sm bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden ring-1 ring-slate-100">
+          <CardHeader className="pb-3 border-b border-slate-50 bg-slate-50/30">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-700">
               <div className="w-1.5 h-4 bg-sky-500 rounded-full"></div>
-              每日财务明细
+              逐日净利润明细 (已含额外支出)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 max-h-[500px] overflow-y-auto">
             <Table>
               <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
                 <TableRow>
-                  <TableHead className="text-[11px] font-bold">日期</TableHead>
-                  <TableHead className="text-[11px] font-bold">销售额 (MXN)</TableHead>
-                  <TableHead className="text-[11px] font-bold">广告 (MXN)</TableHead>
-                  <TableHead className="text-[11px] font-bold">净利润 (CNY)</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400">日期</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400">销售额 (MXN)</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400 text-right">净利润 (CNY)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dailyFinance.length > 0 ? dailyFinance.map((day) => (
                   <TableRow key={day.date} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="text-xs font-mono py-3">{day.date}</TableCell>
-                    <TableCell className="text-xs font-medium">${day.sales.toLocaleString()}</TableCell>
-                    <TableCell className="text-xs text-rose-500">-${day.adSpend.toLocaleString()}</TableCell>
-                    <TableCell className={`text-xs font-bold ${day.profitCNY > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <TableCell className="text-[11px] font-mono font-bold text-slate-500 py-3">{day.date}</TableCell>
+                    <TableCell className="text-[11px] font-bold text-slate-800">${day.sales.toLocaleString()}</TableCell>
+                    <TableCell className={`text-[11px] font-black text-right ${day.profitCNY > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       ¥{day.profitCNY.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
                     </TableCell>
                   </TableRow>
                 )) : (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-slate-400 text-sm">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center py-8 text-slate-400 text-xs">暂无财务数据</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        {/* 右侧：按 SKU 汇总 */}
-        <Card className="border-slate-200 shadow-sm bg-white rounded-xl overflow-hidden">
-          <CardHeader className="pb-3 border-b border-slate-50">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <Card className="border-slate-100 shadow-sm bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden ring-1 ring-slate-100">
+          <CardHeader className="pb-3 border-b border-slate-50 bg-slate-50/30">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-700">
               <div className="w-1.5 h-4 bg-indigo-500 rounded-full"></div>
-              SKU 利润贡献排行
+              SKU 真实盈亏排行 (扣除测评货损)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 max-h-[500px] overflow-y-auto">
             <Table>
               <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
                 <TableRow>
-                  <TableHead className="text-[11px] font-bold">SKU</TableHead>
-                  <TableHead className="text-[11px] font-bold">销量</TableHead>
-                  <TableHead className="text-[11px] font-bold">广告 (MXN)</TableHead>
-                  <TableHead className="text-[11px] font-bold">净利润 (CNY)</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400">产品 SKU</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400">销量/费用</TableHead>
+                  <TableHead className="text-[10px] font-bold text-slate-400 text-right">净利润 (CNY)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {skuFinance.length > 0 ? skuFinance.map((item) => (
-                  <TableRow key={item.sku} className="hover:bg-slate-50/50 transition-colors">
+                  <TableRow key={item.sku} className="hover:bg-slate-50/50 transition-colors group">
                     <TableCell className="py-3">
-                      <div className="text-xs font-mono font-bold text-slate-700">{item.sku}</div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[120px]">{item.name}</div>
+                      <div className="text-[11px] font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{item.sku}</div>
+                      <div className="text-[10px] text-slate-400 truncate max-w-[150px] font-medium">{item.name}</div>
                     </TableCell>
-                    <TableCell className="text-xs font-medium">{item.orders}</TableCell>
-                    <TableCell className="text-xs text-rose-400">-${item.adSpend.toLocaleString()}</TableCell>
-                    <TableCell className={`text-xs font-bold ${item.profitCNY > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <TableCell>
+                      <div className="text-[11px] font-bold text-slate-600">{item.orders} 件</div>
+                      {item.expenseCNY > 0 && <div className="text-[9px] text-rose-400 font-bold">额外支出: ¥{item.expenseCNY.toFixed(1)}</div>}
+                    </TableCell>
+                    <TableCell className={`text-[11px] font-black text-right ${item.profitCNY > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       ¥{item.profitCNY.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
                     </TableCell>
                   </TableRow>
                 )) : (
-                  <TableRow><TableCell colSpan={4} className="text-center py-8 text-slate-400 text-sm">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center py-8 text-slate-400 text-xs">暂无数据</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>

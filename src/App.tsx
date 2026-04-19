@@ -22,7 +22,7 @@ import ClaimEntry from './components/ClaimEntry';
 import OperationEntry from './components/OperationEntry';
 import Login from './components/Login';
 
-import { useSkuData, useDailyStats, useClaims, useOperationLogs } from './hooks/useStoreData';
+import { useSkuData, useDailyStats, useClaims, useOperationLogs, useExpenses } from './hooks/useStoreData';
 import { SKUStats, Claim } from './types';
 
 class AppErrorBoundary extends React.Component<any, any> {
@@ -86,6 +86,7 @@ function AppContent() {
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
   const { operationLogs, refreshLogs } = useOperationLogs();
+  const { fakeOrders, cargoDamage, refreshExpenses } = useExpenses();
 
   const [isEntryOpen, setIsEntryOpen] = useState(false);
   const [isSkuEntryOpen, setIsSkuEntryOpen] = useState(false);
@@ -102,6 +103,9 @@ function AppContent() {
     operationLogs,
     refreshSkuData,
     refreshLogs,
+    refreshExpenses,
+    fakeOrders,
+    cargoDamage,
     onOpenDataEntry: () => setIsEntryOpen(true),
     onAddClaim: () => {
       setSelectedClaim(null);

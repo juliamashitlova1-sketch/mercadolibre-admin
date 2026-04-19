@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { DailyStats, SKUStats, Claim, OperationLog } from '../types';
+import { DailyStats, SKUStats, Claim, OperationLog, FakeOrder, CargoDamage } from '../types';
 import { parseISO } from 'date-fns';
 
 export function useSkuData() {
@@ -323,5 +323,52 @@ export function useOperationLogs() {
   return { 
     operationLogs,
     refreshLogs: () => setRefreshKey(k => k + 1)
+  };
+}
+export function useExpenses() {
+  const [fakeOrders, setFakeOrders] = useState<FakeOrder[]>([]);
+  const [cargoDamage, setCargoDamage] = useState<CargoDamage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const { data: fData } = await supabase
+      .from('fake_orders')
+      .select('*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, skuName:sku_name')
+      .order('date', { ascending: false });
+    
+    const { data: cData } = await supabase
+      .from('cargo_damage')
+      .select('*, skuName:sku_name, skuValueCNY:sku_value_cny')
+      .order('date', { ascending: false });
+
+    setFakeOrders(fData || []);
+    setCargoDamage(cData || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    
+    const fChannel = supabase.channel('fake-orders-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fake_orders' }, () => fetchData())
+      .subscribe();
+      
+    const cChannel = supabase.channel('cargo-damage-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cargo_damage' }, () => fetchData())
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(fChannel);
+      supabase.removeChannel(cChannel);
+    };
+  }, [fetchData, refreshKey]);
+
+  return { 
+    fakeOrders, 
+    cargoDamage, 
+    loading, 
+    refreshExpenses: () => setRefreshKey(k => k + 1) 
   };
 }

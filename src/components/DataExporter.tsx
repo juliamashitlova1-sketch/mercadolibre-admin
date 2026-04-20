@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import { Download, Calendar, Loader2 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { format, isWithinInterval, parseISO } from 'date-fns';
+import { supabase } from '../lib/supabase';
 
 interface DataExporterProps {
   skuData: any[];
@@ -16,95 +14,97 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     setIsExporting(true);
     try {
-      const start = parseISO(startDate);
-      const end = parseISO(endDate);
+      // 1. Fetch Full Data from Supabase for the specified range
+      // We do this directly to bypass UI limits (like the 30-day dashboard limit)
+      
+      const [
+        { data: rawDaily },
+        { data: rawFakeOrders },
+        { data: rawCargoDamage },
+        { data: rawLogs },
+        { data: rawMetadata }
+      ] = await Promise.all([
+        supabase.from('daily_stats').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('fake_orders').select('*, sku_name').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('cargo_damage').select('*, sku_name, sku_value_cny').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('operation_logs').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('sku_metadata').select('*')
+      ]);
 
-      // 1. Filter Data by Date Range
-      const filteredDaily = dailyData.filter(d => {
-        const dDate = parseISO(d.date);
-        return isWithinInterval(dDate, { start, end });
-      });
-
-      const filteredFakeOrders = fakeOrders.filter(d => {
-        const dDate = parseISO(d.date);
-        return isWithinInterval(dDate, { start, end });
-      });
-
-      const filteredCargoDamage = cargoDamage.filter(d => {
-        const dDate = parseISO(d.date);
-        return isWithinInterval(dDate, { start, end });
-      });
-
-      const filteredLogs = operationLogs.filter(d => {
-        const dDate = parseISO(d.date || d.created_at);
-        return isWithinInterval(dDate, { start, end });
-      });
+      const metaMap: Record<string, string> = {};
+      rawMetadata?.forEach(m => { metaMap[m.sku] = m.name; });
 
       // 2. Prepare Sheets
       const wb = XLSX.utils.book_new();
 
       // Sheet 1: SKU Overview
+      // For overview, we use the skuData prop as it already contains the "latest" calculated state
       const skuSheetData = skuData.map(s => ({
-        'SKU ID': s.id,
+        'SKU ID': s.sku || s.id,
         'SKU 名称': s.skuName,
         '当前库存': s.stock || 0,
-        '库容健康': s.stockHealth || '正常',
         '日均销量': s.avgSalesSinceListing || 0,
-        '创建时间': s.createdAt ? format(parseISO(s.createdAt), 'yyyy-MM-dd HH:mm') : '-'
+        '创建时间': s.listedAt || '-'
       }));
       const wsSku = XLSX.utils.json_to_sheet(skuSheetData);
       XLSX.utils.book_append_sheet(wb, wsSku, "SKU总览");
 
-      // Sheet 2: Daily Performance
-      const dailySheetData = filteredDaily.map(d => ({
+      // Sheet 2: Daily Performance (All matching records)
+      const dailySheetData = (rawDaily || []).map(d => ({
         '日期': d.date,
-        'SKU': d.sku_id || '全店',
-        '销量 (MXN)': d.sales_mxn || 0,
-        '订单数': d.orders || 0,
-        '广告费 (MXN)': d.ads_mxn || 0,
-        '广告占比': d.sales_mxn > 0 ? ((d.ads_mxn / d.sales_mxn) * 100).toFixed(2) + '%' : '0%',
-        '净利润 (CNY)': d.profit_cny || 0,
-        '利润率': d.sales_mxn > 0 ? ((d.profit_cny / (d.sales_mxn * 0.365)) * 100).toFixed(2) + '%' : '0%',
+        '店铺/SKU': d.sku_id || '全店',
+        '销售额 (MXN)': d.total_sales || 0,
+        '订单数': d.total_orders || 0,
+        '广告费 (MXN)': d.ad_spend || 0,
+        '广告占比': d.total_sales > 0 ? ((d.ad_spend / d.total_sales) * 100).toFixed(2) + '%' : '0%',
+        '净利润 (CNY)': d.calculated_profit || 0,
       }));
       const wsDaily = XLSX.utils.json_to_sheet(dailySheetData);
       XLSX.utils.book_append_sheet(wb, wsDaily, "每日业绩");
 
-      // Sheet 3: Fake Orders (刷单)
-      const fakeSheetData = filteredFakeOrders.map(d => ({
+      // Sheet 3: Fake Orders (测评)
+      const fakeSheetData = (rawFakeOrders || []).map(d => ({
         '日期': d.date,
-        'SKU': d.skuId,
-        'SKU 名称': d.skuName,
-        '测评费用 (CNY)': d.testFeeCNY || 0,
-        '回款金额 (USD)': d.refundUSD || 0,
-        '实际成本 (CNY)': (d.testFeeCNY || 0) - (d.refundUSD || 0) * 7.24
+        'SKU': d.sku,
+        '产品名称': d.sku_name || metaMap[d.sku] || '-',
+        '测评费 (CNY)': d.review_fee_cny || 0,
+        '回款 (USD)': d.refund_amount_usd || 0,
+        '实际损益 (CNY)': (d.review_fee_cny || 0) - ((d.refund_amount_usd || 0) * 7.2)
       }));
       const wsFake = XLSX.utils.json_to_sheet(fakeSheetData);
       XLSX.utils.book_append_sheet(wb, wsFake, "刷单支出");
 
       // Sheet 4: Cargo Damage (货损)
-      const damageSheetData = filteredCargoDamage.map(d => ({
+      const damageSheetData = (rawCargoDamage || []).map(d => ({
         '日期': d.date,
-        'SKU': d.skuId,
-        'SKU 名称': d.skuName,
+        'SKU': d.sku,
+        '产品名称': d.sku_name || metaMap[d.sku] || '-',
         '数量': d.quantity || 0,
-        '原因': d.reason || '-',
-        'SKU货值 (CNY)': d.skuValueCNY || 0,
-        '总损失 (CNY)': (d.quantity || 0) * (d.skuValueCNY || 0)
+        'SKU货值 (CNY)': d.sku_value_cny || 0,
+        '总损失 (CNY)': (d.quantity || 0) * (d.sku_value_cny || 0),
+        '原因': d.reason || '-'
       }));
       const wsDamage = XLSX.utils.json_to_sheet(damageSheetData);
       XLSX.utils.book_append_sheet(wb, wsDamage, "货损记录");
 
-      // Sheet 5: Operation Logs (操作日志)
-      const logSheetData = filteredLogs.map(d => ({
-        '时间': d.date || format(parseISO(d.created_at), 'yyyy-MM-dd'),
-        'SKU': d.sku_id || '-',
-        '操作内容': d.content || '-',
-        '记录人': d.operator || '管理员'
+      // Sheet 5: Operation Logs
+      const logSheetData = (rawLogs || []).map(d => ({
+        '日期': d.date,
+        'SKU': d.sku || '-',
+        '操作项': d.action || '-',
+        '详细内容': d.details || '-',
+        '操作人': d.operator || 'Admin'
       }));
       const wsLogs = XLSX.utils.json_to_sheet(logSheetData);
+      XLSX.utils.book_append_sheet(wb, wsLogs, "操作日志");
+
+      // 3. Download
+      const fileName = `MILYFLY_FullReport_${startDate}_to_${endDate}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+et(logSheetData);
       XLSX.utils.book_append_sheet(wb, wsLogs, "操作日志");
 
       // 3. Download File

@@ -120,29 +120,35 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
   };
 
   return (
-    <div className="flex flex-col gap-3 bg-white border-2 border-sky-400/30 rounded-2xl p-4 shadow-xl hover:border-sky-500 transition-all">
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-          <Calendar className="w-3 h-3" /> 数据导出范围
+    <div className="flex flex-col gap-4 bg-white border-2 border-sky-400/30 rounded-2xl p-4 shadow-xl hover:border-sky-500 transition-all">
+      <div className="flex flex-col gap-2.5">
+        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-sky-500" /> 报表日期范围选择
         </label>
-        <div className="flex items-center gap-2">
-          <input 
-            type="date" 
-            value={startDate} 
-            onChange={(e) => setStartDate(e.target.value)}
-            className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-[10px] font-bold outline-none border border-slate-100 focus:border-sky-300"
-          />
-          <span className="text-[10px] opacity-40">至</span>
-          <input 
-            type="date" 
-            value={endDate} 
-            onChange={(e) => setEndDate(e.target.value)}
-            className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-[10px] font-bold outline-none border border-slate-100 focus:border-sky-300"
-          />
+        
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 w-4">从</span>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => setStartDate(e.target.value)}
+              className="flex-1 bg-slate-100/50 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-900 outline-none border border-slate-200 focus:border-sky-400 focus:bg-white transition-all cursor-pointer"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 w-4">至</span>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => setEndDate(e.target.value)}
+              className="flex-1 bg-slate-100/50 rounded-xl px-3 py-2 text-[11px] font-bold text-slate-900 outline-none border border-slate-200 focus:border-sky-400 focus:bg-white transition-all cursor-pointer"
+            />
+          </div>
         </div>
       </div>
       
-      <div className="w-full h-[1px] bg-sky-100" />
+      <div className="w-full h-[1px] bg-sky-50" />
       
       <button 
         onClick={handleExport}

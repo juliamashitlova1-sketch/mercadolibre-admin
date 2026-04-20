@@ -244,6 +244,8 @@ export default function MainLayout({
             <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
               {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace('-', ' ')}
             </span>
+            <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.3</span>
+
           </div>
 
           <div className="flex-1 flex items-center justify-center gap-3 mx-4">

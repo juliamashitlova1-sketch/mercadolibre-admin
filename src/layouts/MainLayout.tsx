@@ -213,15 +213,7 @@ export default function MainLayout({
 
           <div className="p-4 mt-auto space-y-4">
             {/* 全局数据导出 - 移至侧边栏底部以保持高度可见 */}
-            <div className="px-2">
-              <DataExporter 
-                skuData={skuData} 
-                dailyData={dailyData} 
-                fakeOrders={fakeOrders} 
-                cargoDamage={cargoDamage} 
-                operationLogs={operationLogs}
-              />
-            </div>
+
 
             <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
               <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">

@@ -1,4 +1,7 @@
-import { format, isWithinInterval, parseISO } from 'date-fns';
+import React, { useState } from 'react';
+import { Download, Calendar, Loader2 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { format, parseISO } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
 interface DataExporterProps {
@@ -9,7 +12,7 @@ interface DataExporterProps {
   operationLogs: any[];
 }
 
-export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDamage, operationLogs }: DataExporterProps) {
+export default function DataExporter({ skuData }: DataExporterProps) {
   const [startDate, setStartDate] = useState(format(new Date(new Date().setDate(new Date().getDate() - 30)), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [isExporting, setIsExporting] = useState(false);
@@ -28,8 +31,8 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
         { data: rawMetadata }
       ] = await Promise.all([
         supabase.from('daily_stats').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
-        supabase.from('fake_orders').select('*, sku_name').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
-        supabase.from('cargo_damage').select('*, sku_name, sku_value_cny').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('fake_orders').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
+        supabase.from('cargo_damage').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
         supabase.from('operation_logs').select('*').gte('date', startDate).lte('date', endDate).order('date', { ascending: true }),
         supabase.from('sku_metadata').select('*')
       ]);
@@ -41,7 +44,6 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
       const wb = XLSX.utils.book_new();
 
       // Sheet 1: SKU Overview
-      // For overview, we use the skuData prop as it already contains the "latest" calculated state
       const skuSheetData = skuData.map(s => ({
         'SKU ID': s.sku || s.id,
         'SKU 名称': s.skuName,
@@ -72,7 +74,7 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
         '产品名称': d.sku_name || metaMap[d.sku] || '-',
         '测评费 (CNY)': d.review_fee_cny || 0,
         '回款 (USD)': d.refund_amount_usd || 0,
-        '实际损益 (CNY)': (d.review_fee_cny || 0) - ((d.refund_amount_usd || 0) * 7.2)
+        '实际损益 (CNY)': (Number(d.review_fee_cny) || 0) - ((Number(d.refund_amount_usd) || 0) * 7.2)
       }));
       const wsFake = XLSX.utils.json_to_sheet(fakeSheetData);
       XLSX.utils.book_append_sheet(wb, wsFake, "刷单支出");
@@ -84,7 +86,7 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
         '产品名称': d.sku_name || metaMap[d.sku] || '-',
         '数量': d.quantity || 0,
         'SKU货值 (CNY)': d.sku_value_cny || 0,
-        '总损失 (CNY)': (d.quantity || 0) * (d.sku_value_cny || 0),
+        '总损失 (CNY)': (Number(d.quantity) || 0) * (Number(d.sku_value_cny) || 0),
         '原因': d.reason || '-'
       }));
       const wsDamage = XLSX.utils.json_to_sheet(damageSheetData);
@@ -104,16 +106,10 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
       // 3. Download
       const fileName = `MILYFLY_FullReport_${startDate}_to_${endDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
-et(logSheetData);
-      XLSX.utils.book_append_sheet(wb, wsLogs, "操作日志");
-
-      // 3. Download File
-      const fileName = `MILYFLY_Export_${startDate}_to_${endDate}.xlsx`;
-      XLSX.writeFile(wb, fileName);
 
     } catch (error) {
       console.error('Export error:', error);
-      alert('导出失败，请检查数据。');
+      alert('导出失败，请检查数据连接。');
     } finally {
       setIsExporting(false);
     }
@@ -161,5 +157,3 @@ et(logSheetData);
     </div>
   );
 }
-
-// v1.0.1 - Sidebar Export Layout Fix

@@ -22,22 +22,41 @@ export default function AiBrain() {
     end: new Date().toISOString().split('T')[0]
   });
   const [analyzing, setAnalyzing] = useState(false);
+  const [selectedSku, setSelectedSku] = useState<string>('all');
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Get unique SKUs for selector
+  const uniqueSkus = Array.from(new Set(allSkuData.map(s => s.sku))).sort();
+  const skuInfoMap = allSkuData.reduce((acc, curr) => {
+    if (!acc[curr.sku]) acc[curr.sku] = curr.skuName;
+    return acc;
+  }, {} as Record<string, string>);
+
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
     setError(null);
     try {
-      const filteredStats = allSkuData.filter(s => s.date >= dateRange.start && s.date <= dateRange.end);
-      const filteredLogs = operationLogs.filter(l => l.date >= dateRange.start && l.date <= dateRange.end);
+      const filteredStats = allSkuData.filter(s => 
+        s.date >= dateRange.start && 
+        s.date <= dateRange.end && 
+        (selectedSku === 'all' || s.sku === selectedSku)
+      );
+      const filteredLogs = operationLogs.filter(l => 
+        l.date >= dateRange.start && 
+        l.date <= dateRange.end &&
+        (selectedSku === 'all' || l.sku === selectedSku)
+      );
       
       const analysis = await analyzeStoreData(
         dateRange.start, 
         dateRange.end, 
         filteredStats, 
-        filteredLogs
+        filteredLogs,
+        selectedSku
       );
+
       setResult(analysis);
     } catch (err: any) {
       setError(err.message || '分析过程中发生错误，请稍后重试。');
@@ -61,7 +80,23 @@ export default function AiBrain() {
         </div>
 
         <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+          {/* SKU Selector */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 min-w-[200px]">
+            <Target className="w-4 h-4 text-purple-500" />
+            <select 
+              value={selectedSku}
+              onChange={e => setSelectedSku(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-none w-full cursor-pointer"
+            >
+              <option value="all">全店汇总分析</option>
+              {uniqueSkus.map(sku => (
+                <option key={sku} value={sku}>{sku} - {skuInfoMap[sku]}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+
             <Calendar className="w-4 h-4 text-slate-400" />
             <input 
               type="date" 

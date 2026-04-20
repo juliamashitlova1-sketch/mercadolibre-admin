@@ -273,6 +273,11 @@ export default function MainLayout({
           </div>
 
           <div className="flex items-center gap-4">
+            {/* 全局数据导出 - 按用户要求移至搜索栏左侧 */}
+            <div className="hidden xl:block">
+              <DataExporter skuData={skuData} />
+            </div>
+
             <div className="hidden lg:flex items-center gap-2 glass-panel shadow-none h-10 px-4 rounded-full text-sm text-slate-400 focus-within:text-slate-700 transition-colors cursor-text group w-[240px]">
               <Search className="w-4 h-4 opacity-70 group-focus-within:opacity-100 group-focus-within:text-sky-500" />
               <input 

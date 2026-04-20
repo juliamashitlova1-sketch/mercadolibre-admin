@@ -266,7 +266,9 @@ export default function MainLayout({
 
           <div className="flex items-center gap-4">
             {/* 全局数据导出 - 按用户要求移至搜索栏左侧 */}
+            {/* FORCE SYNC v1.0.2 */}
             <div className="hidden xl:block">
+
               <DataExporter skuData={skuData} />
             </div>
 

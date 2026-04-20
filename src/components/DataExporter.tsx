@@ -120,33 +120,37 @@ export default function DataExporter({ skuData, dailyData, fakeOrders, cargoDama
   };
 
   return (
-    <div className="flex items-center gap-3 bg-white border border-slate-200 rounded-full px-4 h-[32px] shadow-sm ml-2">
-      <div className="flex items-center gap-2 text-slate-500">
-        <Calendar className="w-3 h-3" />
-        <input 
-          type="date" 
-          value={startDate} 
-          onChange={(e) => setStartDate(e.target.value)}
-          className="bg-transparent text-[10px] font-bold outline-none border-none p-0 cursor-pointer hover:text-sky-600"
-        />
-        <span className="text-[10px] opacity-40">至</span>
-        <input 
-          type="date" 
-          value={endDate} 
-          onChange={(e) => setEndDate(e.target.value)}
-          className="bg-transparent text-[10px] font-bold outline-none border-none p-0 cursor-pointer hover:text-sky-600"
-        />
+    <div className="flex flex-col gap-3 bg-white border-2 border-sky-400/30 rounded-2xl p-4 shadow-xl hover:border-sky-500 transition-all">
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          <Calendar className="w-3 h-3" /> 数据导出范围
+        </label>
+        <div className="flex items-center gap-2">
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={(e) => setStartDate(e.target.value)}
+            className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-[10px] font-bold outline-none border border-slate-100 focus:border-sky-300"
+          />
+          <span className="text-[10px] opacity-40">至</span>
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={(e) => setEndDate(e.target.value)}
+            className="flex-1 bg-slate-50 rounded-lg px-2 py-1.5 text-[10px] font-bold outline-none border border-slate-100 focus:border-sky-300"
+          />
+        </div>
       </div>
       
-      <div className="w-[1px] h-3 bg-slate-200" />
+      <div className="w-full h-[1px] bg-sky-100" />
       
       <button 
         onClick={handleExport}
         disabled={isExporting}
-        className="flex items-center gap-1.5 text-sky-600 hover:text-sky-700 disabled:opacity-50 transition-colors"
+        className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white rounded-xl shadow-lg shadow-sky-100 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
       >
-        {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-        <span className="text-[11px] font-bold whitespace-nowrap">导出数据</span>
+        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+        <span className="text-xs font-black">导出 Excel 报表</span>
       </button>
     </div>
   );

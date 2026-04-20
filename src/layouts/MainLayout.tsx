@@ -211,7 +211,18 @@ export default function MainLayout({
             })}
           </nav>
 
-          <div className="p-4 mt-auto">
+          <div className="p-4 mt-auto space-y-4">
+            {/* 全局数据导出 - 移至侧边栏底部以保持高度可见 */}
+            <div className="px-2">
+              <DataExporter 
+                skuData={skuData} 
+                dailyData={dailyData} 
+                fakeOrders={fakeOrders} 
+                cargoDamage={cargoDamage} 
+                operationLogs={operationLogs}
+              />
+            </div>
+
             <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
               <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
                 <span>管理员</span>
@@ -236,29 +247,28 @@ export default function MainLayout({
         {/* Dynamic Island Top Bar Container */}
         <header className="h-[72px] shrink-0 flex items-center justify-between px-8 z-10">
           <div className={`flex items-center gap-2 font-medium text-sm ${uiVersion === 'v2' ? 'text-slate-400' : 'text-slate-500'}`}>
-            <span>MILYFLY 控制台</span>
-            <span className="text-slate-300">/</span>
-            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]' : 'text-slate-800'}`}>{location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace('-', ' ')}</span>
-            
-            <div className="ml-4 flex items-center gap-3">
-              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-xs font-mono font-bold tracking-tight border ${uiVersion === 'v2' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' : 'bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-100 text-sky-700'}`}>
-                <Compass className={`w-3.5 h-3.5 animate-pulse ${uiVersion === 'v2' ? 'text-sky-300' : 'text-sky-500'}`} />
-                <span>墨西哥当地时间：{currentTime}</span>
-              </div>
-              
-              {/* 汇率转换小工具 */}
-              <div className="flex items-center bg-white border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
-                 <CurrencyConverter />
-              </div>
+            <span className="hidden sm:inline">MILYFLY 控制台</span>
+            <span className="text-slate-300 hidden sm:inline">/</span>
+            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
+              {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace('-', ' ')}
+            </span>
+          </div>
 
-              {/* 全局数据导出 */}
-              <DataExporter 
-                skuData={skuData} 
-                dailyData={dailyData} 
-                fakeOrders={fakeOrders} 
-                cargoDamage={cargoDamage} 
-                operationLogs={operationLogs}
-              />
+          <div className="flex-1 flex items-center justify-center gap-3 mx-4">
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-xs font-mono font-bold tracking-tight border ${uiVersion === 'v2' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' : 'bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-100 text-sky-700'}`}>
+              <Compass className={`w-3.5 h-3.5 animate-pulse ${uiVersion === 'v2' ? 'text-sky-300' : 'text-sky-500'}`} />
+              <span className="hidden xl:inline">墨西哥当地时间：</span>
+              <span>{currentTime}</span>
+            </div>
+            
+            {/* 汇率转换小工具 - 仅在较大屏幕显示 */}
+            <div className="hidden lg:flex items-center bg-white/80 backdrop-blur border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
+               <CurrencyConverter />
+            </div>
+
+            {/* 全局数据导出 - 增加阴影和边框确保可见性 */}
+            <div className="relative z-50">
+              {/* DataExporter was here */}
             </div>
           </div>
 

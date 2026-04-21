@@ -27,18 +27,25 @@ export default function Competitors() {
     const latestPerSku: Record<string, SKUStats> = {};
     filtered.forEach(item => {
       const existing = latestPerSku[item.sku];
-      const itemHasData = item.competitors && item.competitors.length > 0;
-      const existingHasData = existing?.competitors && existing.competitors.length > 0;
+      if (!existing) {
+        latestPerSku[item.sku] = item;
+        return;
+      }
 
-      if (!existing || item.date > existing.date) {
-        // 如果新记录有数据，或者旧记录没数据，则更新为新记录
-        if (itemHasData || !existingHasData) {
+      const itemHasData = (item.competitors && item.competitors.length > 0);
+      const existingHasData = (existing.competitors && existing.competitors.length > 0);
+
+      // 逻辑：
+      // 1. 如果当前存的记录没有数据，而这条新记录有数据，无论日期先后，都优先采用有数据的作为“最新状态”
+      // 2. 如果两条都有数据，或者两条都没数据，则取日期更近的那条
+      if (itemHasData && !existingHasData) {
+        latestPerSku[item.sku] = item;
+      } else if (itemHasData === existingHasData) {
+        if (item.date > existing.date) {
           latestPerSku[item.sku] = item;
         }
-      } else if (item.date === existing.date && itemHasData && !existingHasData) {
-        // 同一天的情况下，优先保留有数据的那条
-        latestPerSku[item.sku] = item;
       }
+      // 如果现有有数据而新的没数据，直接跳过，保留现有的
     });
     return Object.values(latestPerSku);
   }, [allSkuData, startDate, endDate]);

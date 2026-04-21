@@ -189,48 +189,47 @@ export default function Overview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div variants={itemVariants as any} className="lg:col-span-2 glass-card rounded-2xl p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className={`font-bold font-heading ${isV2 ? 'text-white' : 'text-slate-800'}`}>销售与广告表现</h3>
-              <p className="text-slate-500 text-xs mt-1">{periodLabel} · 每日汇总</p>
-            </div>
-            <div className="flex gap-4 text-xs font-medium">
-              <div className="flex items-center gap-2 text-slate-400"><div className="w-2.5 h-2.5 rounded bg-sky-500" />销售额</div>
-              <div className="flex items-center gap-2 text-slate-400"><div className="w-2.5 h-2.5 rounded bg-amber-400" />广告费</div>
-            </div>
-          </div>
-          <div className="flex-1 min-h-[300px]">
-            {metrics.chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metrics.chartData}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={isV2 ? 0.4 : 0.2}/>
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isV2 ? '#1e293b' : '#e2e8f0'} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => val.split('-').slice(1).join('/')} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dx={-10} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: isV2 ? '#0f172a' : '#fff', 
-                      borderRadius: '12px', 
-                      border: isV2 ? '1px solid #334155' : '1px solid #e2e8f0', 
-                      fontSize: '12px', 
-                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                      color: isV2 ? '#f1f5f9' : '#0f172a'
-                    }}
-                    itemStyle={{ color: isV2 ? '#38bdf8' : '#0ea5e9' }}
-                  />
-                  <Area type="monotone" dataKey="totalSales" name="销售额 (MXN)" stroke={isV2 ? '#38bdf8' : '#0ea5e9'} fill="url(#colorSales)" strokeWidth={3} />
-                  <Area type="monotone" dataKey="adSpend" name="广告费 (MXN)" stroke="#fbbf24" fill="none" strokeWidth={2} strokeDasharray="5 5" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-slate-400 text-sm">所选日期范围内暂无数据</div>
-            )}
-          </div>
+           <div className="flex items-center justify-between mb-6">
+             <div>
+               <h3 className={`font-bold font-heading ${isV2 ? 'text-white' : 'text-slate-800'}`}>SKU 规模与净利润分布 (矩阵)</h3>
+               <p className="text-slate-500 text-xs mt-1">X轴: 销量 · Y轴: 利润率空间</p>
+             </div>
+           </div>
+           <div className="flex-1 min-h-[300px]">
+             {metrics.scatterData.length > 0 ? (
+               <ResponsiveContainer width="100%" height="100%">
+                 <ScatterChart margin={{ top: 10, right: 20, bottom: 0, left: -20 }}>
+                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isV2 ? '#1e293b' : '#e2e8f0'} />
+                   <XAxis type="number" dataKey="sales" name="销量(件)" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
+                   <YAxis type="number" dataKey="profitMargin" name="利润率(%)" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} unit="%" />
+                   <ZAxis type="number" range={[50, 400]} />
+                   <Tooltip 
+                     cursor={{ strokeDasharray: '3 3' }}
+                     content={({ payload }) => {
+                       if (payload && payload.length) {
+                         const data = payload[0].payload;
+                         return (
+                           <div className={`p-3 rounded-xl shadow-xl ${isV2 ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-100 text-slate-800'}`}>
+                             <div className="text-xs font-bold mb-1">{data.sku}</div>
+                             <div className="text-[10px] text-slate-400 mb-2">{data.name}</div>
+                             <div className="flex flex-col gap-1 text-[10px]">
+                               <div>销量: <strong className="text-sky-500">{data.sales}</strong></div>
+                               <div>利润: <strong className={data.profitCNY >= 0 ? "text-emerald-500" : "text-rose-500"}>¥{data.profitCNY.toFixed(1)}</strong></div>
+                               <div>利润率: <strong>{data.profitMargin.toFixed(1)}%</strong></div>
+                             </div>
+                           </div>
+                         );
+                       }
+                       return null;
+                     }}
+                   />
+                   <Scatter data={metrics.scatterData} fill={isV2 ? '#818cf8' : '#6366f1'} opacity={0.6} shape="circle" />
+                 </ScatterChart>
+               </ResponsiveContainer>
+             ) : (
+               <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无销量数据生成矩阵</div>
+             )}
+           </div>
         </motion.div>
 
         <motion.div variants={itemVariants as any} className="lg:col-span-1 glass-card rounded-2xl flex flex-col p-0 overflow-hidden">
@@ -272,94 +271,90 @@ export default function Overview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div variants={itemVariants as any} className="glass-card rounded-2xl p-6 flex flex-col lg:col-span-2">
-           <div className="flex items-center justify-between mb-6">
-             <div>
-               <h3 className={`font-bold font-heading ${isV2 ? 'text-white' : 'text-slate-800'}`}>SKU 规模与净利润分布 (矩阵)</h3>
-               <p className="text-slate-500 text-xs mt-1">X轴: 销量 · Y轴: 利润率空间</p>
-             </div>
-           </div>
-           <div className="flex-1 min-h-[250px]">
-             {metrics.scatterData.length > 0 ? (
-               <ResponsiveContainer width="100%" height="100%">
-                 <ScatterChart margin={{ top: 10, right: 20, bottom: 0, left: -20 }}>
-                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isV2 ? '#1e293b' : '#e2e8f0'} />
-                   <XAxis type="number" dataKey="sales" name="销量(件)" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} />
-                   <YAxis type="number" dataKey="profitMargin" name="利润率(%)" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} unit="%" />
-                   <ZAxis type="number" range={[50, 400]} />
-                   <Tooltip 
-                     cursor={{ strokeDasharray: '3 3' }}
-                     content={({ payload }) => {
-                       if (payload && payload.length) {
-                         const data = payload[0].payload;
-                         return (
-                           <div className={`p-3 rounded-xl shadow-xl ${isV2 ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-100 text-slate-800'}`}>
-                             <div className="text-xs font-bold mb-1">{data.sku}</div>
-                             <div className="text-[10px] text-slate-400 mb-2">{data.name}</div>
-                             <div className="flex flex-col gap-1 text-[10px]">
-                               <div>销量: <strong className="text-sky-500">{data.sales}</strong></div>
-                               <div>利润: <strong className={data.profitCNY >= 0 ? "text-emerald-500" : "text-rose-500"}>¥{data.profitCNY.toFixed(1)}</strong></div>
-                               <div>利润率: <strong>{data.profitMargin.toFixed(1)}%</strong></div>
-                             </div>
-                           </div>
-                         );
-                       }
-                       return null;
-                     }}
-                   />
-                   <Scatter data={metrics.scatterData} fill={isV2 ? '#818cf8' : '#6366f1'} opacity={0.6} shape="circle" />
-                 </ScatterChart>
-               </ResponsiveContainer>
-             ) : (
-               <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无销量数据生成矩阵</div>
-             )}
-           </div>
+        <motion.div variants={itemVariants as any} className="lg:col-span-1 glass-card rounded-2xl p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className={`font-bold font-heading ${isV2 ? 'text-white' : 'text-slate-800'}`}>销售与广告表现</h3>
+              <p className="text-slate-500 text-xs mt-1">{periodLabel}</p>
+            </div>
+          </div>
+          <div className="flex-1 min-h-[250px]">
+            {metrics.chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={metrics.chartData}>
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={isV2 ? 0.4 : 0.2}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isV2 ? '#1e293b' : '#e2e8f0'} />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => val.split('-').slice(1).join('/')} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b' }} dx={-10} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isV2 ? '#0f172a' : '#fff', 
+                      borderRadius: '12px', 
+                      border: isV2 ? '1px solid #334155' : '1px solid #e2e8f0', 
+                      fontSize: '12px', 
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      color: isV2 ? '#f1f5f9' : '#0f172a'
+                    }}
+                  />
+                  <Area type="monotone" dataKey="totalSales" name="销售额" stroke={isV2 ? '#38bdf8' : '#0ea5e9'} fill="url(#colorSales)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="adSpend" name="广告费" stroke="#fbbf24" fill="none" strokeWidth={2} strokeDasharray="5 5" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm">暂无数据</div>
+            )}
+          </div>
         </motion.div>
 
-        <motion.div variants={itemVariants as any} className="glass-card rounded-2xl flex flex-col p-6 lg:col-span-1">
+        <motion.div variants={itemVariants as any} className="glass-card rounded-2xl flex flex-col p-6 lg:col-span-2">
           <div className="flex items-center gap-2 mb-6">
              <Package className={`w-5 h-5 ${isV2 ? 'text-amber-400' : 'text-amber-500'}`} />
              <h3 className={`font-bold font-heading ${isV2 ? 'text-white' : 'text-slate-800'}`}>智能库存预警 (DOH)</h3>
           </div>
           
-          <div className="flex-1 flex flex-col justify-center gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              <div className={`p-4 rounded-xl border flex items-center justify-between ${inventoryDoh.danger > 0 ? (isV2 ? 'bg-rose-500/10 border-rose-500/20' : 'bg-rose-50 border-rose-100') : (isV2 ? 'bg-slate-800/50 border-slate-700/50' : 'bg-slate-50 border-slate-100')} transition-all`}>
                 <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.danger > 0 ? 'bg-rose-500 shadow-lg shadow-rose-500/30 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                      <AlertTriangle className="w-4 h-4" />
-                   </div>
-                   <div>
-                     <div className={`text-xs font-bold ${isV2 ? (inventoryDoh.danger > 0 ? 'text-rose-400' : 'text-slate-400') : (inventoryDoh.danger > 0 ? 'text-rose-600' : 'text-slate-500')}`}>高危断货</div>
-                     <div className="text-[10px] text-slate-500">DOH &lt; 15天</div>
-                   </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.danger > 0 ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                       <AlertTriangle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">高危断货</div>
+                      <div className="text-[9px] text-slate-500">&lt; 15天</div>
+                    </div>
                 </div>
-                <div className={`text-2xl font-black ${inventoryDoh.danger > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{inventoryDoh.danger}</div>
+                <div className={`text-xl font-black ${inventoryDoh.danger > 0 ? 'text-rose-500' : 'text-slate-400'}`}>{inventoryDoh.danger}</div>
              </div>
 
              <div className={`p-4 rounded-xl border flex items-center justify-between ${inventoryDoh.healthy > 0 ? (isV2 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-100') : (isV2 ? 'bg-slate-800/50 border-slate-700/50' : 'bg-slate-50 border-slate-100')} transition-all`}>
                 <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.healthy > 0 ? 'bg-emerald-500 shadow-lg shadow-emerald-500/30 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                      <CheckCircle2 className="w-4 h-4" />
-                   </div>
-                   <div>
-                     <div className={`text-xs font-bold ${isV2 ? (inventoryDoh.healthy > 0 ? 'text-emerald-400' : 'text-slate-400') : (inventoryDoh.healthy > 0 ? 'text-emerald-600' : 'text-slate-500')}`}>健康红利区</div>
-                     <div className="text-[10px] text-slate-500">DOH 30-60天</div>
-                   </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.healthy > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                       <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">健康仓储</div>
+                      <div className="text-[9px] text-slate-500">30-60天</div>
+                    </div>
                 </div>
-                <div className={`text-2xl font-black ${inventoryDoh.healthy > 0 ? 'text-emerald-500' : 'text-slate-400'}`}>{inventoryDoh.healthy}</div>
+                <div className={`text-xl font-black ${inventoryDoh.healthy > 0 ? 'text-emerald-500' : 'text-slate-400'}`}>{inventoryDoh.healthy}</div>
              </div>
 
              <div className={`p-4 rounded-xl border flex items-center justify-between ${inventoryDoh.overstock > 0 ? (isV2 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-100') : (isV2 ? 'bg-slate-800/50 border-slate-700/50' : 'bg-slate-50 border-slate-100')} transition-all`}>
                 <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.overstock > 0 ? 'bg-amber-500 shadow-lg shadow-amber-500/30 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                      <Package className="w-4 h-4" />
-                   </div>
-                   <div>
-                     <div className={`text-xs font-bold ${isV2 ? (inventoryDoh.overstock > 0 ? 'text-amber-400' : 'text-slate-400') : (inventoryDoh.overstock > 0 ? 'text-amber-600' : 'text-slate-500')}`}>冗余资金</div>
-                     <div className="text-[10px] text-slate-500">DOH &gt; 90天</div>
-                   </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${inventoryDoh.overstock > 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                       <Package className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">冗余风险</div>
+                      <div className="text-[9px] text-slate-500">&gt; 90天</div>
+                    </div>
                 </div>
-                <div className={`text-2xl font-black ${inventoryDoh.overstock > 0 ? 'text-amber-500' : 'text-slate-400'}`}>{inventoryDoh.overstock}</div>
+                <div className={`text-xl font-black ${inventoryDoh.overstock > 0 ? 'text-amber-500' : 'text-slate-400'}`}>{inventoryDoh.overstock}</div>
              </div>
           </div>
         </motion.div>

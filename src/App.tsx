@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
-// Triggering UI Restoration Deployment Sync
+// Vercel Sync: 2026-04-21 18:00 - Overview Layout Refactor
 import { supabase } from './lib/supabase';
 import Overview from './pages/Overview';
 import SkuManage from './pages/SkuManage';

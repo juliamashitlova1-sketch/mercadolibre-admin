@@ -18,8 +18,8 @@ export default function Competitors() {
   const { skuData, allSkuData, onEditSku } = useOutletContext<ContextType>();
   const todayStr = getMexicoDateString();
 
-  const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(todayStr);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   // 筛选范围内每个 SKU 最新的快照（含竞品数据）
   const filteredSkuData = useMemo(() => {

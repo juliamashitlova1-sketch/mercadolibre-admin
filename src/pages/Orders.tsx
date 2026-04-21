@@ -15,8 +15,8 @@ export default function Orders() {
   const { skuData, allSkuData } = useOutletContext<ContextType>();
   const todayStr = getMexicoDateString();
 
-  const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(todayStr);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const filtered = useMemo(() => filterByDateRange(allSkuData, startDate, endDate), [allSkuData, startDate, endDate]);
 

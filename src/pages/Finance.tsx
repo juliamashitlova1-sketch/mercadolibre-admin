@@ -20,8 +20,8 @@ export default function Finance() {
   const isV2 = uiVersion === 'v2';
   const todayStr = getMexicoDateString();
 
-  const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(todayStr);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const filteredSkuData = useMemo(() => filterByDateRange(allSkuData, startDate, endDate), [allSkuData, startDate, endDate]);
   const filteredFakeOrders = useMemo(() => filterByDateRange(fakeOrders, startDate, endDate), [fakeOrders, startDate, endDate]);

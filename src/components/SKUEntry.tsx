@@ -40,7 +40,9 @@ const skuSchema = z.object({
   competitors: z.array(z.object({
     id: z.string(),
     url: z.string().url().or(z.string().length(0)),
-    name: z.string(),
+    name: z.string(), // 店铺等级
+    specs: z.string().optional(),
+    imageUrl: z.string().url().or(z.string().length(0)).optional(),
     currentPrice: z.number().min(0),
     reviewCount: z.number().min(0),
     rating: z.number().min(0).max(5),
@@ -425,26 +427,52 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] text-slate-600">竞品名称/备注</Label>
-                      <Input {...register(`competitors.${index}.name`)} placeholder="竞品 A" className="h-7 text-xs bg-white" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] text-slate-500">竞品链接 (URL)</Label>
-                      <div className="flex gap-1">
-                        <Input {...register(`competitors.${index}.url`)} placeholder="https://..." className="h-7 text-xs bg-white flex-1" />
-                        {watchedCompetitors[index]?.url && (
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="icon" 
-                            className="h-7 w-7"
-                            onClick={() => window.open(watchedCompetitors[index].url, '_blank')}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
+                  <div className="grid grid-cols-[100px_1fr] gap-4">
+                    <div className="space-y-1.5 flex flex-col items-center">
+                      <Label className="text-[10px] text-slate-500">竞品主图</Label>
+                      <div className="w-20 h-20 rounded border border-slate-200 bg-white overflow-hidden flex items-center justify-center relative group/compimg">
+                        {watchedCompetitors[index]?.imageUrl ? (
+                          <img src={watchedCompetitors[index].imageUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <Plus className="w-4 h-4 text-slate-300" />
                         )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] text-slate-600">竞品图片 URL</Label>
+                          <Input {...register(`competitors.${index}.imageUrl`)} placeholder="https://..." className="h-7 text-xs bg-white" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] text-slate-500 font-bold text-blue-600">店铺等级</Label>
+                          <Input {...register(`competitors.${index}.name`)} placeholder="例如: 铂金/优秀" className="h-7 text-xs bg-white" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] text-slate-500">竞品规格</Label>
+                          <Input {...register(`competitors.${index}.specs`)} placeholder="例如: 黑色-加厚款" className="h-7 text-xs bg-white" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] text-slate-500">竞品链接 (URL)</Label>
+                          <div className="flex gap-1">
+                            <Input {...register(`competitors.${index}.url`)} placeholder="https://..." className="h-7 text-xs bg-white flex-1" />
+                            {watchedCompetitors[index]?.url && (
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-7 w-7"
+                                onClick={() => window.open(watchedCompetitors[index].url, '_blank')}
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

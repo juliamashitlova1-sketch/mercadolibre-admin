@@ -32,7 +32,9 @@ export interface OperationLog {
 export interface Competitor {
   id: string;
   url: string;
-  name: string;
+  name: string; // 拟用作店铺等级
+  specs?: string; // 竞品规格
+  imageUrl?: string; // 竞品图片URL
   currentPrice: number;
   reviewCount: number;
   rating: number;

@@ -113,7 +113,9 @@ export default function Competitors() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="text-[11px] h-8">竞品名称/链接</TableHead>
+                    <TableHead className="text-[11px] h-8 w-[60px]">图片</TableHead>
+                    <TableHead className="text-[11px] h-8">店铺等级</TableHead>
+                    <TableHead className="text-[11px] h-8">规格</TableHead>
                     <TableHead className="text-[11px] h-8">当前售价</TableHead>
                     <TableHead className="text-[11px] h-8">价格差</TableHead>
                     <TableHead className="text-[11px] h-8">评价数量</TableHead>
@@ -126,16 +128,28 @@ export default function Competitors() {
                     sku.competitors.map((comp) => {
                       const priceDiff = sku.sellingPrice - comp.currentPrice;
                       return (
-                        <TableRow key={comp.id} className="h-10">
+                        <TableRow key={comp.id} className="h-16">
+                          <TableCell className="py-2">
+                            <div className="w-12 h-12 rounded border bg-slate-50 overflow-hidden flex items-center justify-center">
+                              {comp.imageUrl ? (
+                                <img src={comp.imageUrl} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="text-[10px] text-slate-300">无图</div>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="py-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium">{comp.name || '未命名竞品'}</span>
+                              <span className="text-xs font-bold text-blue-600">{comp.name || '--'}</span>
                               {comp.url && (
                                 <a href={comp.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               )}
                             </div>
+                          </TableCell>
+                          <TableCell className="py-2">
+                            <span className="text-[11px] text-text-main bg-slate-100 px-1.5 py-0.5 rounded">{comp.specs || '--'}</span>
                           </TableCell>
                           <TableCell className="text-xs font-bold">${comp.currentPrice}</TableCell>
                           <TableCell className="text-xs">
@@ -158,7 +172,7 @@ export default function Competitors() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-10">
+                      <TableCell colSpan={8} className="text-center py-10">
                         <div className="flex flex-col items-center gap-3">
                           <div className="text-xs text-text-sub italic">暂无监控竞品，记录每日数据请点击右上方 "+" 号</div>
                           <Button 

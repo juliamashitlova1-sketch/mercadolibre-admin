@@ -119,7 +119,6 @@ export default function MainLayout({
     { id: '/ads', label: '广告优化', icon: TrendingUp },
     { id: '/fake-orders', label: '刷单支出', icon: CreditCard },
     { id: '/cargo-damage', label: '货损支出', icon: PackageX },
-    { id: '/competitors', label: '竞品监控', icon: Crosshair },
     { id: '/finance', label: '财务报表', icon: DollarSign },
     { id: '/health', label: '账号健康', icon: AlertTriangle },
     { id: '/operations', label: '操作日志', icon: Activity },

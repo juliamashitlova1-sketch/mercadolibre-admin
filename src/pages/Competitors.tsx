@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, AlertTriangle } from 'lucide-react';
+import { ExternalLink, AlertTriangle, Plus, History } from 'lucide-react';
 import { SKUStats } from '../types';
 import { useOutletContext } from 'react-router-dom';
 import { getMexicoDateString } from '../lib/time';
@@ -93,15 +93,21 @@ export default function Competitors() {
                 <div className="text-xs text-text-sub">
                   我的售价: <span className="font-bold text-text-main">${sku.sellingPrice}</span>
                 </div>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 border border-sky-100 rounded text-[10px] text-sky-600 font-medium">
+                  <History className="w-3 h-3" />
+                  数据日期: {sku.date}
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-7 text-[10px]"
-                onClick={() => onEditSku(sku, 'competitors')}
-              >
-                更新竞品数据
-              </Button>
+              <div className="flex items-center gap-2">
+                 <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                  onClick={() => onEditSku(sku, 'competitors')}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -152,8 +158,18 @@ export default function Competitors() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-4 text-xs text-text-sub italic">
-                        暂无监控竞品，点击右上角"更新竞品数据"添加
+                      <TableCell colSpan={6} className="text-center py-10">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="text-xs text-text-sub italic">暂无监控竞品，记录每日数据请点击右上方 "+" 号</div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 border-dashed gap-1.5 text-xs text-slate-500 hover:text-primary hover:border-primary transition-all"
+                            onClick={() => onEditSku(sku, 'competitors')}
+                          >
+                            <Plus className="w-3.5 h-3.5" /> 开始录入首个竞品
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}

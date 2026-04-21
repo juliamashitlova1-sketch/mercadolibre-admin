@@ -687,6 +687,7 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
         impressions: Number(form.impressions) || 0,
         clicks: Number(form.clicks) || 0, 
         ad_orders: Number(form.adOrders) || 0,
+        competitors: existingData?.competitors || [],
       }, { onConflict: 'doc_id' });
       if (error) throw error;
 

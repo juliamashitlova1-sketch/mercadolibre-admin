@@ -26,7 +26,17 @@ export default function Competitors() {
     const filtered = filterByDateRange(allSkuData, startDate, endDate);
     const latestPerSku: Record<string, SKUStats> = {};
     filtered.forEach(item => {
-      if (!latestPerSku[item.sku] || item.date > latestPerSku[item.sku].date) {
+      const existing = latestPerSku[item.sku];
+      const itemHasData = item.competitors && item.competitors.length > 0;
+      const existingHasData = existing?.competitors && existing.competitors.length > 0;
+
+      if (!existing || item.date > existing.date) {
+        // 如果新记录有数据，或者旧记录没数据，则更新为新记录
+        if (itemHasData || !existingHasData) {
+          latestPerSku[item.sku] = item;
+        }
+      } else if (item.date === existing.date && itemHasData && !existingHasData) {
+        // 同一天的情况下，优先保留有数据的那条
         latestPerSku[item.sku] = item;
       }
     });

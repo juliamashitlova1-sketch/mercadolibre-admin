@@ -892,38 +892,69 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
           </section>
         </div>
 
-        <div className="px-8 py-6 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="text-[11px] text-slate-500 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Supabase 数据库连接正常
+        {/* Sticky Footer */}
+        <div className="sticky bottom-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-6 flex items-center justify-between z-20 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">数据状态</span>
+              <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> 
+                {existingData ? `已加载历史记录 (${existingData.date})` : '正在创建新纪录'}
+              </div>
             </div>
+            
             {existingData && (
               <button
                 onClick={async () => {
-                  if (!confirm(`确认删除 ${selectedSku} 在 ${logDate} 的全部数据？此操作不可撤销！`)) return;
+                  if (!confirm(`确认删除 ${selectedSku} 在 ${logDate} 的全部数据？`)) return;
                   setDeleting(true);
                   try {
                     const docId = `${selectedSku}_${logDate}`;
                     const { error } = await supabase.from('sku_stats').delete().eq('doc_id', docId);
                     if (error) throw error;
-                    setMsg('数据已永久删除'); setMsgType('success');
+                    setMsg('数据已清除'); setMsgType('success');
                     onSaveSuccess();
                     setTimeout(() => onBack(), 800);
                   } catch (err: any) { setMsg(err.message); setMsgType('error'); }
                   finally { setDeleting(false); }
                 }}
                 disabled={deleting}
-                className="px-4 h-10 rounded-xl text-sm font-medium text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-200 hover:border-rose-500 transition-all flex items-center gap-2"
+                className="px-4 h-9 rounded-xl text-xs font-medium text-rose-500 hover:text-white hover:bg-rose-500 border border-thin border-rose-100 hover:border-rose-500 transition-all flex items-center gap-2"
               >
-                <Trash2 className="w-4 h-4" />
-                {deleting ? '正在删除...' : '删除此日数据'}
+                <Trash2 className="w-3.5 h-3.5" />
+                {deleting ? '正在移除...' : '删除记录'}
               </button>
             )}
           </div>
-          <button onClick={handleSave} disabled={saving} className="btn-primary min-w-[200px] flex justify-center py-3">
-            {saving ? (<span className="flex items-center gap-2"><RefreshCw className="w-4 h-4 animate-spin"/> 数据传输中...</span>) :
-             (<span className="flex items-center gap-2"><Save className="w-4 h-4"/> 确认提交并同步至云端</span>)}
-          </button>
+
+          <div className="flex items-center gap-3">
+            {msg && (
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${msgType === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                {msg}
+              </span>
+            )}
+            <button 
+              onClick={onBack} 
+              className="px-6 h-11 rounded-xl text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all"
+            >
+              取消
+            </button>
+            <button 
+              onClick={handleSave} 
+              disabled={saving} 
+              className="btn-primary min-w-[220px] h-11 flex justify-center shadow-lg shadow-sky-100 hover:shadow-sky-200"
+            >
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin"/> 同步中...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Save className="w-4 h-4"/> 确认提交并实时同步
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

@@ -220,7 +220,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
       />
       
       {/* Right Slide Panel */}
-      <div className="fixed top-0 right-0 h-full w-[520px] bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right">
+      <div className="fixed top-0 right-0 h-full w-[520px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
           <div>
@@ -242,12 +242,12 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
           <form id="sku-entry-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="sku" className="text-xs">SKU 编码</Label>
-                <Input {...register('sku')} disabled={!!sku} className="h-8 text-xs" placeholder="A16" />
+                <Label htmlFor="sku" className="text-xs text-slate-700">SKU 编码</Label>
+                <Input {...register('sku')} disabled={!!sku} className="h-8 text-xs font-bold disabled:opacity-100 disabled:bg-slate-50 disabled:text-slate-900" placeholder="A16" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="skuName" className="text-xs">SKU 中文名称</Label>
-                <Input {...register('skuName')} disabled={mode === 'competitors'} placeholder="例如: 蓝牙耳机-黑色" className="h-8 text-xs" />
+                <Label htmlFor="skuName" className="text-xs text-slate-700">SKU 中文名称</Label>
+                <Input {...register('skuName')} disabled={mode === 'competitors'} placeholder="例如: 蓝牙耳机-黑色" className="h-8 text-xs font-bold disabled:opacity-100 disabled:bg-slate-50 disabled:text-slate-900" />
               </div>
             </div>
 
@@ -391,7 +391,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
 
             {mode === 'full' && <Separator />}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[11px] text-primary uppercase tracking-tight">竞品监控 (Competitors)</h3>
+              <h3 className="font-bold text-[11px] text-blue-700 uppercase tracking-tight">竞品监控 (Competitors)</h3>
               <Button 
                 type="button" 
                 variant="outline" 
@@ -426,7 +426,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-slate-500">竞品名称/备注</Label>
+                      <Label className="text-[10px] text-slate-600">竞品名称/备注</Label>
                       <Input {...register(`competitors.${index}.name`)} placeholder="竞品 A" className="h-7 text-xs bg-white" />
                     </div>
                     <div className="space-y-1.5">

@@ -25,6 +25,13 @@ export default function AiBrain() {
   const [selectedSku, setSelectedSku] = useState<string>('all');
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [extraPrompt, setExtraPrompt] = useState<string>('');
+
+  const quickPrompts = [
+     "深度AB测试复盘：重点分析核心改动（如调价/图片）后的环比转化差异",
+     "库存与流量预警：结合DOH找出隐患 SKU 以及被压缩自然流量的冗余品",
+     "竞品攻防策略：分析因头部竞品降价可能导致的我方流量流失率与保本反击底线"
+  ];
 
   // Get unique SKUs for selector
   const uniqueSkus = Array.from(new Set(allSkuData.map(s => s.sku))).sort();
@@ -34,7 +41,8 @@ export default function AiBrain() {
   }, {} as Record<string, string>);
 
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (overridePrompt?: string | React.MouseEvent) => {
+    const promptToUse = typeof overridePrompt === 'string' ? overridePrompt : extraPrompt;
     setAnalyzing(true);
     setError(null);
     try {
@@ -54,7 +62,8 @@ export default function AiBrain() {
         dateRange.end, 
         filteredStats, 
         filteredLogs,
-        selectedSku
+        selectedSku,
+        promptToUse
       );
 
       setResult(analysis);
@@ -191,13 +200,30 @@ export default function AiBrain() {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="h-full glass-panel flex flex-col items-center justify-center p-12 text-center"
               >
-                <div className="w-20 h-20 bg-purple-50 rounded-3xl flex items-center justify-center mb-6">
+                <div className="w-20 h-20 bg-purple-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
                   <MessageSquare className="w-10 h-10 text-purple-300" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800 mb-2">准备好开启智能洞察了吗？</h2>
-                <p className="text-sm text-slate-500 max-w-sm">
-                  请在上方选择您想要分析的时间范围。AI 将深入您的销售数据与操作记录，为您生成专业的经营报告。
-                </p>
+                <h2 className="text-xl font-bold text-slate-800 mb-8">准备好开启智能洞察了吗？</h2>
+                
+                <div className="w-full max-w-xl text-left space-y-4">
+                   <div className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-2">常用深度分析指令 (Quick Prompts)</div>
+                   <div className="flex flex-col gap-3">
+                     {quickPrompts.map(prompt => (
+                        <button
+                          key={prompt}
+                          onClick={() => {
+                             setExtraPrompt(prompt);
+                             handleAnalyze(prompt);
+                          }}
+                          className="px-5 py-4 text-sm text-left bg-white border border-slate-200 rounded-xl hover:border-purple-300 hover:shadow-lg hover:shadow-purple-500/10 hover:text-purple-700 transition-all text-slate-600 flex items-center justify-between group relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <span className="relative z-10">{prompt}</span>
+                          <Sparkles className="w-5 h-5 text-purple-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 relative z-10" />
+                        </button>
+                     ))}
+                   </div>
+                </div>
               </motion.div>
             )}
 

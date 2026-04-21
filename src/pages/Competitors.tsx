@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertTriangle } from 'lucide-react';
 import { SKUStats } from '../types';
 import { useOutletContext } from 'react-router-dom';
 import { getMexicoDateString } from '../lib/time';
@@ -33,6 +33,17 @@ export default function Competitors() {
     return Object.values(latestPerSku);
   }, [allSkuData, startDate, endDate]);
 
+  const criticalAlerts = useMemo(() => {
+     return filteredSkuData.map(sku => {
+        if (!sku.competitors) return null;
+        const severeThreats = sku.competitors.filter(c => sku.sellingPrice - c.currentPrice > 0);
+        if (severeThreats.length > 0) {
+           return { sku: sku.sku, skuName: sku.skuName, threats: severeThreats };
+        }
+        return null;
+     }).filter(Boolean) as { sku: string; skuName: string; threats: any[] }[];
+  }, [filteredSkuData]);
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex justify-between items-end">
@@ -44,6 +55,29 @@ export default function Competitors() {
           提示: 点击 SKU 可快速更新竞品数据
         </div>
       </header>
+
+      {criticalAlerts.length > 0 && (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-4 shadow-sm relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-rose-500/10 to-transparent rounded-bl-full pointer-events-none" />
+           <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0 border border-rose-200 z-10">
+              <AlertTriangle className="w-5 h-5 text-rose-600" />
+           </div>
+           <div className="z-10 flex-1">
+              <h3 className="text-sm font-bold text-rose-800 flex items-center gap-2">防御雷达报警：发现核心竞品低价威胁 <span className="bg-rose-600 text-white text-[10px] px-2 py-0.5 rounded-full font-mono animate-pulse">{criticalAlerts.length} SKU</span></h3>
+              <p className="text-xs text-rose-700/80 mt-1 leading-relaxed">
+                 存在核心竞品售价低于我方，建议立即关注对应 SKU 的自然转化率波动，并利用 AiBrain 进行推演，或启动降价 / 增加防御性广告预算。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                 {criticalAlerts.slice(0, 5).map(a => (
+                    <div key={a.sku} className="bg-white/60 border border-rose-100 rounded px-2 py-1 text-[10px] font-bold text-rose-700">
+                       {a.sku} <span className="text-rose-500 font-normal">[{a.threats.length}个威胁]</span>
+                    </div>
+                 ))}
+                 {criticalAlerts.length > 5 && <div className="text-[10px] text-rose-500 font-bold flex items-end">... 等 {criticalAlerts.length} 个 SKU</div>}
+              </div>
+           </div>
+        </div>
+      )}
 
       <DateRangeFilter startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />
 

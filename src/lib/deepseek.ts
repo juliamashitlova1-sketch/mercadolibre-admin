@@ -9,7 +9,8 @@ export async function analyzeStoreData(
   endDate: string,
   skuStats: SKUStats[],
   logs: OperationLog[],
-  selectedSku: string = 'all'
+  selectedSku: string = 'all',
+  extraPrompt: string = ''
 ) {
 
   // 1. Prepare data summary for AI context
@@ -74,7 +75,9 @@ export async function analyzeStoreData(
 ## 3. 细分 SKU 指标拆解
 (如果是整体分析，列出表现最优和最差的 SKU；如果是单 SKU 分析，拆解其流量结构和订单转化)
 ## 4. 首席分析师的战略建议
-(给出具体的、可落地的优化动作清单。包含：价格调整策略、广告出价模式、库存预警动作等)`;
+(给出具体的、可落地的优化动作清单。包含：价格调整策略、广告出价模式、库存预警动作等)
+
+${extraPrompt ? `**【用户特别指令 / 重点聚焦】**：\n${extraPrompt}\n请特别针对上述指令提供深度的解答和洞察。` : ''}`;
 
   const userPrompt = `以下是分析所需的上下文原始数据：
 

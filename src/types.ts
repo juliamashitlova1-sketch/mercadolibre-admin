@@ -61,6 +61,9 @@ export interface SKUStats {
   adOrders: number; // 当日广告订单数
   purchasePrice: number; // 采购价 (CNY)
   sellingPrice: number; // 当时售价 (MXN)
+  specs?: string; // 产品规格
+  reviewCount?: number; // 评论数量
+  rating?: number; // 评分
   unitProfitExclAds: number; // 当时利润-不含广告 (MXN)
   inTransitStock: number; // 在途库存
   inProductionStock: number; // 生产中库存

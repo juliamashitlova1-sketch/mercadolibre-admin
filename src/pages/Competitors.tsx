@@ -101,29 +101,58 @@ export default function Competitors() {
       <div className="grid grid-cols-1 gap-6">
         {filteredSkuData.length > 0 ? filteredSkuData.map((sku) => (
           <Card key={sku.sku} className="border-border shadow-sm bg-card rounded-xl overflow-hidden">
-            <CardHeader className="bg-slate-50/50 py-3 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 text-primary font-mono text-xs px-2 py-1 rounded">
-                  {sku.sku}
+            <CardHeader className="bg-slate-50/50 py-4 flex flex-col gap-4">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 text-primary font-mono text-xs px-2 py-1 rounded">
+                    {sku.sku}
+                  </div>
+                  <CardTitle className="text-sm font-bold">{sku.skuName}</CardTitle>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 border border-sky-100 rounded text-[10px] text-sky-600 font-medium">
+                    <History className="w-3 h-3" />
+                    数据日期: {sku.date}
+                  </div>
                 </div>
-                <CardTitle className="text-sm font-bold">{sku.skuName}</CardTitle>
-                <div className="text-xs text-text-sub">
-                  我的售价: <span className="font-bold text-text-main">${sku.sellingPrice}</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-sky-50 border border-sky-100 rounded text-[10px] text-sky-600 font-medium">
-                  <History className="w-3 h-3" />
-                  数据日期: {sku.date}
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
+                    onClick={() => onEditSku(sku, 'competitors')}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shadow-sm"
-                  onClick={() => onEditSku(sku, 'competitors')}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+
+              {/* 我的产品当日状态摘要 (用于对比) */}
+              <div className="flex items-center gap-6 bg-white/60 p-2.5 rounded-xl border border-slate-200 border-dashed">
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">我的售价</span>
+                  <span className="text-xs font-bold text-slate-800">${sku.sellingPrice}</span>
+                </div>
+                <div className="h-6 w-px bg-slate-200" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">产品规格</span>
+                  <span className="text-[11px] font-medium text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-100 mt-0.5 truncate max-w-[150px]">{sku.specs || '--'}</span>
+                </div>
+                <div className="h-6 w-px bg-slate-200" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评价数</span>
+                  <span className="text-xs font-bold text-slate-700">{sku.reviewCount || 0}</span>
+                </div>
+                <div className="h-6 w-px bg-slate-200" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评分</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs font-extrabold text-amber-600">{sku.rating?.toFixed(1) || '0.0'}</span>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => (
+                        <div key={s} className={`w-1.5 h-1.5 rounded-full ${s <= (sku.rating || 0) ? 'bg-amber-400' : 'bg-slate-200'}`} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">

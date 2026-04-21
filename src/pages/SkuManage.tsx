@@ -606,6 +606,9 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
     impressions: existingData?.impressions !== undefined ? String(existingData.impressions) : '', 
     clicks: existingData?.clicks !== undefined ? String(existingData.clicks) : '', 
     adOrders: existingData?.adOrders !== undefined ? String(existingData.adOrders) : '',
+    specs: existingData?.specs || '',
+    reviewCount: existingData?.reviewCount !== undefined ? String(existingData.reviewCount) : '',
+    rating: existingData?.rating !== undefined ? String(existingData.rating) : '',
   });
 
   // Whenever existingData changes, re-sync state immediately
@@ -624,6 +627,9 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
         impressions: String(existingData.impressions), 
         clicks: String(existingData.clicks), 
         adOrders: String(existingData.adOrders),
+        specs: existingData.specs || '',
+        reviewCount: String(existingData.reviewCount || 0),
+        rating: String(existingData.rating || 0),
       });
     }
   }, [existingData]);
@@ -687,6 +693,9 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
         impressions: Number(form.impressions) || 0,
         clicks: Number(form.clicks) || 0, 
         ad_orders: Number(form.adOrders) || 0,
+        specs: form.specs || '',
+        review_count: Number(form.reviewCount) || 0,
+        rating: Number(form.rating) || 0,
         competitors: existingData?.competitors || [],
       }, { onConflict: 'doc_id' });
       if (error) throw error;
@@ -790,7 +799,14 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div><label className={labelCls}>当前真实售价 (MXN)</label><div className={inputGroupCls}><input type="number" step="0.01" value={form.sellingPrice} onChange={e=>handleChange('sellingPrice',e.target.value)} className={inputCls} placeholder="0.00"/></div></div>
-              <div><label className={labelCls}>单件毛利(不含广告) (CNY)</label><div className={inputGroupCls}><input type="number" step="0.01" value={form.unitProfitExclAds} onChange={e=>handleChange('unitProfitExclAds',e.target.value)} className={inputCls} placeholder="0.00"/></div></div>
+              <div><label className={labelCls}>我的规格</label><div className={inputGroupCls}><input value={form.specs} onChange={e=>handleChange('specs',e.target.value)} className={inputCls} placeholder="例如: 黑色-加厚款"/></div></div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <div><label className={labelCls}>评价数量</label><div className={inputGroupCls}><input type="number" value={form.reviewCount} onChange={e=>handleChange('reviewCount',e.target.value)} className={inputCls} placeholder="0"/></div></div>
+              <div><label className={labelCls}>产品评分 (0-5)</label><div className={inputGroupCls}><input type="number" step="0.1" value={form.rating} onChange={e=>handleChange('rating',e.target.value)} className={inputCls} placeholder="0.0"/></div></div>
+            </div>
+            <div className="mt-6">
+              <label className={labelCls}>单件毛利(不含广告) (CNY)</label><div className={inputGroupCls}><input type="number" step="0.01" value={form.unitProfitExclAds} onChange={e=>handleChange('unitProfitExclAds',e.target.value)} className={inputCls} placeholder="0.00"/></div>
             </div>
           </section>
 

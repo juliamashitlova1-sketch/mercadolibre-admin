@@ -32,6 +32,9 @@ const skuSchema = z.object({
   adOrders: z.number().min(0),
   purchasePrice: z.number().min(0),
   sellingPrice: z.number().min(0),
+  specs: z.string().optional(),
+  reviewCount: z.number().min(0).optional(),
+  rating: z.number().min(0).max(5).optional(),
   unitProfitExclAds: z.number().min(0),
   inTransitStock: z.number().min(0),
   inProductionStock: z.number().min(0),
@@ -84,6 +87,9 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
       adOrders: 0,
       purchasePrice: 0,
       sellingPrice: 0,
+      specs: '',
+      reviewCount: 0,
+      rating: 0,
       unitProfitExclAds: 0,
       inTransitStock: 0,
       inProductionStock: 0,
@@ -160,6 +166,9 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
         ad_orders: data.adOrders || 0,
         purchase_price: data.purchasePrice || 0,
         selling_price: data.sellingPrice || 0,
+        specs: data.specs || '',
+        review_count: data.reviewCount || 0,
+        rating: data.rating || 0,
         unit_profit_excl_ads: data.unitProfitExclAds || 0,
         in_transit_stock: data.inTransitStock || 0,
         in_production_stock: data.inProductionStock || 0,
@@ -332,18 +341,36 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
             <Separator />
             <h3 className="font-bold text-[11px] text-primary uppercase tracking-tight">财务成本（财努）</h3>
             
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="purchasePrice" className="text-xs">采购价 (元)</Label>
-                <Input type="number" step="0.01" {...register('purchasePrice', { valueAsNumber: true })} className="h-8 text-xs" />
+                <Input type="number" step="0.01" {...register('purchasePrice', { valueAsNumber: true })} className="h-8 text-xs font-bold border-slate-300" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sellingPrice" className="text-xs">当时售价 (MXN)</Label>
-                <Input type="number" step="0.01" {...register('sellingPrice', { valueAsNumber: true })} className="h-8 text-xs" />
+                <Label htmlFor="unitProfitExclAds" className="text-xs">单品纯利润 (MXN)</Label>
+                <Input type="number" step="0.01" {...register('unitProfitExclAds', { valueAsNumber: true })} className="h-8 text-xs font-bold border-slate-300" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="sellingPrice" className="text-xs font-bold text-sky-600">我的售价 (MXN)</Label>
+                <Input type="number" step="0.01" {...register('sellingPrice', { valueAsNumber: true })} className="h-8 text-xs font-bold border-sky-300 bg-sky-50/30" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="unitProfitExclAds" className="text-xs">单品利润-透明广告(MXN)</Label>
-                <Input type="number" step="0.01" {...register('unitProfitExclAds', { valueAsNumber: true })} className="h-8 text-xs" />
+                <Label htmlFor="specs" className="text-xs font-bold text-sky-600">我的产品规格</Label>
+                <Input {...register('specs')} placeholder="黑色-标准版" className="h-8 text-xs font-bold border-sky-300 bg-sky-50/30" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="reviewCount" className="text-xs font-bold text-sky-600">我的评价数量</Label>
+                <Input type="number" {...register('reviewCount', { valueAsNumber: true })} className="h-8 text-xs font-bold border-sky-300 bg-sky-50/30" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="rating" className="text-xs font-bold text-sky-600">我的评分 (0-5)</Label>
+                <Input type="number" step="0.1" {...register('rating', { valueAsNumber: true })} className="h-8 text-xs font-bold border-sky-300 bg-sky-50/30" />
               </div>
             </div>
 

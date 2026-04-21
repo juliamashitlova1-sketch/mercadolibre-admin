@@ -29,7 +29,7 @@ export default function Finance() {
 
   const { dailyFinance, skuFinance, totalProfitCNY, totalSalesCNY } = useMemo(() => {
     const byDate: Record<string, { sales: number; adSpend: number; orders: number; profitCNY: number; expenseCNY: number }> = {};
-    const bySku: Record<string, { sku: string; name: string; sales: number; adSpend: number; orders: number; profitCNY: number; expenseCNY: number; imageUrl?: string }> = {};
+    const bySku: Record<string, { sku: string; name: string; sales: number; adSpend: number; orders: number; adOrders: number; profitCNY: number; expenseCNY: number; imageUrl?: string }> = {};
 
     // 1. 处理 SKU 运营数据 (销售与广告)
     filteredSkuData.forEach(item => {
@@ -45,7 +45,7 @@ export default function Finance() {
         bySku[skuKey] = { 
           sku: skuKey, 
           name: item.skuName || (item.sku ? item.sku : '未归属广告/其它支出'), 
-          sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0,
+          sales: 0, adSpend: 0, orders: 0, adOrders: 0, profitCNY: 0, expenseCNY: 0,
           imageUrl: item.imageUrl
         };
       }
@@ -53,6 +53,7 @@ export default function Finance() {
       s.sales += item.sales || 0;
       s.adSpend += item.adSpend || 0;
       s.orders += item.orders || 0;
+      s.adOrders += item.adOrders || 0;
       // SKU 利润: 订单 * 单件毛利 - 广告支出(换算)
       s.profitCNY += (item.orders || 0) * (item.unitProfitExclAds || 0) - (item.adSpend || 0) * MXN_TO_CNY;
     });
@@ -66,7 +67,7 @@ export default function Finance() {
 
       const skuKey = item.sku || 'FAKE_ORDER';
       if (!bySku[skuKey]) {
-        bySku[skuKey] = { sku: skuKey, name: item.skuName || '刷单/测评', sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+        bySku[skuKey] = { sku: skuKey, name: item.skuName || '刷单/测评', sales: 0, adSpend: 0, orders: 0, adOrders: 0, profitCNY: 0, expenseCNY: 0 };
       }
       bySku[skuKey].expenseCNY += cost;
     });
@@ -80,7 +81,7 @@ export default function Finance() {
 
       const skuKey = item.sku || 'CARGO_DAMAGE';
       if (!bySku[skuKey]) {
-        bySku[skuKey] = { sku: skuKey, name: item.skuName || '货损异常', sales: 0, adSpend: 0, orders: 0, profitCNY: 0, expenseCNY: 0 };
+        bySku[skuKey] = { sku: skuKey, name: item.skuName || '货损异常', sales: 0, adSpend: 0, orders: 0, adOrders: 0, profitCNY: 0, expenseCNY: 0 };
       }
       bySku[skuKey].expenseCNY += cost;
     });
@@ -202,8 +203,11 @@ export default function Finance() {
             <Table>
               <TableHeader className={`${isV2 ? 'bg-[#0f172a]/80 sticky top-0 z-10 backdrop-blur-md' : 'bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm'}`}>
                 <TableRow className={isV2 ? 'border-slate-800 hover:bg-transparent' : ''}>
-                  <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>产品 SKU</TableHead>
+                  <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>产品</TableHead>
+                  <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>SKU</TableHead>
                   <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>销量/费用</TableHead>
+                  <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>广告销量</TableHead>
+                  <TableHead className={`text-[10px] font-bold ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>自然销量</TableHead>
                   <TableHead className={`text-[10px] font-bold text-right ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>净利润 (CNY)</TableHead>
                 </TableRow>
               </TableHeader>
@@ -211,19 +215,27 @@ export default function Finance() {
                 {skuFinance.length > 0 ? skuFinance.map((item) => (
                   <TableRow key={item.sku} className={`${isV2 ? 'border-slate-800/50 hover:bg-indigo-500/5' : 'hover:bg-slate-50/50'} transition-all duration-300 group`}>
                     <TableCell className="py-3">
-                      <div className={`text-[11px] font-bold transition-colors ${isV2 ? 'text-slate-200 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-indigo-600'}`}>{item.sku}</div>
-                      <div className={`text-[10px] truncate max-w-[150px] font-medium ${isV2 ? 'text-slate-500' : 'text-slate-400'}`}>{item.name}</div>
+                      <div className={`text-[10px] font-medium leading-normal ${isV2 ? 'text-slate-400' : 'text-slate-500'}`}>{item.name}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className={`text-[11px] font-bold ${isV2 ? 'text-slate-200 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-indigo-600'}`}>{item.sku}</div>
                     </TableCell>
                     <TableCell>
                       <div className={`text-[11px] font-bold ${isV2 ? 'text-slate-400' : 'text-slate-600'}`}>{item.orders} 件</div>
                       {item.expenseCNY > 0 && <div className={`text-[9px] font-bold ${isV2 ? 'text-rose-400/80' : 'text-rose-400'}`}>额外支出: ¥{item.expenseCNY.toFixed(1)}</div>}
+                    </TableCell>
+                    <TableCell>
+                      <div className={`text-[11px] font-medium ${isV2 ? 'text-sky-400/80' : 'text-sky-600'}`}>{item.adOrders}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className={`text-[11px] font-medium ${isV2 ? 'text-emerald-400/80' : 'text-emerald-600'}`}>{item.orders - item.adOrders}</div>
                     </TableCell>
                     <TableCell className={`text-[11px] font-black text-right ${item.profitCNY > 0 ? (isV2 ? 'text-emerald-400' : 'text-emerald-600') : (isV2 ? 'text-rose-400' : 'text-rose-600')}`}>
                       ¥{item.profitCNY.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
                     </TableCell>
                   </TableRow>
                 )) : (
-                  <TableRow><TableCell colSpan={3} className="text-center py-8 text-slate-400 text-xs">暂无数据</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-slate-400 text-xs">暂无数据</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>

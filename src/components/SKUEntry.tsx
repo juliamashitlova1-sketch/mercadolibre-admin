@@ -53,9 +53,10 @@ interface SKUEntryProps {
   onOpenChange: (open: boolean) => void;
   sku?: SKUStats | null;
   onSuccess: () => void;
+  mode?: 'full' | 'competitors';
 }
 
-export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntryProps) {
+export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'full' }: SKUEntryProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { isSubmitting }, reset, setValue, control, watch } = useForm({
     resolver: zodResolver(skuSchema),
@@ -246,9 +247,12 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="skuName" className="text-xs">SKU 中文名称</Label>
-                <Input {...register('skuName')} placeholder="例如: 蓝牙耳机-黑色" className="h-8 text-xs" />
+                <Input {...register('skuName')} disabled={mode === 'competitors'} placeholder="例如: 蓝牙耳机-黑色" className="h-8 text-xs" />
               </div>
             </div>
+
+            {mode === 'full' && (
+              <>
 
             <div className="grid grid-cols-2 gap-3 items-end">
               <div className="space-y-1.5">
@@ -382,8 +386,10 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess }: SKUEntr
                 </div>
               </div>
             </div>
+            </>
+            )}
 
-            <Separator />
+            {mode === 'full' && <Separator />}
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-[11px] text-primary uppercase tracking-tight">竞品监控 (Competitors)</h3>
               <Button 

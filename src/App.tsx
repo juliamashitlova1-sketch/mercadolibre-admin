@@ -91,6 +91,7 @@ function AppContent() {
 
   const [isEntryOpen, setIsEntryOpen] = useState(false);
   const [isSkuEntryOpen, setIsSkuEntryOpen] = useState(false);
+  const [skuEntryMode, setSkuEntryMode] = useState<'full' | 'competitors'>('full');
   const [isClaimEntryOpen, setIsClaimEntryOpen] = useState(false);
   const [isOperationEntryOpen, setIsOperationEntryOpen] = useState(false);
   const [selectedSku, setSelectedSku] = useState<SKUStats | null>(null);
@@ -115,8 +116,9 @@ function AppContent() {
       setIsClaimEntryOpen(true);
     },
     onAddLog: () => setIsOperationEntryOpen(true),
-    onEditSku: (sku: SKUStats | null) => {
+    onEditSku: (sku: SKUStats | null, mode: 'full' | 'competitors' = 'full') => {
       setSelectedSku(sku);
+      setSkuEntryMode(mode);
       setIsSkuEntryOpen(true);
     },
     onEditClaim: (claim: Claim) => {
@@ -189,7 +191,7 @@ function AppContent() {
       </Routes>
 
       <DataEntry open={isEntryOpen} onOpenChange={setIsEntryOpen} skuData={skuData} onSuccess={() => console.log('Data saved')} />
-      <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} onSuccess={() => refreshSkuData()} />
+      <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} mode={skuEntryMode} onSuccess={() => refreshSkuData()} />
       <ClaimEntry open={isClaimEntryOpen} onOpenChange={setIsClaimEntryOpen} claim={selectedClaim} onSuccess={() => console.log('Claim updated')} />
       <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} skuData={skuData} onSuccess={() => { refreshLogs(); console.log('Operation log saved'); }} />
     </>

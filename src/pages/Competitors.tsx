@@ -11,7 +11,7 @@ import DateRangeFilter, { filterByDateRange } from '../components/DateRangeFilte
 interface ContextType {
   skuData: SKUStats[];
   allSkuData: SKUStats[];
-  onEditSku: (sku: SKUStats) => void;
+  onEditSku: (sku: SKUStats, mode?: 'full' | 'competitors') => void;
 }
 
 export default function Competitors() {
@@ -98,7 +98,7 @@ export default function Competitors() {
                 variant="outline" 
                 size="sm" 
                 className="h-7 text-[10px]"
-                onClick={() => onEditSku(sku)}
+                onClick={() => onEditSku(sku, 'competitors')}
               >
                 更新竞品数据
               </Button>

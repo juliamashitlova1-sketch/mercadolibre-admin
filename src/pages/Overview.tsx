@@ -15,7 +15,7 @@ interface ContextType {
   fakeOrders: FakeOrder[];
   cargoDamage: CargoDamage[];
   uiVersion: 'v1' | 'v2';
-  onEditSku: (sku: SKUStats | null) => void;
+  onEditSku: (sku: SKUStats | null, mode?: 'full' | 'competitors') => void;
   onAddLog: () => void;
 }
 

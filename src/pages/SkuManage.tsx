@@ -12,7 +12,7 @@ interface ContextType {
   skuData: SKUStats[];
   allSkuData: SKUStats[];
   refreshSkuData: () => void;
-  onEditSku: (sku: SKUStats | null) => void;
+  onEditSku: (sku: SKUStats | null, mode?: 'full' | 'competitors') => void;
 }
 
 const compressImage = (file: File, callback: (base64: string) => void) => {

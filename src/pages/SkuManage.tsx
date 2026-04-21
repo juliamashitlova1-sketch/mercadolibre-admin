@@ -700,6 +700,36 @@ function DailyDataView({ selectedSku, onBack, existingData, onSaveSuccess }: {
       }, { onConflict: 'doc_id' });
       if (error) throw error;
 
+      // --- Automated Operational Logging ---
+      const changes: string[] = [];
+      if (existingData) {
+        if (Number(form.sellingPrice) !== existingData.sellingPrice) 
+          changes.push(`价格: $${existingData.sellingPrice} -> $${form.sellingPrice}`);
+        if (form.specs !== existingData.specs) 
+          changes.push(`规格: [${existingData.specs || '空'}] -> [${form.specs || '空'}]`);
+        if (Number(form.reviewCount) !== (existingData.reviewCount || 0)) 
+          changes.push(`评价数: ${existingData.reviewCount || 0} -> ${form.reviewCount}`);
+        if (Number(form.rating) !== (existingData.rating || 0)) 
+          changes.push(`评分: ${existingData.rating || 0} -> ${form.rating}`);
+      }
+
+      if (changes.length > 0) {
+        const actionMessage = changes.join('; ');
+        await supabase.from('operation_logs').upsert([{
+          date: logDate,
+          sku: selectedSku,
+          action: `[自动记录-管理页] ${actionMessage}`,
+          details: JSON.stringify({
+            sku: selectedSku,
+            date: logDate,
+            actionType: 'Other',
+            description: actionMessage
+          }),
+          created_at: new Date().toISOString()
+        }]);
+      }
+      // -------------------------------------
+
       const cpcNum = cli > 0 ? (spendUsd / cli) : 0;
       const salesUsdForDb = salesVal / USD_TO_MXN;
       

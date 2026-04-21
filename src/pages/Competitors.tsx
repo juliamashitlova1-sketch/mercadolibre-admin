@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, AlertTriangle, Plus, History } from 'lucide-react';
+import { ExternalLink, AlertTriangle, Plus, History, Edit3 } from 'lucide-react';
 import { SKUStats } from '../types';
 import { useOutletContext } from 'react-router-dom';
 import { getMexicoDateString } from '../lib/time';
@@ -126,24 +126,44 @@ export default function Competitors() {
               </div>
 
               {/* 我的产品当日状态摘要 (用于对比) */}
-              <div className="flex items-center gap-6 bg-white/60 p-2.5 rounded-xl border border-slate-200 border-dashed">
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">我的售价</span>
+              <div className="flex items-center gap-6 bg-white/60 p-2.5 rounded-xl border border-slate-200 border-dashed group/comparison">
+                <div className="flex flex-col group/item">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-tighter">我的售价</span>
+                    <button onClick={() => onEditSku(sku, 'full')} className="opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <Edit3 className="w-2.5 h-2.5 text-sky-500" />
+                    </button>
+                  </div>
                   <span className="text-xs font-bold text-slate-800">${sku.sellingPrice}</span>
                 </div>
                 <div className="h-6 w-px bg-slate-200" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">产品规格</span>
+                <div className="flex flex-col group/item">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-tighter">产品规格</span>
+                    <button onClick={() => onEditSku(sku, 'full')} className="opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <Edit3 className="w-2.5 h-2.5 text-sky-500" />
+                    </button>
+                  </div>
                   <span className="text-[11px] font-medium text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-100 mt-0.5 truncate max-w-[150px]">{sku.specs || '--'}</span>
                 </div>
                 <div className="h-6 w-px bg-slate-200" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评价数</span>
+                <div className="flex flex-col group/item">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评价数</span>
+                    <button onClick={() => onEditSku(sku, 'full')} className="opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <Edit3 className="w-2.5 h-2.5 text-sky-500" />
+                    </button>
+                  </div>
                   <span className="text-xs font-bold text-slate-700">{sku.reviewCount || 0}</span>
                 </div>
                 <div className="h-6 w-px bg-slate-200" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评分</span>
+                <div className="flex flex-col group/item">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-tighter">评分</span>
+                    <button onClick={() => onEditSku(sku, 'full')} className="opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <Edit3 className="w-2.5 h-2.5 text-sky-500" />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-xs font-extrabold text-amber-600">{sku.rating?.toFixed(1) || '0.0'}</span>
                     <div className="flex gap-0.5">

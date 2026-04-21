@@ -211,6 +211,39 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
         await supabase.from('sku_metadata').update({ image_url: null }).eq('sku', data.sku);
       }
       console.log('保存成功！');
+
+      // --- Automated Operational Logging ---
+      const changes: string[] = [];
+      if (sku) {
+        if (data.sellingPrice !== sku.sellingPrice) changes.push(`价格: $${sku.sellingPrice} -> $${data.sellingPrice}`);
+        if (data.specs !== sku.specs) changes.push(`规格: [${sku.specs || '空'}] -> [${data.specs || '空'}]`);
+        if (data.reviewCount !== sku.reviewCount) changes.push(`评价数: ${sku.reviewCount || 0} -> ${data.reviewCount || 0}`);
+        if (data.rating !== sku.rating) changes.push(`评分: ${sku.rating || 0} -> ${data.rating || 0}`);
+      } else {
+        changes.push(`初始录入数据 (售价: $${data.sellingPrice})`);
+      }
+
+      if (changes.length > 0) {
+        const actionMessage = changes.join('; ');
+        const logPayload = {
+          date: data.date,
+          sku: data.sku,
+          action: `[自动记录] ${actionMessage}`,
+          details: JSON.stringify({
+            sku: data.sku,
+            date: data.date,
+            actionType: 'Other',
+            description: actionMessage,
+            fullData: data
+          }),
+          created_at: new Date().toISOString()
+        };
+        
+        await supabase.from('operation_logs').upsert([logPayload]);
+        console.log('自动操作日志已保存');
+      }
+      // -------------------------------------
+
       onSuccess();
       onOpenChange(false);
       reset();

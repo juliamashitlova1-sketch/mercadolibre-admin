@@ -251,14 +251,15 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="date" className="text-xs text-slate-700 font-bold">数据记录日期（业务日期）</Label>
+              <Input type="date" {...register('date')} className="h-9 text-xs font-bold bg-slate-50 border-slate-300" />
+            </div>
+
             {mode === 'full' && (
               <>
 
-            <div className="grid grid-cols-2 gap-3 items-end">
-              <div className="space-y-1.5">
-                <Label htmlFor="date" className="text-xs">日期</Label>
-                <Input type="date" {...register('date')} className="h-8 text-xs" />
-              </div>
+            <div className="grid grid-cols-1 gap-3 items-end">
               <div className="flex items-center gap-2 mb-0.5">
                  <div className="relative w-8 h-8 rounded border border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center group/entryimg">
                     {watch('imageUrl') ? (
@@ -276,7 +277,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
                        <Plus className="w-3 h-3 text-slate-400" />
                     )}
                  </div>
-                 <Label className="text-[10px] text-slate-500">
+                 <Label className="text-[10px] text-slate-500 text-slate-600">
                     {watch('imageUrl') ? '已有关联图片' : '未关联图片'}
                  </Label>
               </div>

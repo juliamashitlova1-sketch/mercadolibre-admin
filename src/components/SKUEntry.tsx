@@ -264,7 +264,7 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
       />
       
       {/* Right Slide Panel */}
-      <div className="fixed top-0 right-0 h-full w-[520px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col animate-slide-in-right">
+      <div className="fixed inset-y-0 right-0 w-[520px] bg-white text-slate-900 shadow-2xl z-50 flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
           <div>
@@ -273,12 +273,23 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
             </h2>
             <p className="text-[11px] text-text-sub mt-0.5">录入特定 SKU 的每日销售、库存及竞争数据</p>
           </div>
-          <button 
-            onClick={() => onOpenChange(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Button 
+              type="submit" 
+              form="sku-entry-form" 
+              size="sm" 
+              disabled={isSubmitting}
+              className="h-8 text-xs px-4"
+            >
+              {isSubmitting ? '保存中...' : '立即保存'}
+            </Button>
+            <button 
+              onClick={() => onOpenChange(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Form Content */}

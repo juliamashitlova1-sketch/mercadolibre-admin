@@ -5,7 +5,7 @@ import { SKUStats } from '../types';
 import logo from '../assets/logo.png';
 import { STOCK_HEALTH_THRESHOLD } from '../constants';
 import {
-  LayoutDashboard, Package, ShoppingCart, 
+  LayoutDashboard, Package, ShoppingCart, ShoppingBag,
   Archive, TrendingUp, Crosshair, 
   DollarSign, AlertTriangle, Activity,
   Search, Bell, Command, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
@@ -112,9 +112,10 @@ export default function MainLayout({
     : '空';
 
   const menuItems = [
+    { id: '/orders-dashboard', label: '订单大盘', icon: ShoppingBag, color: 'text-sky-500' },
+    { id: '/sku-manage', label: 'SKU 档案', icon: Package, color: 'text-amber-500' },
     { id: '/', label: '总览看板', icon: LayoutDashboard },
-    { id: '/sku-manage', label: 'SKU 管理', icon: Package },
-    { id: '/orders', label: '订单管理', icon: ShoppingCart },
+    { id: '/orders', label: '订单流水', icon: ShoppingCart },
     { id: '/inventory', label: '库存管理', icon: Archive, badge: inventoryStatus },
     { id: '/ads', label: '广告优化', icon: TrendingUp },
     { id: '/fake-orders', label: '刷单支出', icon: CreditCard },

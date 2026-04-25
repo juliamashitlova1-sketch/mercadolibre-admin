@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import { supabase } from './lib/supabase';
 import Overview from './pages/Overview';
 import SkuManage from './pages/SkuManage';
+import OrdersDashboard from './pages/OrdersDashboard';
 import Orders from './pages/Orders';
 import Inventory from './pages/Inventory';
 import Ads from './pages/Ads';
@@ -171,6 +172,7 @@ function AppContent() {
         }>
           <Route element={<ContextWrapper contextValue={contextValue} />}>
             <Route path="/" element={<Overview />} />
+            <Route path="/orders-dashboard" element={<OrdersDashboard />} />
             <Route path="/sku-manage" element={<SkuManage />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/inventory" element={<Inventory />} />

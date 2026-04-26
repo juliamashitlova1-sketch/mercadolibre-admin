@@ -89,7 +89,7 @@ export default function SkuManagement() {
       setAdsHistory(adsObj);
 
       // 4. Fetch Operations
-      const { data: ops, error: opsError } = await supabase.from('operations_log').select('*');
+      const { data: ops, error: opsError } = await supabase.from('operation_logs').select('*');
       if (opsError) throw opsError;
       setOpsData(ops);
 

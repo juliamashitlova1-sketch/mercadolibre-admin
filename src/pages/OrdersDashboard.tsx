@@ -18,6 +18,8 @@ export default function OrdersDashboard() {
   const [summary, setSummary] = useState<ParsingSummary | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [rawData, setRawData] = useState<any[][] | null>(null);
+
 
   const handleFileSelect = (file: File) => {
     const reader = new FileReader();
@@ -29,11 +31,14 @@ export default function OrdersDashboard() {
       const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
       
       try {
-        const result = parseMercadoLibreExcel(data as any[][]);
+        const raw = data as any[][];
+        setRawData(raw);
+        const result = parseMercadoLibreExcel(raw);
         setSummary(result);
         setSyncStatus(null);
       } catch (err: any) {
         setSyncStatus({ type: 'error', message: err.message });
+        setSummary(null);
       }
     };
     reader.readAsBinaryString(file);
@@ -234,7 +239,48 @@ export default function OrdersDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* 调试视图：当解析失败或数据为0时显示 */}
+          {rawData && (!summary || summary.validOrders === 0) && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6"
+            >
+              <Card className="border-amber-200 bg-amber-50/30">
+                <CardHeader>
+                  <CardTitle className="text-sm font-bold text-amber-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" /> 调试模式：原始数据预览 (协助检查表头)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-auto max-h-[300px] border border-amber-100 rounded-lg">
+                    <Table>
+                      <TableBody>
+                        {rawData.slice(0, 15).map((row, rIdx) => (
+                          <TableRow key={rIdx} className={rIdx === 5 ? "bg-amber-100/50" : ""}>
+                            <TableCell className="text-[10px] font-bold text-amber-600 bg-amber-50 sticky left-0">
+                              行 {rIdx + 1}
+                            </TableCell>
+                            {Array.isArray(row) && row.slice(0, 10).map((cell, cIdx) => (
+                              <TableCell key={cIdx} className="text-[10px] whitespace-nowrap text-slate-600 border-r border-amber-50">
+                                {String(cell || '')}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <p className="text-[10px] text-amber-600 mt-2 italic">
+                    提示：系统会自动寻找包含 "SKU" 或 "Order ID" 的行作为表头。如果以上预览中没有这些关键词，请检查文件格式。
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </div>
+
       </div>
     </div>
   );

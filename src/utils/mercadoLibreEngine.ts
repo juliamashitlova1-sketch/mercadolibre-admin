@@ -30,13 +30,35 @@ export interface ParsingSummary {
 }
 
 export const parseMercadoLibreExcel = (jsonData: any[][]): ParsingSummary => {
-  if (!jsonData || jsonData.length < 6) {
-    throw new Error('无效的 Excel 文件，数据行数不足（需包含前5行元数据）。');
+  if (!jsonData || jsonData.length === 0) {
+    throw new Error('Excel 文件内容为空。');
   }
 
-  // Mercado Libre 报表通常前 5 行是汇总信息，第 6 行（索引 5）是表头
-  const headers = jsonData[5];
-  const rows = jsonData.slice(6);
+  // --- 1. 动态寻找表头 (Dynamic Header Search) ---
+  // 遍历前 20 行，寻找包含关键特征的行作为表头
+  let headerIndex = -1;
+  const headerKeywords = ['sku', 'order id', 'número de venda', 'external id', 'venda #', 'item sku'];
+  
+  for (let i = 0; i < Math.min(jsonData.length, 20); i++) {
+    const row = jsonData[i];
+    if (!row || !Array.isArray(row)) continue;
+    
+    const rowStr = row.join('|').toLowerCase();
+    if (headerKeywords.some(keyword => rowStr.includes(keyword))) {
+      headerIndex = i;
+      break;
+    }
+  }
+
+  // 如果没找到特征行，默认尝试第 6 行（LatAm 传统格式）
+  if (headerIndex === -1 && jsonData.length >= 6) {
+    headerIndex = 5;
+  } else if (headerIndex === -1) {
+    throw new Error('无法识别表格结构。请确保表格包含 SKU 或 Order ID 等标志性表头。');
+  }
+
+  const headers = jsonData[headerIndex];
+  const rows = jsonData.slice(headerIndex + 1);
 
   // 处理重复表头（防止 key 冲突）
   const seenHeaders: Record<string, number> = {};
@@ -60,24 +82,36 @@ export const parseMercadoLibreExcel = (jsonData: any[][]): ParsingSummary => {
     data: [],
   };
 
+  // --- 2. 字段映射函数 (Mapping Utilities) ---
+  const findValue = (order: RawOrder, aliases: string[]) => {
+    for (const alias of aliases) {
+      if (order[alias] !== undefined && order[alias] !== null && order[alias] !== '') {
+        return order[alias];
+      }
+    }
+    return null;
+  };
+
   rows.forEach((row) => {
+    if (!row || row.length === 0 || (row.length === 1 && !row[0])) return;
+
     const order: RawOrder = {};
     uniqueHeaders.forEach((header, index) => {
       order[header] = row[index];
     });
 
-    // 提取关键字段 (根据 Mercado Libre 导出模板映射)
-    // 常用表头：'Número de venda', 'SKU', 'Status', 'Total (USD)', 'Data da venda'
-    const orderId = String(order['Número de venda'] || order['Order ID'] || order['订单号'] || '').trim();
-    const sku = String(order['SKU'] || order['External ID'] || '').trim();
-    const statusStr = String(order['Status'] || order['Estado'] || '').toLowerCase();
-    const dateStr = String(order['Data da venda'] || order['Data de aprovação'] || order['Date'] || '');
-    const amountVal = parseFloat(String(order['Total (USD)'] || order['Total_1'] || '0').replace(/[^0-9.-]+/g, ''));
+    // 提取关键字段的别名映射
+    const orderId = String(findValue(order, ['Número de venda', 'Order ID', '订单号', 'Order Number', 'Venda #', 'Order #']) || '').trim();
+    const sku = String(findValue(order, ['SKU', 'External ID', 'Item SKU', 'Referencia', 'SKU #']) || '').trim();
+    const statusStr = String(findValue(order, ['Status', 'Estado', 'Situación', 'Outcome', 'Status da venda']) || '').toLowerCase();
+    const dateStr = String(findValue(order, ['Data da venda', 'Data de aprovação', 'Date', 'Fecha', 'Data', 'Sale Date']) || '');
+    const amountVal = parseFloat(String(findValue(order, ['Total (USD)', 'Total_1', 'Amount', 'Total', 'Net amount', 'Valor']) || '0').replace(/[^0-9.-]+/g, ''));
 
-    if (!orderId || orderId === 'null') return;
+    if (!orderId || orderId === 'null' || orderId === '') return;
 
     let status: 'Valid' | 'Canceled' | 'Refunded' = 'Valid';
-    if (statusStr.includes('cancel') || statusStr.includes('anula')) {
+    // 综合多语言状态词汇
+    if (statusStr.includes('cancel') || statusStr.includes('anula') || statusStr.includes('returned') || statusStr.includes('devolv')) {
       status = 'Canceled';
       summary.canceledOrders++;
     } else if (statusStr.includes('refund') || statusStr.includes('reembols')) {
@@ -105,3 +139,4 @@ export const parseMercadoLibreExcel = (jsonData: any[][]): ParsingSummary => {
 
   return summary;
 };
+

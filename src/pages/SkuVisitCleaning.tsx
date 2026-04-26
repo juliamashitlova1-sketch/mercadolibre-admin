@@ -177,27 +177,27 @@ export default function SkuVisitCleaning() {
     <div className="flex-1 overflow-y-auto min-h-screen py-6 px-4 bg-transparent custom-scrollbar">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header Compact */}
-        <header className="flex justify-between items-center bg-white/60 backdrop-blur-xl p-4 rounded-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+        <header className="flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shadow-sm">
               <Search className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-100 tracking-tight">
                 各 SKU 访问数据清洗
               </h1>
-              <p className="text-[11px] text-slate-500 mt-0.5">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 bg-white/50 backdrop-blur border border-white/40 p-2 rounded-lg">
-               <span className="text-xs text-slate-500">选择上传日期:</span>
+            <div className="flex items-center space-x-2 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+               <span className="text-xs text-slate-400">选择上传日期:</span>
                <input 
                  type="date" 
                  value={manualDate} 
                  onChange={(e) => setManualDate(e.target.value)}
-                 className="bg-transparent text-xs text-slate-800 outline-none cursor-pointer"
+                 className="bg-transparent text-xs text-white outline-none cursor-pointer [color-scheme:dark]"
                />
             </div>
 
@@ -227,26 +227,26 @@ export default function SkuVisitCleaning() {
         )}
 
         {/* List Table */}
-        <div className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-xl overflow-hidden shadow-lg">
-          <div className="px-4 py-2 border-b border-white/30 flex items-center justify-between bg-white/30">
-            <h2 className="text-xs font-semibold text-slate-800 tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-500" />
+        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+          <div className="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
+            <h2 className="text-xs font-semibold text-white tracking-tight flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-purple-400" />
               已清洗流量数据 ({data.length})
             </h2>
           </div>
           <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
             <table className="w-full text-[11px] text-left">
-              <thead className="bg-slate-100/70 text-slate-500 tracking-wider sticky top-0 z-10 font-medium">
+              <thead className="bg-slate-800/90 text-slate-400 tracking-wider sticky top-0 z-10 font-medium">
                 <tr>
-                  <th className="px-4 py-2 border-b border-slate-200/50">日期</th>
-                  <th className="px-4 py-2 border-b border-slate-200/50">SKU</th>
-                  <th className="px-4 py-2 border-b border-slate-200/50 text-right">独立访问量</th>
-                  <th className="px-4 py-2 border-b border-slate-200/50 text-right">总评论</th>
-                  <th className="px-4 py-2 border-b border-slate-200/50 text-right text-emerald-600">正面评论</th>
-                  <th className="px-4 py-2 border-b border-slate-200/50 text-right text-rose-600">负面评论</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50">日期</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50">SKU</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50 text-right">独立访问量</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50 text-right">总评论</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50 text-right text-emerald-400/80">正面评论</th>
+                  <th className="px-4 py-2 border-b border-slate-700/50 text-right text-rose-400/80">负面评论</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200/50">
+              <tbody className="divide-y divide-slate-800/50">
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-20 text-center text-slate-500">
@@ -262,13 +262,13 @@ export default function SkuVisitCleaning() {
                   </tr>
                 ) : (
                   data.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-100/50 transition-colors">
-                      <td className="px-4 py-1.5 text-slate-600">{row.date}</td>
-                      <td className="px-4 py-1.5 text-purple-600 font-semibold">{row.sku}</td>
-                      <td className="px-4 py-1.5 text-right text-slate-900 font-bold">{row.unique_visits?.toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-slate-700">{(row.total_reviews || 0).toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-emerald-600">{(row.positive_reviews || 0).toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-rose-600">{(row.negative_reviews || 0).toLocaleString()}</td>
+                    <tr key={idx} className="hover:bg-slate-800/80 transition-colors">
+                      <td className="px-4 py-1.5 text-slate-400">{row.date}</td>
+                      <td className="px-4 py-1.5 text-purple-400 font-semibold">{row.sku}</td>
+                      <td className="px-4 py-1.5 text-right text-white font-bold">{row.unique_visits?.toLocaleString()}</td>
+                      <td className="px-4 py-1.5 text-right text-slate-300">{(row.total_reviews || 0).toLocaleString()}</td>
+                      <td className="px-4 py-1.5 text-right text-emerald-400/80">{(row.positive_reviews || 0).toLocaleString()}</td>
+                      <td className="px-4 py-1.5 text-right text-rose-400/80">{(row.negative_reviews || 0).toLocaleString()}</td>
                     </tr>
                   ))
                 )}

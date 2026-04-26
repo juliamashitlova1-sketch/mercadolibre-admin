@@ -88,14 +88,14 @@ export default function AiBrain() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 bg-white/50 border border-white/40 p-1.5 rounded-xl ml-auto">
+          <div className="flex flex-wrap items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-xl ml-auto">
             {/* SKU Selector */}
-            <div className="flex items-center gap-2 px-3 h-9 bg-white/50 rounded-lg border border-white/40 min-w-[160px]">
-              <Target className="w-3.5 h-3.5 text-purple-600" />
+            <div className="flex items-center gap-2 px-3 h-9 bg-slate-800/50 rounded-lg border border-slate-700 min-w-[160px]">
+              <Target className="w-3.5 h-3.5 text-purple-400" />
               <select 
                 value={selectedSku}
                 onChange={e => setSelectedSku(e.target.value)}
-                className="bg-transparent text-[11px] font-bold text-slate-800 outline-none w-full cursor-pointer appearance-none"
+                className="bg-transparent text-[11px] font-bold text-slate-300 outline-none w-full cursor-pointer appearance-none"
               >
                 <option value="all">全店汇总分析</option>
                 {uniqueSkus.map(sku => (
@@ -104,20 +104,20 @@ export default function AiBrain() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 px-3 h-9 bg-white/50 rounded-lg border border-white/40">
+            <div className="flex items-center gap-2 px-3 h-9 bg-slate-800/50 rounded-lg border border-slate-700">
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
               <input 
                 type="date" 
                 value={dateRange.start} 
                 onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                className="bg-transparent text-[11px] font-bold text-slate-600 outline-none"
+                className="bg-transparent text-[11px] font-bold text-slate-400 outline-none"
               />
-              <span className="text-slate-400 font-bold mx-1">-</span>
+              <span className="text-slate-600 font-bold mx-1">-</span>
               <input 
                 type="date" 
                 value={dateRange.end}
                 onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                className="bg-transparent text-[11px] font-bold text-slate-600 outline-none"
+                className="bg-transparent text-[11px] font-bold text-slate-400 outline-none"
               />
             </div>
             <button 
@@ -140,21 +140,21 @@ export default function AiBrain() {
           <div className="lg:col-span-1 space-y-4">
             <div className="v2-card p-5 space-y-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5 text-sky-600" /> Context Info
+                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Terminal className="w-3.5 h-3.5 text-sky-400" /> Context Info
                 </h3>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-600 font-mono">LIVE</span>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 font-mono">LIVE</span>
               </div>
               <div className="space-y-3">
-                <div className="p-3 bg-white/40 border border-white/40 rounded-lg">
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
                   <div className="text-[9px] text-slate-500 font-bold uppercase mb-1">SKU Range</div>
-                  <div className="text-sm font-black text-slate-800">
+                  <div className="text-sm font-black text-slate-200">
                     {new Set(allSkuData.filter(s => s.date >= dateRange.start && s.date <= dateRange.end).map(s => s.sku)).size} Active
                   </div>
                 </div>
-                <div className="p-3 bg-white/40 border border-white/40 rounded-lg">
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
                   <div className="text-[9px] text-slate-500 font-bold uppercase mb-1">Synced Logs</div>
-                  <div className="text-sm font-black text-slate-800">
+                  <div className="text-sm font-black text-slate-200">
                     {operationLogs.filter(l => l.date >= dateRange.start && l.date <= dateRange.end).length} Entries
                   </div>
                 </div>
@@ -162,9 +162,9 @@ export default function AiBrain() {
               
               <div className="pt-2">
                 <div className="flex items-start gap-2.5 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                  <Target className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                  <Target className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[10px] font-black text-purple-700 uppercase tracking-wider">Analysis Bias</div>
+                    <div className="text-[10px] font-black text-purple-300 uppercase tracking-wider">Analysis Bias</div>
                     <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                       模型将重点对比操作日期前后的 ACOS/ROAS 波动。
                     </p>
@@ -173,25 +173,25 @@ export default function AiBrain() {
               </div>
             </div>
 
-            <div className="v2-card p-5 bg-gradient-to-br from-white/70 to-slate-100/50 text-slate-900 relative overflow-hidden group border-white/40">
+            <div className="v2-card p-5 bg-gradient-to-br from-slate-900 to-black text-white relative overflow-hidden group border-slate-800">
                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-purple-600/10 blur-2xl rounded-full" />
                <div className="relative z-10 space-y-4">
                   <div className="flex items-center justify-between">
-                     <h4 className="text-[9px] font-black text-purple-600 uppercase tracking-widest">Model Config</h4>
-                     <Settings2 className="w-3 h-3 text-slate-500" />
+                     <h4 className="text-[9px] font-black text-purple-400 uppercase tracking-widest">Model Config</h4>
+                     <Settings2 className="w-3 h-3 text-slate-600" />
                   </div>
                   <div>
                     <div className="text-lg font-black tracking-tight">DeepSeek V3</div>
                     <div className="text-[10px] text-slate-500 font-bold">Inference Engine</div>
                   </div>
-                  <div className="space-y-2 border-t border-slate-200 pt-3">
+                  <div className="space-y-2 border-t border-slate-800 pt-3">
                      <div className="flex items-center justify-between text-[10px]">
                         <span className="text-slate-500">Context</span>
-                        <span className="text-slate-700 font-mono">128k Tokens</span>
+                        <span className="text-slate-300 font-mono">128k Tokens</span>
                      </div>
                      <div className="flex items-center justify-between text-[10px]">
                         <span className="text-slate-500">Quality</span>
-                        <span className="text-emerald-600 font-bold">Ultra Precise</span>
+                        <span className="text-emerald-400 font-bold">Ultra Precise</span>
                      </div>
                   </div>
                </div>
@@ -206,12 +206,12 @@ export default function AiBrain() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="v2-card bg-white/40 border-dashed border-white/40 flex flex-col items-center justify-center p-12 text-center h-full min-h-[500px]"
+                  className="v2-card bg-slate-900/40 border-dashed border-slate-800 flex flex-col items-center justify-center p-12 text-center h-full min-h-[500px]"
                 >
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-xl ring-4 ring-purple-500/10">
                     <MessageSquare className="w-8 h-8 text-white" />
                   </div>
-                  <h2 className="text-lg font-black text-slate-900 mb-2">准备好开启智能洞察了吗？</h2>
+                  <h2 className="text-lg font-black text-white mb-2">准备好开启智能洞察了吗？</h2>
                   <p className="text-[11px] text-slate-500 mb-8 max-w-sm mx-auto uppercase font-bold tracking-wider">选择下方指令或直接启动分析</p>
                   
                   <div className="w-full max-w-lg space-y-3">
@@ -222,7 +222,7 @@ export default function AiBrain() {
                              setExtraPrompt(prompt);
                              handleAnalyze(prompt);
                           }}
-                          className="w-full px-5 py-4 text-[11px] font-bold text-left bg-white/50 border border-white/50 rounded-xl hover:border-purple-500/50 hover:text-purple-600 transition-all text-slate-600 flex items-center justify-between group"
+                          className="w-full px-5 py-4 text-[11px] font-bold text-left bg-slate-900 border border-slate-800 rounded-xl hover:border-purple-500/50 hover:text-purple-400 transition-all text-slate-400 flex items-center justify-between group"
                         >
                           <span>{prompt}</span>
                           <Sparkles className="w-4 h-4 text-purple-500 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
@@ -236,13 +236,13 @@ export default function AiBrain() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="v2-card bg-white/40 border-white/40 flex flex-col items-center justify-center p-12 h-full min-h-[500px]"
+                  className="v2-card bg-slate-900/40 border-slate-800 flex flex-col items-center justify-center p-12 h-full min-h-[500px]"
                 >
                   <div className="relative mb-8">
                     <div className="w-16 h-16 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
                     <Brain className="w-6 h-6 text-purple-500 absolute top-5 left-5" />
                   </div>
-                  <h2 className="text-[11px] font-black text-slate-800 mb-3 uppercase tracking-[0.2em]">正在分析海量经营数据...</h2>
+                  <h2 className="text-[11px] font-black text-white mb-3 uppercase tracking-[0.2em]">正在分析海量经营数据...</h2>
                   <div className="flex gap-1.5 justify-center">
                      {[0,1,2].map(i => (
                        <motion.div 
@@ -253,7 +253,7 @@ export default function AiBrain() {
                        />
                      ))}
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-8 font-mono tracking-widest font-black">SYSTEM STATUS: COMPUTING_METRICS...</p>
+                  <p className="text-[9px] text-slate-600 mt-8 font-mono tracking-widest font-black">SYSTEM STATUS: COMPUTING_METRICS...</p>
                 </motion.div>
               )}
 
@@ -261,18 +261,18 @@ export default function AiBrain() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="v2-card bg-white/50 border-rose-500/20 flex flex-col items-center justify-center p-12 text-center h-full min-h-[500px]"
+                  className="v2-card bg-slate-900 border-rose-500/20 flex flex-col items-center justify-center p-12 text-center h-full min-h-[500px]"
                 >
                   <div className="w-14 h-14 bg-rose-500/10 rounded-full flex items-center justify-center mb-4">
                     <AlertTriangle className="w-6 h-6 text-rose-500" />
                   </div>
-                  <h2 className="text-sm font-black text-slate-900 mb-2">分析请求失败</h2>
-                  <p className="text-[11px] text-rose-600 bg-rose-500/5 px-4 py-2 rounded-lg mb-6 max-w-sm border border-rose-500/10">
+                  <h2 className="text-sm font-black text-white mb-2">分析请求失败</h2>
+                  <p className="text-[11px] text-rose-400 bg-rose-500/5 px-4 py-2 rounded-lg mb-6 max-w-sm border border-rose-500/10">
                     {error}
                   </p>
                   <button 
                     onClick={() => handleAnalyze()}
-                    className="px-6 py-2 bg-white/60 text-slate-800 rounded-lg text-[11px] font-black border border-white/40 hover:bg-white/80 transition-all"
+                    className="px-6 py-2 bg-slate-800 text-white rounded-lg text-[11px] font-black border border-slate-700 hover:bg-slate-700 transition-all"
                   >
                     重试分析
                   </button>
@@ -283,9 +283,9 @@ export default function AiBrain() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="v2-card p-8 bg-white/50 border-white/40"
+                  className="v2-card p-8 bg-slate-900/60 border-slate-800"
                 >
-                  <div className="flex items-center justify-between pb-6 border-b border-slate-200 mb-6">
+                  <div className="flex items-center justify-between pb-6 border-b border-slate-800 mb-6">
                     <div className="flex items-center gap-3">
                       <div className="px-3 py-1 bg-purple-600 text-white text-[9px] font-black rounded-full uppercase tracking-widest">Analysis Result</div>
                       <span className="text-[9px] font-mono text-slate-500 font-bold uppercase tracking-tight">TIMESTAMP: {new Date().toLocaleTimeString()}</span>
@@ -299,13 +299,13 @@ export default function AiBrain() {
                          a.download = `AI_Analysis_${dateRange.start}_${dateRange.end}.md`;
                          a.click();
                       }}
-                      className="text-[10px] font-black text-sky-600 hover:text-sky-500 transition-all flex items-center gap-1.5 uppercase"
+                      className="text-[10px] font-black text-sky-400 hover:text-sky-300 transition-all flex items-center gap-1.5 uppercase"
                     >
                       <Download className="w-3.5 h-3.5" /> 下载报告
                     </button>
                   </div>
                   
-                  <div className="v2-markdown-body prose prose-sm max-w-none text-slate-700">
+                  <div className="v2-markdown-body prose prose-invert prose-sm max-w-none">
                     <ReactMarkdown>{result}</ReactMarkdown>
                   </div>
                 </motion.div>

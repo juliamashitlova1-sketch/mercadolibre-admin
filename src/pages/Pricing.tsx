@@ -548,7 +548,7 @@ export default function Pricing() {
 
             {/* 右侧：结果分析与操作 */}
             <div className="lg:col-span-4 space-y-5">
-              <section className="v2-card bg-white/60 p-6 text-slate-900 relative overflow-hidden border-white/40">
+              <section className="v2-card bg-slate-900/80 p-6 text-white relative overflow-hidden border-slate-800">
                 <div className="relative z-10 space-y-8">
                   <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-3">
                     <BarChart3 className="w-5 h-5" /> 深度利润分析模型
@@ -557,41 +557,41 @@ export default function Pricing() {
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">海运模式 / 总毛利 (¥)</div>
-                      <div className="text-4xl font-mono font-black text-emerald-600">¥{metrics.profitSeaUnit.toFixed(1)}</div>
+                      <div className="text-4xl font-mono font-black text-emerald-400">¥{metrics.profitSeaUnit.toFixed(1)}</div>
                       <div className="flex items-center gap-3 pt-1">
-                         <span className="text-xs font-black px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-lg italic">ROI: {(metrics.roiSea*100).toFixed(0)}%</span>
+                         <span className="text-xs font-black px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-lg italic">ROI: {(metrics.roiSea*100).toFixed(0)}%</span>
                          <span className="text-xs font-bold text-slate-500">{(metrics.marginSea*100).toFixed(1)}% 利率</span>
                       </div>
                     </div>
-                    <div className="space-y-2 opacity-60 transition-opacity hover:opacity-100">
+                    <div className="space-y-2 opacity-50 transition-opacity hover:opacity-100">
                       <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">空运模式 / 总毛利 (¥)</div>
-                      <div className="text-3xl font-mono font-black text-sky-600">¥{metrics.profitAirUnit.toFixed(1)}</div>
+                      <div className="text-3xl font-mono font-black text-sky-400">¥{metrics.profitAirUnit.toFixed(1)}</div>
                       <div className="flex items-center gap-3 pt-1">
-                         <span className="text-xs font-black px-2 py-0.5 bg-sky-500/10 text-sky-600 rounded-lg italic">ROI: {(metrics.roiAir*100).toFixed(0)}%</span>
+                         <span className="text-xs font-black px-2 py-0.5 bg-sky-500/20 text-sky-400 rounded-lg italic">ROI: {(metrics.roiAir*100).toFixed(0)}%</span>
                          <span className="text-xs font-bold text-slate-500">{(metrics.marginAir*100).toFixed(1)}% 利率</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-10 pt-8 border-t border-slate-200 space-y-5">
-                     <div className="flex justify-between items-center text-indigo-600 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
+                  <div className="mt-10 pt-8 border-t border-slate-800 space-y-5">
+                     <div className="flex justify-between items-center text-indigo-400 bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
                         <span className="text-sm font-black flex items-center gap-2"><CheckCircle className="w-5 h-5" /> 最终结汇到账 (¥)</span>
-                        <span className="text-3xl font-mono font-black tracking-tight">¥{metrics.payoutCny.toFixed(2)}</span>
+                        <span className="text-3xl font-mono font-black tracking-tight drop-shadow-[0_0_10px_rgba(99,102,241,0.3)]">¥{metrics.payoutCny.toFixed(2)}</span>
                      </div>
                   </div>
 
-                  <div className="mt-8 bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-6 shadow-inner">
+                  <div className="mt-8 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 shadow-inner">
                      <div className="flex justify-between items-center">
                         <div className="flex flex-col">
-                           <span className="text-[11px] text-emerald-600 font-black uppercase tracking-widest mb-1">盈亏平衡建议售价 (MXN)</span>
+                           <span className="text-[11px] text-emerald-500 font-black uppercase tracking-widest mb-1 text-shadow-sm">盈亏平衡建议售价 (MXN)</span>
                            <span className="text-[10px] text-slate-500 italic font-medium">在此价格成交 利润刚好对冲所有成本</span>
                         </div>
-                        <span className="text-4xl font-mono font-black text-emerald-600 drop-shadow-sm">${metrics.breakEvenSellingMxn.toFixed(0)}</span>
+                        <span className="text-4xl font-mono font-black text-emerald-400 drop-shadow-sm">${metrics.breakEvenSellingMxn.toFixed(0)}</span>
                      </div>
                   </div>
                 </div>
                 {/* Visual Accent */}
-                <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20" />
+                <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20" />
               </section>
 
                 <button 
@@ -626,7 +626,7 @@ export default function Pricing() {
         ) : (
           <>
             {isSuccessView && (
-              <div className="v2-card bg-white/30 p-3 flex items-center gap-3 mb-4">
+              <div className="v2-card bg-slate-900/30 p-3 flex items-center gap-3 mb-4">
                 <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter className="w-4 h-4" /> 排序方式:
                 </div>
@@ -644,8 +644,8 @@ export default function Pricing() {
                     })}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
                       sortConfig.key === sort.key 
-                        ? 'bg-sky-500/20 text-sky-600 border border-sky-500/30' 
-                        : 'bg-white/40 text-slate-500 hover:bg-white/60 hover:text-slate-700 border border-transparent'
+                        ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' 
+                        : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300 border border-transparent'
                     }`}
                   >
                     {sort.label} {sortConfig.key === sort.key && (sortConfig.order === 'desc' ? '↓' : '↑')}
@@ -736,7 +736,7 @@ export default function Pricing() {
                           <select 
                             value={rec.operation_status || '待采购'} 
                             onChange={(e) => updateOperationStatus(rec.id, e.target.value)}
-                            className="bg-white/60 border border-slate-200 rounded px-2 py-1 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500/50 transition-colors"
+                            className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] font-bold text-slate-300 outline-none focus:border-sky-500/50 transition-colors"
                           >
                             {operationStatuses.map(s => (
                               <option key={s} value={s}>{s}</option>
@@ -783,26 +783,26 @@ export default function Pricing() {
                   initial={{ x: '100%' }} 
                   animate={{ x: 0 }} 
                   exit={{ x: '100%' }}
-                  className="fixed top-0 right-0 h-full w-[500px] bg-white/80 backdrop-blur-2xl shadow-2xl z-[60] overflow-y-auto border-l border-white/50"
+                  className="fixed top-0 right-0 h-full w-[500px] bg-slate-900/95 backdrop-blur-xl shadow-2xl z-[60] overflow-y-auto border-l border-slate-800"
                 >
                   <div className="p-6">
-                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                           <Info className="w-5 h-5 text-indigo-600" /> 核价原始数据详情
+                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                           <Info className="w-5 h-5 text-indigo-400" /> 核价原始数据详情
                         </h3>
-                        <button onClick={() => setDetailRecord(null)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                        <button onClick={() => setDetailRecord(null)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
                            <X className="w-5 h-5 text-slate-500" />
                         </button>
                      </div>
 
                      <div className="space-y-5">
                         {/* 产品预览 */}
-                        <div className="flex gap-4 p-4 bg-white/50 rounded-xl border border-white/40">
-                           <img src={detailRecord.image_url} referrerPolicy="no-referrer" className="w-20 h-20 rounded-lg object-cover bg-slate-200" />
+                        <div className="flex gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-800">
+                           <img src={detailRecord.image_url} referrerPolicy="no-referrer" className="w-20 h-20 rounded-lg object-cover bg-slate-700" />
                            <div className="flex flex-col justify-center">
-                              <div className="text-base font-bold text-slate-900">{detailRecord.name}</div>
-                              <div className="text-xs text-slate-500 uppercase mt-1">型号: {detailRecord.model || '--'}</div>
-                              <div className="text-[10px] font-mono text-slate-400 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
+                              <div className="text-base font-bold text-white">{detailRecord.name}</div>
+                              <div className="text-xs text-slate-400 uppercase mt-1">型号: {detailRecord.model || '--'}</div>
+                              <div className="text-[10px] font-mono text-slate-600 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
                            </div>
                         </div>
 
@@ -836,14 +836,14 @@ export default function Pricing() {
                         ].map(sec => (
                           <div key={sec.title} className="space-y-2">
                              <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">{sec.title}</h4>
-                             <div className="bg-white/50 border border-white/40 rounded-xl overflow-hidden divide-y divide-slate-200/50">
+                             <div className="bg-slate-800/50 border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/50">
                                 {sec.items.map(item => (
                                   <div key={item.l} className="flex items-center justify-between p-3 px-4">
                                      <span className="text-[11px] font-medium text-slate-500">{item.l}</span>
                                      {item.isLink && item.v ? (
-                                        <a href={item.v} target="_blank" className="text-[11px] font-bold text-sky-600 hover:text-sky-500 flex items-center gap-1">访问链接 <ExternalLink className="w-3 h-3" /></a>
+                                        <a href={item.v} target="_blank" className="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1">访问链接 <ExternalLink className="w-3 h-3" /></a>
                                      ) : (
-                                        <span className={`text-sm font-mono font-bold ${item.highlight ? 'text-indigo-600' : 'text-slate-800'}`}>{item.v || '--'}</span>
+                                        <span className={`text-sm font-mono font-bold ${item.highlight ? 'text-indigo-400' : 'text-slate-200'}`}>{item.v || '--'}</span>
                                      )}
                                   </div>
                                 ))}

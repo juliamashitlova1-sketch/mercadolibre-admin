@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Edit2, Loader2, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, Check, CreditCard, DollarSign, RefreshCcw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { FakeOrder, SKUStats } from '../types';
 import { USD_TO_MXN, MXN_TO_CNY } from '../constants';
@@ -93,9 +91,20 @@ export default function FakeOrders() {
     }
   };
 
-  const calculateActualCost = (fee: number, refund: number) => {
-    const refundCNY = refund * USD_TO_MXN * MXN_TO_CNY;
-    return (fee - refundCNY).toFixed(2);
+  const calculateActualCostTotal = () => {
+    return data.reduce((acc, curr) => {
+        const fee = curr.reviewFeeCNY || 0;
+        const refund = (curr.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY;
+        return acc + (fee - refund);
+    }, 0).toFixed(2);
+  };
+
+  const calculateTotalFees = () => {
+    return data.reduce((acc, curr) => acc + (curr.reviewFeeCNY || 0), 0).toFixed(2);
+  };
+
+  const calculateTotalRefundsUSD = () => {
+    return data.reduce((acc, curr) => acc + (curr.refundAmountUSD || 0), 0).toFixed(2);
   };
 
   const handleSkuSelect = (sku: string) => {
@@ -108,174 +117,198 @@ export default function FakeOrders() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-2">
-      <header className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">刷单/测评支出管理</h2>
-          <p className="text-slate-500 text-sm">追踪并核算站外测评支出的实际成本</p>
-        </div>
-        <Button onClick={() => {
-          setCurrentRecord({
-            date: getMexicoDateString(),
-            sku: '',
-            skuName: '',
-          });
-          setIsEditing(true);
-        }} className="gap-2 shadow-sm">
-          <Plus className="w-4 h-4" /> 新增记录
-        </Button>
-      </header>
+    <div className="v2-page-container">
+      <div className="v2-inner-container">
+        <header className="v2-header">
+          <div className="flex items-center space-x-3">
+            <div className="v2-header-icon bg-gradient-to-br from-amber-500 to-orange-600">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="v2-header-title">刷单/测评支出管理</h1>
+              <p className="v2-header-subtitle">追踪并核算站外测评支出的实际成本</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setCurrentRecord({
+                date: getMexicoDateString(),
+                sku: '',
+                skuName: '',
+              });
+              setIsEditing(true);
+            }}
+            className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            <span>新增记录</span>
+          </button>
+        </header>
 
-      {isEditing && (
-        <Card className="border-sky-200 bg-sky-50/50 shadow-md animate-in fade-in slide-in-from-top-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-bold text-sky-900">{currentRecord.id ? '编辑记录' : '新增记录'}</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {isEditing && (
+          <div className="v2-card bg-sky-500/5 border-sky-500/20 animate-in fade-in slide-in-from-top-4 p-6">
+            <h3 className="text-sm font-bold text-sky-400 mb-4 flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {currentRecord.id ? '编辑测评记录' : '新增测评记录'}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-              <div className="space-y-1.5 focus-within:text-sky-600 transition-colors">
-                <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">选择日期</Label>
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase">业务日期</Label>
                 <Input 
                   type="date" 
                   value={currentRecord.date} 
                   onChange={e => setCurrentRecord({...currentRecord, date: e.target.value})}
-                  className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg"
+                  className="v2-input"
                 />
               </div>
-              <div className="space-y-1.5 focus-within:text-sky-600 transition-colors">
-                <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">选择 SKU</Label>
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase">选择 SKU</Label>
                 <Select value={currentRecord.sku} onValueChange={handleSkuSelect}>
-                  <SelectTrigger className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg">
-                    <SelectValue placeholder="搜索或选择 SKU" />
+                  <SelectTrigger className="v2-input">
+                    <SelectValue placeholder="选择 SKU" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
+                  <SelectContent>
                     {skuData.map(s => (
-                      <SelectItem key={s.sku} value={s.sku} className="flex flex-col items-start gap-1">
-                        <div className="font-bold text-slate-900">{s.sku}</div>
-                        <div className="text-[10px] text-slate-400">{s.skuName}</div>
+                      <SelectItem key={s.sku} value={s.sku}>
+                        <span className="font-bold">{s.sku}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5 focus-within:text-sky-600 transition-colors">
-                <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">测评费 (CNY)</Label>
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase">测评费 (CNY)</Label>
                 <Input 
                   type="number" 
                   step="any"
-                  placeholder="人民币支出" 
                   value={currentRecord.reviewFeeCNY ?? ''} 
                   onChange={e => setCurrentRecord({...currentRecord, reviewFeeCNY: e.target.value === '' ? undefined : Number(e.target.value)})}
-                  className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg"
+                  className="v2-input"
                 />
               </div>
-              <div className="space-y-1.5 focus-within:text-sky-600 transition-colors">
-                <Label className="text-[11px] font-bold uppercase tracking-wider opacity-70">回款金额 (USD)</Label>
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase">回款额 (USD)</Label>
                 <Input 
                   type="number" 
                   step="any"
-                  placeholder="美元回款" 
                   value={currentRecord.refundAmountUSD ?? ''} 
                   onChange={e => setCurrentRecord({...currentRecord, refundAmountUSD: e.target.value === '' ? undefined : Number(e.target.value)})}
-                  className="bg-white border-sky-100 focus:border-sky-300 transition-all rounded-lg"
+                  className="v2-input"
                 />
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleSave} className="flex-1 bg-sky-600 hover:bg-sky-700 shadow-md">保存</Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)} className="border-slate-200">取消</Button>
+                <button onClick={handleSave} className="flex-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg h-9 text-xs font-bold transition-all active:scale-95">保存</button>
+                <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg h-9 text-xs font-bold transition-all border border-slate-700">取消</button>
               </div>
             </div>
             {currentRecord.skuName && (
-              <div className="mt-3 text-[10px] flex items-center gap-1.5 text-slate-400 font-medium">
-                <Check className="w-3 h-3 text-emerald-500" />
-                已自动匹配 SKU 名称: <span className="text-slate-600 underline decoration-sky-200">{currentRecord.skuName}</span>
+              <div className="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">
+                <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                自动匹配: <span className="text-sky-400 font-mono">{currentRecord.skuName}</span>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      <Card className="border-slate-100 shadow-sm bg-white/50 backdrop-blur-sm rounded-xl overflow-hidden ring-1 ring-slate-100">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[120px] font-bold text-slate-500">日期</TableHead>
-                <TableHead className="font-bold text-slate-500">SKU 信息</TableHead>
-                <TableHead className="font-bold text-slate-500">测评费 (CNY)</TableHead>
-                <TableHead className="font-bold text-slate-500">回款额 (USD)</TableHead>
-                <TableHead className="font-bold text-slate-500">回款折算 (CNY)</TableHead>
-                <TableHead className="text-emerald-600 font-bold uppercase tracking-wider">实际费用 (CNY)</TableHead>
-                <TableHead className="text-right font-bold text-slate-500 pr-6">管理操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
-                      <span className="text-sm text-slate-300 font-medium">全力加载数据中...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : data.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-20 text-slate-300 italic">暂无刷单支出记录</TableCell>
-                </TableRow>
-              ) : data.map((record) => (
-                <TableRow key={record.id} className="group hover:bg-sky-50/20 transition-colors border-slate-50">
-                  <TableCell className="text-[11px] font-mono font-bold text-slate-400">{record.date}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-[10px] text-slate-400 border border-slate-100">
-                         {record.sku.substring(0, 2)}
-                       </div>
-                       <div>
-                        <div className="font-bold text-slate-900 group-hover:text-sky-600 transition-colors">{record.sku}</div>
-                        <div className="text-[10px] text-slate-400 font-medium">{record.skuName || '未知 SKU 名称'}</div>
-                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-mono text-[12px] font-bold text-slate-600">¥{Number(record.reviewFeeCNY || 0).toFixed(2)}</TableCell>
-                  <TableCell className="font-mono text-[12px] font-bold text-slate-600">${Number(record.refundAmountUSD || 0).toFixed(2)}</TableCell>
-                  <TableCell className="font-mono text-[10px] text-slate-300 italic">¥{(Number(record.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY).toFixed(2)}</TableCell>
-                  <TableCell className="font-mono font-bold text-emerald-600 bg-emerald-50/10">
-                    <span className="px-2 py-1 rounded bg-emerald-50 text-emerald-700">
-                      ¥{calculateActualCost(record.reviewFeeCNY || 0, record.refundAmountUSD || 0)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-2 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-all"
-                        onClick={() => {
-                          setCurrentRecord(record);
-                          setIsEditing(true);
-                        }}
-                      >
-                        <Edit2 className="w-3.5 h-3.5 mr-1" />
-                        <span className="text-[11px] font-bold">修改</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                        onClick={() => handleDelete(record.id)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
-                        <span className="text-[11px] font-bold">删除</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+        {data.length > 0 && !loading && (
+          <div className="v2-stats-grid">
+            <div className="v2-stat-card bg-slate-900/50 border-slate-800">
+               <span className="v2-stat-label text-slate-500">记录总数</span>
+               <div className="v2-stat-value text-white">{data.length}</div>
+            </div>
+            <div className="v2-stat-card bg-amber-500/5 border-amber-500/20">
+               <span className="v2-stat-label text-amber-500">累计支出 (CNY)</span>
+               <div className="v2-stat-value text-amber-400">¥{calculateTotalFees()}</div>
+            </div>
+            <div className="v2-stat-card bg-sky-500/5 border-sky-500/20">
+               <span className="v2-stat-label text-sky-500">累计回款 (USD)</span>
+               <div className="v2-stat-value text-sky-400">${calculateTotalRefundsUSD()}</div>
+            </div>
+            <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20">
+               <div className="flex justify-between items-center">
+                 <div>
+                   <span className="v2-stat-label text-emerald-500">实际总成 (CNY)</span>
+                   <div className="v2-stat-value text-emerald-400">¥{calculateActualCostTotal()}</div>
+                 </div>
+                 <RefreshCcw className="w-6 h-6 text-emerald-500/20" />
+               </div>
+            </div>
+          </div>
+        )}
+
+        <div className="v2-card">
+          <div className="v2-card-header">
+            <h2 className="v2-card-title">
+              <DollarSign className="w-4 h-4 text-amber-400" />
+              测评支出明细
+            </h2>
+          </div>
+          <div className="v2-table-wrapper">
+            <table className="v2-table">
+              <thead className="v2-table-thead">
+                <tr>
+                  <th className="v2-table-th">日期</th>
+                  <th className="v2-table-th">SKU</th>
+                  <th className="v2-table-th">测评费 (CNY)</th>
+                  <th className="v2-table-th">回款 (USD)</th>
+                  <th className="v2-table-th">实际成本 (CNY)</th>
+                  <th className="v2-table-th text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center">
+                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-sky-400" />
+                    </td>
+                  </tr>
+                ) : data.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-20 text-center text-slate-500 italic">暂无记录</td>
+                  </tr>
+                ) : data.map((record) => {
+                  const actual = Number(record.reviewFeeCNY || 0) - (Number(record.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY);
+                  return (
+                    <tr key={record.id} className="v2-table-tr group">
+                      <td className="v2-table-td text-slate-400">{record.date}</td>
+                      <td className="v2-table-td">
+                         <div className="flex flex-col">
+                           <span className="text-sky-400 font-bold">{record.sku}</span>
+                           <span className="text-[9px] text-slate-500 truncate max-w-[120px]">{record.skuName}</span>
+                         </div>
+                      </td>
+                      <td className="v2-table-td text-slate-300">¥{(record.reviewFeeCNY || 0).toLocaleString()}</td>
+                      <td className="v2-table-td text-slate-300">${(record.refundAmountUSD || 0).toLocaleString()}</td>
+                      <td className="v2-table-td">
+                        <span className={`font-bold ${actual > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                           ¥{actual.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="v2-table-td text-right">
+                        <div className="flex justify-end gap-1">
+                          <button 
+                            onClick={() => { setCurrentRecord(record); setIsEditing(true); }}
+                            className="p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(record.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+

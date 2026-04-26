@@ -1,28 +1,25 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 // Vercel Sync: 2026-04-21 18:00 - Overview Layout Refactor
 import { supabase } from './lib/supabase';
-import Overview from './pages/Overview';
-import SkuManage from './pages/SkuManage';
-import OrdersDashboard from './pages/OrdersDashboard';
-import Orders from './pages/Orders';
-import Inventory from './pages/Inventory';
-import Ads from './pages/Ads';
 import Competitors from './pages/Competitors';
-import Finance from './pages/Finance';
 import Health from './pages/Health';
 import Operations from './pages/Operations';
 import AiBrain from './pages/AiBrain';
 import Pricing from './pages/Pricing';
 import FakeOrders from './pages/FakeOrders';
 import CargoDamage from './pages/CargoDamage';
+import DataCleaning from './pages/DataCleaning';
+import SkuVisitCleaning from './pages/SkuVisitCleaning';
+import SkuManagement from './pages/SkuManagement';
 
 import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
 import ClaimEntry from './components/ClaimEntry';
 import OperationEntry from './components/OperationEntry';
 import Login from './components/Login';
+
 
 import { useSkuData, useDailyStats, useClaims, useOperationLogs, useExpenses } from './hooks/useStoreData';
 import { SKUStats, Claim } from './types';
@@ -84,7 +81,7 @@ export default function App() {
 }
 
 function AppContent() {
-  const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v1');
+  const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2');
   const { skuData, allSkuData, refreshSkuData } = useSkuData();
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
@@ -171,14 +168,11 @@ function AppContent() {
           />
         }>
           <Route element={<ContextWrapper contextValue={contextValue} />}>
-            <Route path="/" element={<Overview />} />
-            <Route path="/orders-dashboard" element={<OrdersDashboard />} />
-            <Route path="/sku-manage" element={<SkuManage />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/ads" element={<Ads />} />
-            <Route path="/competitors" element={<Competitors />} />
-            <Route path="/finance" element={<Finance />} />
+            <Route path="/" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/data-cleaning" element={<Navigate to="/data-cleaning/orders" replace />} />
+            <Route path="/data-cleaning/orders" element={<DataCleaning />} />
+            <Route path="/data-cleaning/visits" element={<SkuVisitCleaning />} />
+            <Route path="/sku-management" element={<SkuManagement />} />
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/fake-orders" element={<FakeOrders />} />
@@ -189,7 +183,19 @@ function AppContent() {
             <Route path="/pricing/list" element={<Pricing />} />
             <Route path="/pricing/success" element={<Pricing />} />
             <Route path="/pricing/staging" element={<Pricing />} />
+            
+            {/* Redirects for legacy routes */}
+            <Route path="/orders-dashboard" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/orders" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/inventory" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/ads" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/finance" element={<Navigate to="/fake-orders" replace />} />
+            
+            {/* Catch-all redirect to home */}
+            <Route path="*" element={<Navigate to="/fake-orders" replace />} />
           </Route>
+
+
         </Route>
       </Routes>
 

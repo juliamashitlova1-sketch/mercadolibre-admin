@@ -42,11 +42,13 @@ export default function OperationEntry({ open, onOpenChange, skuData, initialSku
   });
 
   const onSubmit = async (data: any) => {
-    console.log('Submitting operation log:', data);
     try {
       const { error } = await supabase.from('operation_logs').upsert([{
         date: data.date,
-        action: `[${data.sku}][${data.actionType}] ${data.description}`,
+        sku: data.sku,
+        action_type: data.actionType,
+        description: data.description,
+        action: `[${data.actionType}] ${data.description}`,
         details: JSON.stringify(data),
       }]);
       if (error) throw error;

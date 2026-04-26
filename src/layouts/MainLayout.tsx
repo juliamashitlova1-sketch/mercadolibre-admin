@@ -5,14 +5,17 @@ import { SKUStats } from '../types';
 import logo from '../assets/logo.png';
 import { STOCK_HEALTH_THRESHOLD } from '../constants';
 import {
-  LayoutDashboard, Package, ShoppingCart, ShoppingBag,
-  Archive, TrendingUp, Crosshair, 
+  Database, Package, ShoppingBag, ShoppingCart,
+  TrendingUp, LayoutDashboard,
   DollarSign, AlertTriangle, Activity,
-  Search, Bell, Command, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
+  Search, Bell, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
   CreditCard, PackageX
 } from 'lucide-react';
+
 import { getMexicoTimeString } from '../lib/time';
 import DataExporter from '../components/DataExporter';
+import { supabase } from '../lib/supabase';
+import { motion, AnimatePresence } from 'motion/react';
 
 const MilyflyLogo = ({ className = 'w-6 h-6' }) => (
   <svg viewBox="0 0 100 90" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -105,6 +108,40 @@ export default function MainLayout({
     return () => clearInterval(timer);
   }, []);
 
+  // Notification system state
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [appUpdates, setAppUpdates] = useState<any[]>([]);
+  const [hasNewUpdate, setHasNewUpdate] = useState(true);
+
+  useEffect(() => {
+    fetchAppUpdates();
+  }, []);
+
+  const fetchAppUpdates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('app_updates')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const updates = data || [];
+      setAppUpdates(updates);
+      
+      if (updates.length > 0) {
+        const latestVersion = updates[0].version;
+        const lastSeen = localStorage.getItem('milyfly_last_seen_version');
+        if (lastSeen !== latestVersion) {
+          setIsNotificationOpen(true);
+          setHasNewUpdate(true);
+        } else {
+          setHasNewUpdate(false);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching updates:', err);
+    }
+  };
+
   const inventoryStatus = skuData && skuData.length > 0
     ? skuData.filter(s => Math.floor(s.stock / (s.avgSalesSinceListing || 1)) < STOCK_HEALTH_THRESHOLD).length > 0
       ? '需补货'
@@ -112,15 +149,19 @@ export default function MainLayout({
     : '空';
 
   const menuItems = [
-    { id: '/orders-dashboard', label: '订单大盘', icon: ShoppingBag, color: 'text-sky-500' },
-    { id: '/sku-manage', label: 'SKU 档案', icon: Package, color: 'text-amber-500' },
-    { id: '/', label: '总览看板', icon: LayoutDashboard },
-    { id: '/orders', label: '订单流水', icon: ShoppingCart },
-    { id: '/inventory', label: '库存管理', icon: Archive, badge: inventoryStatus },
-    { id: '/ads', label: '广告优化', icon: TrendingUp },
+    { 
+      id: '/data-cleaning', 
+      label: '数据清洗', 
+      icon: Database,
+      children: [
+        { id: '/data-cleaning/orders', label: '订单及销售数量', icon: ShoppingCart },
+        { id: '/data-cleaning/visits', label: '各SKU访问数据', icon: Search },
+        { id: '/data-cleaning/ads', label: '各SKU每日广告数据', icon: TrendingUp },
+      ]
+    },
+    { id: '/sku-management', label: 'SKU管理', icon: Package },
     { id: '/fake-orders', label: '刷单支出', icon: CreditCard },
     { id: '/cargo-damage', label: '货损支出', icon: PackageX },
-    { id: '/finance', label: '财务报表', icon: DollarSign },
     { id: '/health', label: '账号健康', icon: AlertTriangle },
     { id: '/operations', label: '操作日志', icon: Activity },
     { id: '/ai-brain', label: 'AI 智能大脑', icon: Brain, color: 'text-purple-500' },
@@ -138,6 +179,7 @@ export default function MainLayout({
     },
   ];
 
+
   return (
     <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-[#020617] text-slate-300' : 'bg-transparent'}`}>
       {/* Floating Sidebar */}
@@ -153,7 +195,7 @@ export default function MainLayout({
           </div>
           
           <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar">
-            {menuItems.map((item) => {
+            {menuItems.map((item: any) => {
               const Icon = item.icon;
               const isPricingActive = location.pathname.startsWith('/pricing');
               const isActive = item.children ? isPricingActive : location.pathname === item.id;
@@ -183,7 +225,7 @@ export default function MainLayout({
                   </NavLink>
 
                   {/* Sub-menu items */}
-                  {item.children && isPricingActive && (
+                  {item.children && (item.id === '/pricing' ? isPricingActive : location.pathname.startsWith(item.id)) && (
                     <div className="flex flex-col gap-1 ml-6 mt-1 mb-2 border-l-2 border-slate-100 pl-2">
                       {item.children.map(child => {
                         const ChildIcon = child.icon;
@@ -226,7 +268,7 @@ export default function MainLayout({
                 </div>
                 <div>
                   <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>Juan Carlos</div>
-                  <div className="text-[10px] text-slate-500 font-mono tracking-wider">Store Manager</div>
+                  <div className="text-xs text-slate-500 font-mono mt-1">v1.0.6</div>
                 </div>
               </div>
             </div>
@@ -242,9 +284,9 @@ export default function MainLayout({
             <span className="hidden sm:inline">MILYFLY 控制台</span>
             <span className="text-slate-300 hidden sm:inline">/</span>
             <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
-              {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace('-', ' ')}
+              {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace(/-/g, ' ')}
             </span>
-            <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.3</span>
+            <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.5</span>
 
           </div>
 
@@ -284,10 +326,76 @@ export default function MainLayout({
               <kbd className="hidden group-hover:flex items-center h-5 px-1.5 text-[10px] font-mono bg-slate-100 rounded font-medium text-slate-500 border border-slate-200">⌘K</kbd>
             </div>
             
-            <button className="relative w-10 h-10 rounded-full glass-panel shadow-none flex items-center justify-center hover:bg-slate-50 transition-colors group">
-              <Bell className="w-[18px] h-[18px] text-slate-500 group-hover:text-slate-800 transition-colors" />
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setIsNotificationOpen(!isNotificationOpen);
+                  if (appUpdates.length > 0) {
+                    localStorage.setItem('milyfly_last_seen_version', appUpdates[0].version);
+                  }
+                  setHasNewUpdate(false);
+                }}
+                className={`relative w-10 h-10 rounded-full glass-panel shadow-none flex items-center justify-center transition-all group ${isNotificationOpen ? 'bg-sky-500/20 ring-2 ring-sky-500/50' : 'hover:bg-slate-50/10'}`}
+              >
+                <Bell className={`w-[18px] h-[18px] transition-colors ${isNotificationOpen ? 'text-sky-400' : 'text-slate-500 group-hover:text-white'}`} />
+                {hasNewUpdate && (
+                  <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-slate-900 animate-pulse" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {isNotificationOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-3 w-[320px] bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                      <div className="p-4 border-b border-slate-800 bg-slate-800/50">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <History className="w-4 h-4 text-sky-400" />
+                            应用更新日志
+                          </h3>
+                          <span className="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full font-mono font-bold">LIVE v1.0.5</span>
+                        </div>
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                        {appUpdates.length === 0 ? (
+                          <div className="py-8 text-center text-slate-500 text-xs">暂无更新记录</div>
+                        ) : (
+                          appUpdates.map((update) => (
+                            <div key={update.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                                  update.type === 'feature' ? 'bg-emerald-500/10 text-emerald-400' :
+                                  update.type === 'fix' ? 'bg-rose-500/10 text-rose-400' :
+                                  'bg-sky-500/10 text-sky-400'
+                                }`}>
+                                  {update.version}
+                                </span>
+                                <span className="text-[9px] text-slate-500 font-mono">
+                                  {new Date(update.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-bold text-slate-200 mb-1 group-hover:text-white transition-colors">{update.title}</h4>
+                              <p className="text-[11px] text-slate-400 leading-relaxed whitespace-pre-line border-l-2 border-slate-800 pl-2 ml-1">
+                                {update.content}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="p-3 bg-slate-800/30 border-t border-slate-800 text-center">
+                        <p className="text-[10px] text-slate-500">MILYFLY 云端同步系统已就绪</p>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 

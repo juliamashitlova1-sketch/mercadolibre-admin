@@ -310,57 +310,61 @@ export default function Pricing() {
     }
   };
 
-  const inputCls = "w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 font-mono transition-all shadow-inner";
-  const labelCls = "block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1";
+  const inputCls = "v2-input";
+  const labelCls = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1";
 
   return (
-    <div className="flex flex-col gap-8 max-w-[1700px] mx-auto pb-24 px-4">
+    <div className="v2-page-container">
+      <div className="v2-inner-container">
       {/* 顶部标题与状态总览 */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
-        <div>
-          <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-             <div className="p-2 bg-indigo-50 rounded-xl">
-                <Calculator className="w-8 h-8 text-indigo-500" />
-             </div>
-             {isCalculatorView ? '新品深度核价 (计算器)' : isListView ? '已核价历史清单' : isSuccessView ? '核价成功区' : '暂存箱'}
-          </h2>
+      <header className="v2-header flex-col lg:flex-row items-start lg:items-center gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="v2-header-icon bg-gradient-to-br from-indigo-500 to-purple-600">
+             <Calculator className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="v2-header-title">
+               {isCalculatorView ? '新品深度核价 (计算器)' : isListView ? '已核价历史清单' : isSuccessView ? '核价成功区' : '暂存箱'}
+            </h1>
+            <p className="v2-header-subtitle">跨境物流成本核算与利润分析模型</p>
+          </div>
         </div>
         
         {isCalculatorView && (
-           <div className="flex items-center gap-6">
-              <div className="bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center min-w-[120px]">
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">当前汇率</span>
-                 <input type="number" step="0.0001" value={form.exchangeRate} onChange={e=>setForm({...form, exchangeRate: Number(e.target.value)})} className="text-xl font-mono font-black text-indigo-600 outline-none w-24 text-center bg-transparent mt-1" />
+           <div className="flex items-center gap-4">
+              <div className="v2-stat-card bg-slate-900/50 border-slate-800 px-4 py-3 flex flex-col items-center min-w-[110px]">
+                 <span className="v2-stat-label text-slate-500">当前汇率</span>
+                 <input type="number" step="0.0001" value={form.exchangeRate} onChange={e=>setForm({...form, exchangeRate: Number(e.target.value)})} className="text-lg font-mono font-bold text-indigo-400 outline-none w-full text-center bg-transparent mt-0.5" />
               </div>
               
               {/* 海运推荐 */}
               <button 
                 onClick={() => setForm({...form, logisticsMode: '海运'})}
-                className={`px-8 py-4 rounded-3xl shadow-xl transition-all flex flex-col items-center min-w-[160px] border-4 ${
+                className={`v2-stat-card px-6 py-3 flex flex-col items-center min-w-[140px] transition-all ${
                   form.logisticsMode === '海运' 
-                    ? 'bg-indigo-600 border-indigo-400 text-white shadow-indigo-200 scale-105' 
-                    : 'bg-white border-transparent text-slate-400 grayscale hover:grayscale-0'
+                    ? 'bg-indigo-500/20 border-indigo-500/40' 
+                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
                 }`}
               >
-                 <span className={`text-[10px] font-black uppercase tracking-widest ${form.logisticsMode === '海运' ? 'text-indigo-200' : 'text-slate-400'}`}>海运毛利率 (推荐)</span>
-                 <span className="text-3xl font-mono font-black mt-1">{(metrics.marginSea * 100).toFixed(1)}%</span>
+                 <span className={`v2-stat-label ${form.logisticsMode === '海运' ? 'text-indigo-400' : 'text-slate-500'}`}>海运毛利率 (推荐)</span>
+                 <span className="text-2xl font-mono font-black mt-0.5">{(metrics.marginSea * 100).toFixed(1)}%</span>
               </button>
 
               {/* 空运推荐 */}
               <button 
                 onClick={() => setForm({...form, logisticsMode: '空运'})}
-                className={`px-8 py-4 rounded-3xl shadow-xl transition-all flex flex-col items-center min-w-[160px] border-4 ${
+                className={`v2-stat-card px-6 py-3 flex flex-col items-center min-w-[140px] transition-all ${
                   form.logisticsMode === '空运' 
-                    ? 'bg-sky-500 border-sky-300 text-white shadow-sky-100 scale-105' 
-                    : 'bg-white border-transparent text-slate-400 grayscale hover:grayscale-0'
+                    ? 'bg-sky-500/20 border-sky-500/40' 
+                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
                 }`}
               >
-                 <span className={`text-[10px] font-black uppercase tracking-widest ${form.logisticsMode === '空运' ? 'text-sky-100' : 'text-slate-400'}`}>空运毛利率</span>
-                 <span className="text-3xl font-mono font-black mt-1">{(metrics.marginAir * 100).toFixed(1)}%</span>
+                 <span className={`v2-stat-label ${form.logisticsMode === '空运' ? 'text-sky-400' : 'text-slate-500'}`}>空运毛利率</span>
+                 <span className="text-2xl font-mono font-black mt-0.5">{(metrics.marginAir * 100).toFixed(1)}%</span>
               </button>
            </div>
         )}
-      </div>
+      </header>
 
       <AnimatePresence mode="wait">
         {isCalculatorView ? (
@@ -370,7 +374,7 @@ export default function Pricing() {
             <div className="lg:col-span-8 space-y-5">
               
               {/* 第一板块：产品与财务基础 */}
-              <section className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+              <section className="v2-card p-5">
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                    <div className="col-span-1">
                       <label className={labelCls}>产品名称</label>
@@ -453,7 +457,7 @@ export default function Pricing() {
               </section>
 
               {/* 第二板块：物流细节 (Excel 核心) */}
-              <section className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+              <section className="v2-card p-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div>
                       <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase mb-3"><Package className="w-3 h-3" /> 单品规格</h4>
@@ -544,7 +548,7 @@ export default function Pricing() {
 
             {/* 右侧：结果分析与操作 */}
             <div className="lg:col-span-4 space-y-5">
-              <section className="bg-slate-900 rounded-[40px] p-8 text-white shadow-2xl relative overflow-hidden border border-slate-800">
+              <section className="v2-card bg-slate-900/80 p-6 text-white relative overflow-hidden border-slate-800">
                 <div className="relative z-10 space-y-8">
                   <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-3">
                     <BarChart3 className="w-5 h-5" /> 深度利润分析模型
@@ -592,7 +596,7 @@ export default function Pricing() {
 
                 <button 
                 onClick={handleSave} disabled={saving}
-                className="w-full py-8 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white rounded-[32px] shadow-2xl shadow-emerald-200 font-black flex flex-col items-center justify-center gap-1 transition-all disabled:opacity-50"
+                className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white rounded-xl shadow-lg shadow-emerald-500/20 font-black flex flex-col items-center justify-center gap-1 transition-all disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
                    <Save className="w-8 h-8" /> 
@@ -602,18 +606,18 @@ export default function Pricing() {
               </button>
               
               {errorMessage && (
-                <div className="bg-rose-50 border border-rose-200 rounded-3xl p-6 flex gap-4 items-start shadow-sm">
-                   <AlertCircle className="w-6 h-6 text-rose-500 shrink-0 mt-1" />
+                <div className="v2-card bg-rose-500/5 border-rose-500/20 p-4 flex gap-3 items-start">
+                   <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                    <div>
-                      <h4 className="text-sm font-black text-rose-800 mb-1">保存失败</h4>
-                      <p className="text-xs text-rose-700 leading-relaxed font-medium">{errorMessage}</p>
+                      <h4 className="text-xs font-bold text-rose-400 mb-1">保存失败</h4>
+                      <p className="text-[11px] text-rose-400/80 leading-relaxed">{errorMessage}</p>
                    </div>
                 </div>
               )}
               
-              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 items-start">
-                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                 <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
+              <div className="v2-card bg-amber-500/5 border-amber-500/20 p-4 flex gap-3 items-start">
+                 <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                 <p className="text-[10px] text-amber-400/80 font-medium leading-relaxed">
                    提示：核价逻辑已严格对齐跨境物流现实。抛重按照长宽高/6000计算，海运按照单方运价，空运取实重与抛重之大者。
                  </p>
               </div>
@@ -622,8 +626,8 @@ export default function Pricing() {
         ) : (
           <>
             {isSuccessView && (
-              <div className="flex items-center gap-4 mb-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <div className="v2-card bg-slate-900/30 p-3 flex items-center gap-3 mb-4">
+                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter className="w-4 h-4" /> 排序方式:
                 </div>
                 {[
@@ -638,10 +642,10 @@ export default function Pricing() {
                       key: sort.key, 
                       order: sortConfig.key === sort.key && sortConfig.order === 'desc' ? 'asc' : 'desc' 
                     })}
-                    className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
                       sortConfig.key === sort.key 
-                        ? 'bg-indigo-500 text-white shadow-md' 
-                        : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                        ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' 
+                        : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300 border border-transparent'
                     }`}
                   >
                     {sort.label} {sortConfig.key === sort.key && (sortConfig.order === 'desc' ? '↓' : '↑')}
@@ -649,90 +653,90 @@ export default function Pricing() {
                 ))}
               </div>
             )}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[1200px]">
-                <thead className="bg-slate-50/80 border-b border-slate-100">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="v2-card overflow-hidden">
+            <div className="v2-table-wrapper">
+              <table className="v2-table">
+                <thead className="v2-table-thead">
                   <tr>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">产品信息 (点击预览)</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">利润率</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">采购详情 (总额/数量/单价)</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">物流模式</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase whitespace-nowrap">比索售价</th>
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">核价人</th>
-                    {isSuccessView && <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase">当前状态</th>}
-                    <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase text-right">管理操作</th>
+                    <th className="v2-table-th">产品信息 (点击预览)</th>
+                    <th className="v2-table-th">利润率</th>
+                    <th className="v2-table-th">采购详情 (总额/数量/单价)</th>
+                    <th className="v2-table-th">物流模式</th>
+                    <th className="v2-table-th">比索售价</th>
+                    <th className="v2-table-th">核价人</th>
+                    {isSuccessView && <th className="v2-table-th">当前状态</th>}
+                    <th className="v2-table-th text-right">管理操作</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-800/50">
                   {records.length === 0 ? (
-                    <tr><td colSpan={6} className="px-6 py-20 text-center text-slate-300 font-medium font-mono text-xs uppercase tracking-widest">NO RECORDS FOUND</td></tr>
+                    <tr><td colSpan={6} className="px-4 py-20 text-center text-slate-500 italic text-xs">NO RECORDS FOUND</td></tr>
                   ) : sortedRecords.map(rec => (
-                    <tr key={rec.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4">
+                    <tr key={rec.id} className="v2-table-tr group">
+                      <td className="v2-table-td">
                          <div className="flex items-center gap-3">
                             <div className="relative group/img cursor-pointer" onClick={() => setDetailRecord(rec)}>
                               <img 
                                 src={rec.image_url || 'https://via.placeholder.com/80'} 
                                 referrerPolicy="no-referrer"
-                                className="w-14 h-14 rounded-xl object-cover border border-slate-100 shadow-sm transition-all group-hover/img:ring-4 group-hover/img:ring-indigo-100" 
+                                className="w-12 h-12 rounded-lg object-cover border border-slate-700 shadow-sm transition-all group-hover/img:ring-2 group-hover/img:ring-indigo-400/50" 
                               />
-                              <div className="absolute inset-0 bg-indigo-500/0 group-hover/img:bg-indigo-500/10 flex items-center justify-center rounded-xl transition-all">
+                              <div className="absolute inset-0 bg-indigo-500/0 group-hover/img:bg-indigo-500/10 flex items-center justify-center rounded-lg transition-all">
                                  <Search className="w-4 h-4 text-white opacity-0 group-hover/img:opacity-100" />
                               </div>
                             </div>
                             <div className="max-w-[180px]">
-                               <div className="text-sm font-black text-slate-800 truncate" title={rec.name}>{rec.name || '未命名产品'}</div>
-                               <div className="text-[10px] font-bold text-slate-400 mt-0.5 flex items-center gap-1.5 uppercase">
+                               <div className="text-sm font-bold text-slate-200 truncate" title={rec.name}>{rec.name || '未命名产品'}</div>
+                               <div className="text-[10px] font-medium text-slate-500 mt-0.5 flex items-center gap-1.5 uppercase">
                                   <span>型号: {rec.model || '--'}</span>
                                   {rec.competitor_link && (
-                                     <a href={rec.competitor_link} target="_blank" className="text-indigo-400 hover:text-indigo-600"><ExternalLink className="w-3 h-3" /></a>
+                                     <a href={rec.competitor_link} target="_blank" className="text-sky-400 hover:text-sky-300"><ExternalLink className="w-3 h-3" /></a>
                                   )}
                                </div>
                             </div>
                          </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="v2-table-td">
                          <div className="inline-flex flex-col">
-                            <div className="text-base font-mono font-black text-emerald-600 leading-none">{(rec.margin || 0).toFixed(1)}%</div>
-                            <div className="text-[9px] font-black text-slate-300 uppercase tracking-tighter mt-1">MARGIN ONLY</div>
+                            <div className="text-base font-mono font-bold text-emerald-400 leading-none">{(rec.margin || 0).toFixed(1)}%</div>
+                            <div className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter mt-1">MARGIN ONLY</div>
                          </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="v2-table-td">
                          <div className="space-y-0.5">
-                            <div className="text-[11px] font-mono font-black text-indigo-500">总额: ¥{(rec.replenishment_qty * rec.purchase_price_cny).toLocaleString()}</div>
-                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            <div className="text-[11px] font-mono font-bold text-sky-300">总额: ¥{(rec.replenishment_qty * rec.purchase_price_cny).toLocaleString()}</div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
                                {rec.replenishment_qty} PSC × ¥{rec.purchase_price_cny}
                             </div>
                          </div>
                       </td>
-                      <td className="px-6 py-4">
-                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-sm ${
+                      <td className="v2-table-td">
+                         <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold ${
                             rec.logistics_mode === '空运' 
-                              ? 'bg-sky-50 text-sky-600 border-sky-100' 
-                              : 'bg-blue-50 text-blue-600 border-blue-100'
+                              ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' 
+                              : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                          }`}>
-                            {rec.logistics_mode === '空运' ? <Plane className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
-                            <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                            {rec.logistics_mode === '空运' ? <Plane className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
+                            <span className="uppercase tracking-wide whitespace-nowrap">
                                {rec.logistics_mode === '空运' ? '空运模式' : '海运模式'}
                             </span>
                          </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="v2-table-td">
                         <div className="space-y-0.5">
-                           <div className="text-sm font-mono font-black text-slate-700">{rec.selling_price_mxn} MXN</div>
-                           <div className="text-[10px] text-slate-400 font-bold italic">EX: {rec.exchange_rate}</div>
+                           <div className="text-sm font-mono font-bold text-slate-200">{rec.selling_price_mxn} MXN</div>
+                           <div className="text-[10px] text-slate-600 font-bold italic">EX: {rec.exchange_rate}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                         <span className="px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-600">{rec.auditor || '系统'}</span>
+                      <td className="v2-table-td">
+                         <span className="px-2 py-0.5 bg-slate-800 rounded text-[10px] font-bold text-slate-400">{rec.auditor || '系统'}</span>
                       </td>
                       {isSuccessView && (
-                        <td className="px-6 py-4">
+                        <td className="v2-table-td">
                           <select 
                             value={rec.operation_status || '待采购'} 
                             onChange={(e) => updateOperationStatus(rec.id, e.target.value)}
-                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-black text-slate-700 outline-none focus:border-indigo-400 transition-colors"
+                            className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] font-bold text-slate-300 outline-none focus:border-sky-500/50 transition-colors"
                           >
                             {operationStatuses.map(s => (
                               <option key={s} value={s}>{s}</option>
@@ -740,21 +744,21 @@ export default function Pricing() {
                           </select>
                         </td>
                       )}
-                      <td className="px-6 py-4 text-right">
-                         <div className="flex items-center justify-end gap-2">
+                      <td className="v2-table-td text-right">
+                         <div className="flex items-center justify-end gap-1.5">
                             <button 
                               onClick={() => handleRollback(rec)} 
-                              className="px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg flex items-center gap-1.5 text-[10px] font-black transition-all active:scale-95 border border-indigo-100"
+                              className="px-2.5 py-1 bg-slate-800 text-sky-400 hover:bg-sky-500/10 rounded flex items-center gap-1 text-[10px] font-bold transition-all"
                             >
-                               <ArrowLeftCircle className="w-3.5 h-3.5" /> 回退修改
+                               <ArrowLeftCircle className="w-3 h-3" /> 回退
                             </button>
                             {isListView && (
                                <>
-                                 <button onClick={() => updateStatus(rec.id, 'success')} className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-lg flex items-center gap-1 text-[9px] font-black border border-emerald-100 transition-all active:scale-95"><CheckCircle className="w-3.5 h-3.5" /> 确认成功</button>
-                                 <button onClick={() => updateStatus(rec.id, 'staging')} className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg flex items-center gap-1 text-[9px] font-black border border-amber-100 transition-all active:scale-95"><Inbox className="w-3.5 h-3.5" /> 移入暂存</button>
+                                 <button onClick={() => updateStatus(rec.id, 'success')} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded flex items-center gap-1 text-[9px] font-bold border border-transparent hover:border-emerald-500/20 transition-all"><CheckCircle className="w-3 h-3" /> 确认</button>
+                                 <button onClick={() => updateStatus(rec.id, 'staging')} className="p-1.5 text-amber-400 hover:bg-amber-500/10 rounded flex items-center gap-1 text-[9px] font-bold border border-transparent hover:border-amber-500/20 transition-all"><Inbox className="w-3 h-3" /> 暂存</button>
                                </>
                             )}
-                            <button onClick={() => deleteRecord(rec.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => deleteRecord(rec.id)} className="p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                          </div>
                       </td>
                     </tr>
@@ -779,26 +783,26 @@ export default function Pricing() {
                   initial={{ x: '100%' }} 
                   animate={{ x: 0 }} 
                   exit={{ x: '100%' }}
-                  className="fixed top-0 right-0 h-full w-[500px] bg-white shadow-2xl z-[60] overflow-y-auto"
+                  className="fixed top-0 right-0 h-full w-[500px] bg-slate-900/95 backdrop-blur-xl shadow-2xl z-[60] overflow-y-auto border-l border-slate-800"
                 >
-                  <div className="p-8">
-                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                           <Info className="w-6 h-6 text-indigo-500" /> 核价原始数据详情
+                  <div className="p-6">
+                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                           <Info className="w-5 h-5 text-indigo-400" /> 核价原始数据详情
                         </h3>
-                        <button onClick={() => setDetailRecord(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                           <X className="w-6 h-6 text-slate-400" />
+                        <button onClick={() => setDetailRecord(null)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                           <X className="w-5 h-5 text-slate-500" />
                         </button>
                      </div>
 
-                     <div className="space-y-8">
+                     <div className="space-y-5">
                         {/* 产品预览 */}
-                        <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <img src={detailRecord.image_url} referrerPolicy="no-referrer" className="w-24 h-24 rounded-xl object-cover shadow-sm bg-white" />
+                        <div className="flex gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-800">
+                           <img src={detailRecord.image_url} referrerPolicy="no-referrer" className="w-20 h-20 rounded-lg object-cover bg-slate-700" />
                            <div className="flex flex-col justify-center">
-                              <div className="text-lg font-black text-slate-800">{detailRecord.name}</div>
-                              <div className="text-sm font-bold text-slate-400 uppercase mt-1">型号: {detailRecord.model || '--'}</div>
-                              <div className="text-[10px] font-mono text-slate-400 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
+                              <div className="text-base font-bold text-white">{detailRecord.name}</div>
+                              <div className="text-xs text-slate-400 uppercase mt-1">型号: {detailRecord.model || '--'}</div>
+                              <div className="text-[10px] font-mono text-slate-600 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
                            </div>
                         </div>
 
@@ -830,16 +834,16 @@ export default function Pricing() {
                               { l: '整箱重量', v: `${detailRecord.box_weight} kg` },
                           ]}
                         ].map(sec => (
-                          <div key={sec.title} className="space-y-3">
-                             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{sec.title}</h4>
-                             <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden divide-y divide-slate-50">
+                          <div key={sec.title} className="space-y-2">
+                             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">{sec.title}</h4>
+                             <div className="bg-slate-800/50 border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/50">
                                 {sec.items.map(item => (
-                                  <div key={item.l} className="flex items-center justify-between p-4 px-5">
-                                     <span className="text-xs font-bold text-slate-500">{item.l}</span>
+                                  <div key={item.l} className="flex items-center justify-between p-3 px-4">
+                                     <span className="text-[11px] font-medium text-slate-500">{item.l}</span>
                                      {item.isLink && item.v ? (
-                                        <a href={item.v} target="_blank" className="text-xs font-black text-indigo-500 hover:underline flex items-center gap-1">访问链接 <ExternalLink className="w-3 h-3" /></a>
+                                        <a href={item.v} target="_blank" className="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1">访问链接 <ExternalLink className="w-3 h-3" /></a>
                                      ) : (
-                                        <span className={`text-sm font-mono font-black ${item.highlight ? 'text-indigo-600' : 'text-slate-800'}`}>{item.v || '--'}</span>
+                                        <span className={`text-sm font-mono font-bold ${item.highlight ? 'text-indigo-400' : 'text-slate-200'}`}>{item.v || '--'}</span>
                                      )}
                                   </div>
                                 ))}
@@ -847,10 +851,10 @@ export default function Pricing() {
                           </div>
                         ))}
 
-                        <div className="pt-8 space-y-3">
+                        <div className="pt-6 space-y-3">
                            <button 
                              onClick={() => { handleRollback(detailRecord); setDetailRecord(null); }}
-                             className="w-full py-4 bg-indigo-500 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                             className="w-full py-3 bg-indigo-500 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
                            >
                               <ArrowLeftCircle className="w-5 h-5" /> 回退至计算器重新编辑
                            </button>
@@ -864,6 +868,7 @@ export default function Pricing() {
           </>
         )}
       </AnimatePresence>
+    </div>
     </div>
   );
 }

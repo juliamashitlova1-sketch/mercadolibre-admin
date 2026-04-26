@@ -454,27 +454,27 @@ export default function MainLayout({
           {/* ============================================================ */}
           <div className="pointer-events-none fixed left-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
 
-            {/* --- LAYER 1: Deep background grid with glow --- */}
+            {/* --- LAYER 1: Glowing background grid --- */}
             <div className="absolute inset-0 overflow-hidden">
-              <svg width="100%" height="100%" className="opacity-[0.08]">
+              <svg width="100%" height="100%" className="opacity-[0.25]">
                 <defs>
                   <linearGradient id="grid-grad-l" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3"/>
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5"/>
                   </linearGradient>
                 </defs>
                 {Array.from({length: 25}).map((_, i) => (
-                  <line key={`gh${i}`} x1="0" y1={i * 40} x2="400" y2={i * 40} stroke="url(#grid-grad-l)" strokeWidth="0.4"/>
+                  <line key={`gh${i}`} x1="0" y1={i * 40} x2="420" y2={i * 40} stroke="url(#grid-grad-l)" strokeWidth="0.6"/>
                 ))}
-                {Array.from({length: 12}).map((_, i) => (
-                  <line key={`gv${i}`} x1={i * 35} y1="0" x2={i * 35} y2="1000" stroke="url(#grid-grad-l)" strokeWidth="0.4"/>
+                {Array.from({length: 13}).map((_, i) => (
+                  <line key={`gv${i}`} x1={i * 33} y1="0" x2={i * 33} y2="1100" stroke="url(#grid-grad-l)" strokeWidth="0.6"/>
                 ))}
               </svg>
             </div>
 
-            {/* --- LAYER 2: Primary 3D Cube Cluster (large, top-left) --- */}
-            <div className="absolute top-[8%] left-[25px]">
-              <svg width="140" height="140" viewBox="0 0 140 140" fill="none" className="animate-float-slow">
+            {/* --- LAYER 2: PRIMARY Large 3D Cube Cluster (top-left) - HIGH VISIBILITY --- */}
+            <div className="absolute top-[6%] left-[15px]" style={{ filter: 'drop-shadow(0 0 8px rgba(56,189,248,0.3))' }}>
+              <svg width="160" height="160" viewBox="0 0 160 160" fill="none" className="animate-float-slow">
                 <defs>
                   <linearGradient id="cube3d-1" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#06b6d4"/>
@@ -482,177 +482,180 @@ export default function MainLayout({
                     <stop offset="100%" stopColor="#8b5cf6"/>
                   </linearGradient>
                   <linearGradient id="cube3d-1-fill" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.12"/>
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.04"/>
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.18"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.06"/>
                   </linearGradient>
                   <filter id="cube-glow-1">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feGaussianBlur stdDeviation="4" result="blur"/>
                     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                   </filter>
                 </defs>
-                {/* Main cube */}
-                <path d="M70 15L120 42V98L70 125L20 98V42L70 15Z" stroke="url(#cube3d-1)" strokeWidth="1.5" fill="url(#cube3d-1-fill)" filter="url(#cube-glow-1)"/>
-                <path d="M70 15V70" stroke="#38bdf8" strokeWidth="1" opacity="0.8"/>
-                <path d="M20 42H120" stroke="#818cf8" strokeWidth="1" opacity="0.5"/>
-                <path d="M20 98L70 70L120 98" stroke="#06b6d4" strokeWidth="1" opacity="0.7"/>
-                <path d="M70 70L120 42" stroke="#3b82f6" strokeWidth="0.8" opacity="0.4"/>
-                <path d="M70 70L20 42" stroke="#6366f1" strokeWidth="0.8" opacity="0.4"/>
-                {/* Center node with pulse */}
-                <circle cx="70" cy="70" r="4" fill="#38bdf8" opacity="0.9" className="animate-pulse"/>
-                <circle cx="70" cy="70" r="8" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.4" className="animate-ping-slow"/>
-                {/* Vertex dots */}
-                <circle cx="70" cy="15" r="2" fill="#06b6d4" opacity="0.7"/>
-                <circle cx="120" cy="42" r="2" fill="#8b5cf6" opacity="0.6"/>
-                <circle cx="120" cy="98" r="2" fill="#6366f1" opacity="0.5"/>
-                <circle cx="70" cy="125" r="2" fill="#818cf8" opacity="0.6"/>
-                <circle cx="20" cy="98" r="2" fill="#a78bfa" opacity="0.5"/>
-                <circle cx="20" cy="42" r="2" fill="#06b6d4" opacity="0.6"/>
+                {/* Main cube body - thick strokes */}
+                <path d="M80 16L144 48V112L80 144L16 112V48L80 16Z" stroke="url(#cube3d-1)" strokeWidth="2" fill="url(#cube3d-1-fill)" filter="url(#cube-glow-1)"/>
+                {/* Internal edges */}
+                <path d="M80 16V80" stroke="#38bdf8" strokeWidth="1.5" opacity="0.95"/>
+                <path d="M16 48H144" stroke="#818cf8" strokeWidth="1.5" opacity="0.65"/>
+                <path d="M16 112L80 80L144 112" stroke="#06b6d4" strokeWidth="1.5" opacity="0.85"/>
+                <path d="M80 80L144 48" stroke="#3b82f6" strokeWidth="1.2" opacity="0.55"/>
+                <path d="M80 80L16 48" stroke="#6366f1" strokeWidth="1.2" opacity="0.55"/>
+                {/* Center node with strong pulse */}
+                <circle cx="80" cy="80" r="5" fill="#38bdf8" opacity="1" className="animate-pulse"/>
+                <circle cx="80" cy="80" r="12" fill="none" stroke="#38bdf8" strokeWidth="1" opacity="0.5" className="animate-ping-slow"/>
+                {/* Vertex dots - larger and brighter */}
+                <circle cx="80" cy="16" r="3" fill="#06b6d4" opacity="0.9"/>
+                <circle cx="144" cy="48" r="3" fill="#8b5cf6" opacity="0.8"/>
+                <circle cx="144" cy="112" r="3" fill="#6366f1" opacity="0.75"/>
+                <circle cx="80" cy="144" r="3" fill="#818cf8" opacity="0.8"/>
+                <circle cx="16" cy="112" r="3" fill="#a78bfa" opacity="0.75"/>
+                <circle cx="16" cy="48" r="3" fill="#06b6d4" opacity="0.85"/>
               </svg>
             </div>
 
-            {/* --- Secondary smaller cube (offset) --- */}
-            <div className="absolute top-[28%] left-[150px]">
-              <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="animate-float-slow" style={{animationDelay: '2s'}}>
+            {/* --- Secondary cube (middle-right area) --- */}
+            <div className="absolute top-[26%] left-[170px]" style={{ filter: 'drop-shadow(0 0 5px rgba(139,92,246,0.25))' }}>
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none" className="animate-float-slow" style={{animationDelay: '2s'}}>
                 <defs>
                   <linearGradient id="cube3d-2" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#a78bfa"/>
                     <stop offset="100%" stopColor="#06b6d4"/>
                   </linearGradient>
                 </defs>
-                <path d="M30 8L52 22V48L30 56L8 48V22L30 8Z" stroke="url(#cube3d-2)" strokeWidth="1" fill="rgba(167,139,250,0.06)"/>
-                <path d="M30 8V30" stroke="#c084fc" strokeWidth="0.8" opacity="0.6"/>
-                <path d="M8 22H52" stroke="#a78bfa" strokeWidth="0.8" opacity="0.4"/>
-                <path d="M8 48L30 30L52 48" stroke="#06b6d4" strokeWidth="0.8" opacity="0.5"/>
-                <circle cx="30" cy="30" r="2" fill="#c084fc" opacity="0.8"/>
+                <path d="M36 10L62 26V58L36 66L10 58V26L36 10Z" stroke="url(#cube3d-2)" strokeWidth="1.5" fill="rgba(167,139,250,0.1)"/>
+                <path d="M36 10V36" stroke="#c084fc" strokeWidth="1.2" opacity="0.8"/>
+                <path d="M10 26H62" stroke="#a78bfa" strokeWidth="1.2" opacity="0.55"/>
+                <path d="M10 58L36 36L62 58" stroke="#06b6d4" strokeWidth="1.2" opacity="0.7"/>
+                <circle cx="36" cy="36" r="3" fill="#c084fc" opacity="0.95"/>
               </svg>
             </div>
 
-            {/* --- Third mini cube (bottom-left) --- */}
-            <div className="absolute top-[75%] left-[180px]">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="animate-float-slow" style={{animationDelay: '3.5s'}}>
-                <path d="M20 5L35 14V30L20 37L5 30V14L20 5Z" stroke="#22d3ee" strokeWidth="0.8" fill="rgba(34,211,238,0.05)"/>
-                <path d="M20 5V20" stroke="#22d3ee" strokeWidth="0.6" opacity="0.5"/>
-                <path d="M5 14H35" stroke="#06b6d4" strokeWidth="0.6" opacity="0.3"/>
-                <path d="M5 30L20 20L35 30" stroke="#818cf8" strokeWidth="0.6" opacity="0.5"/>
-                <circle cx="20" cy="20" r="1.5" fill="#22d3ee" opacity="0.7"/>
+            {/* --- Third mini cube (bottom-right of left zone) --- */}
+            <div className="absolute top-[72%] left:[210px]" style={{ filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.2))' }}>
+              <svg width="50" height="50" viewBox="0 0 50 50" fill="none" className="animate-float-slow" style={{animationDelay: '3.5s'}}>
+                <path d="M25 6L44 17V37L25 44L6 37V17L25 6Z" stroke="#22d3ee" strokeWidth="1.2" fill="rgba(34,211,238,0.1)"/>
+                <path d="M25 6V25" stroke="#22d3ee" strokeWidth="1" opacity="0.7"/>
+                <path d="M6 17H44" stroke="#06b6d4" strokeWidth="1" opacity="0.45"/>
+                <path d="M6 37L25 25L44 37" stroke="#818cf8" strokeWidth="1" opacity="0.65"/>
+                <circle cx="25" cy="25" r="2.5" fill="#22d3ee" opacity="0.9"/>
               </svg>
             </div>
 
-            {/* --- LAYER 3: Flowing energy lines --- */}
-            <div className="absolute top-[40%] left-[10px] w-[240px]">
-              <svg width="240" height="80" viewBox="0 0 240 80" fill="none">
+            {/* --- LAYER 3: Flowing Energy Lines (BRIGHT) --- */}
+            <div className="absolute top-[38%] left-[5px] w-[260px]">
+              <svg width="260" height="90" viewBox="0 0 260 90" fill="none">
                 <defs>
                   <linearGradient id="flow-line-1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0"/>
-                    <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.7"/>
-                    <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.9"/>
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2"/>
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.1"/>
+                    <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.9"/>
+                    <stop offset="55%" stopColor="#3b82f6" stopOpacity="1"/>
+                    <stop offset="80%" stopColor="#8b5cf6" stopOpacity="0.7"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.15"/>
                   </linearGradient>
                   <linearGradient id="flow-line-2" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.1"/>
-                    <stop offset="40%" stopColor="#a78bfa" stopOpacity="0.6"/>
-                    <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.8"/>
-                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15"/>
+                    <stop offset="35%" stopColor="#a78bfa" stopOpacity="0.75"/>
+                    <stop offset="65%" stopColor="#38bdf8" stopOpacity="0.9"/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1"/>
                   </linearGradient>
                   <filter id="line-glow-filter">
-                    <feGaussianBlur stdDeviation="2" result="blur"/>
+                    <feGaussianBlur stdDeviation="2.5" result="blur"/>
                     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                   </filter>
                 </defs>
-                {/* Primary flowing line */}
-                <path d="M0,60 C20,55 35,25 55,30 C75,35 90,55 110,35 C130,15 150,40 170,20 C190,0 210,30 240,15"
-                  stroke="url(#flow-line-1)" strokeWidth="2" fill="none" strokeLinecap="round"
+                {/* Primary line - thicker and brighter */}
+                <path d="M0,66 C22,60 38,28 60,34 C84,40 96,64 118,40 C142,16 165,44 188,22 C212,0 234,36 260,18"
+                  stroke="url(#flow-line-1)" strokeWidth="2.5" fill="none" strokeLinecap="round"
                   filter="url(#line-glow-filter)" className="animate-draw-line"/>
-                {/* Secondary flowing line */}
-                <path d="M0,70 C30,65 50,45 70,50 C90,55 105,35 125,45 C145,55 165,30 185,40 C205,50 225,25 240,30"
-                  stroke="url(#flow-line-2)" strokeWidth="1.2" fill="none" strokeLinecap="round"
-                  opacity="0.6" className="animate-draw-line" style={{animationDelay: '1.5s'}}/>
-                {/* Data points on lines */}
-                {[[55,30],[110,35],[170,20],[240,15]].map(([cx, cy], i) => (
+                {/* Secondary line */}
+                <path d="M0,78 C33,72 55,50 77,56 C99,62 115,38 138,50 C161,62 183,35 208,47 C232,59 255,30 260,36"
+                  stroke="url(#flow-line-2)" strokeWidth="1.6" fill="none" strokeLinecap="round"
+                  opacity="0.75" className="animate-draw-line" style={{animationDelay: '1.5s'}}/>
+                {/* Data point clusters */}
+                {[[60,34],[118,40],[188,22],[260,18]].map(([cx, cy], i) => (
                   <g key={i}>
-                    <circle cx={cx} cy={cy} r="3.5" fill="#38bdf8" opacity="0.9" className={i % 2 === 0 ? 'animate-pulse' : ''}/>
-                    <circle cx={cx} cy={cy} r="7" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.3" className="animate-ping-slow"/>
+                    <circle cx={cx} cy={cy} r="4.5" fill="#38bdf8" opacity="1" className={i % 2 === 0 ? 'animate-pulse' : ''}/>
+                    <circle cx={cx} cy={cy} r="10" fill="none" stroke="#38bdf8" strokeWidth="0.8" opacity="0.4" className="animate-ping-slow"/>
                   </g>
                 ))}
               </svg>
             </div>
 
-            {/* --- LAYER 4: Dense particle field with connection lines --- */}
+            {/* --- LAYER 4: Dense Particle Field (BRIGHT) --- */}
             <ParticleField particles={[
-              {top:'12%', left:'60px', size:4, delay:'0s', color:'#38bdf8'},
-              {top:'18%', left:'200px', size:3, delay:'1.2s', color:'#8b5cf6'},
-              {top:'25%', left:'120px', size:5, delay:'0.6s', color:'#06b6d4'},
-              {top:'32%', left:'40px', size:3, delay:'2.1s', color:'#a78bfa'},
-              {top:'38%', left:'260px', size:4, delay:'0.3s', color:'#22d3ee'},
-              {top:'48%', left:'80px', size:3, delay:'1.8s', color:'#6366f1'},
-              {top:'55%', left:'180px', size:5, delay:'0.9s', color:'#38bdf8'},
-              {top:'62%', left:'30px', size:3, delay:'2.5s', color:'#c084fc'},
-              {top:'70%', left:'220px', size:4, delay:'1.5s', color:'#06b6d4'},
-              {top:'78%', left:'100px', size:3, delay:'0.4s', color:'#818cf8'},
-              {top:'85%', left:'250px', size:4, delay:'1.1s', color:'#22d3ee'},
-              {top:'92%', left:'50px', size:3, delay:'2.2s', color:'#3b82f6'},
+              {top:'10%', left:'55px', size:5, delay:'0s', color:'#38bdf8'},
+              {top:'16%', left:'210px', size:4, delay:'1.2s', color:'#8b5cf6'},
+              {top:'23%', left:'115px', size:6, delay:'0.6s', color:'#06b6d4'},
+              {top:'31%', left:'35px', size:4, delay:'2.1s', color:'#a78bfa'},
+              {top:'37%', left:'275px', size:5, delay:'0.3s', color:'#22d3ee'},
+              {top:'46%', left:'75px', size:4, delay:'1.8s', color:'#6366f1'},
+              {top:'53%', left:'185px', size:6, delay:'0.9s', color:'#38bdf8'},
+              {top:'61%', left:'25px', size:4, delay:'2.5s', color:'#c084fc'},
+              {top:'68%', left:'230px', size:5, delay:'1.5s', color:'#06b6d4'},
+              {top:'76%', left:'95px', size:4, delay:'0.4s', color:'#818cf8'},
+              {top:'83%', left:'260px', size:5, delay:'1.1s', color:'#22d3ee'},
+              {top:'91%', left:'45px', size:4, delay:'2.2s', color:'#3b82f6'},
+              {top:'97%', left:'170px', size:3, delay:'0.8s', color:'#c084fc'},
             ]}/>
 
-            {/* --- Particle connection lines (SVG overlay) --- */}
+            {/* --- Particle Connection Lines (VISIBLE) --- */}
             <div className="absolute inset-0">
-              <svg width="100%" height="100%" className="opacity-[0.15]">
-                <line x1="60" y1="12%" x2="120" y2="25%" stroke="#38bdf8" strokeWidth="0.4"/>
-                <line x1="120" y1="25%" x2="200" y2="18%" stroke="#8b5cf6" strokeWidth="0.3"/>
-                <line x1="40" y1="32%" x2="80" y2="48%" stroke="#a78bfa" strokeWidth="0.4"/>
-                <line x1="80" y1="48%" x2="180" y2="55%" stroke="#6366f1" strokeWidth="0.3"/>
-                <line x1="180" y1="55%" x2="260" y2="38%" stroke="#38bdf8" strokeWidth="0.4"/>
-                <line x1="30" y1="62%" x2="100" y2="78%" stroke="#c084fc" strokeWidth="0.3"/>
-                <line x1="100" y1="78%" x2="220" y2="70%" stroke="#06b6d4" strokeWidth="0.4"/>
-                <line x1="220" y1="70%" x2="250" y2="85%" stroke="#22d3ee" strokeWidth="0.3"/>
-                <line x1="50" y1="92%" x2="250" y2="85%" stroke="#3b82f6" strokeWidth="0.4"/>
-                <line x1="260" y1="38%" x2="200" y2="18%" stroke="#22d3ee" strokeWidth="0.3"/>
+              <svg width="100%" height="100%" className="opacity-[0.4]">
+                <line x1="55" y1="10%" x2="115" y2="23%" stroke="#38bdf8" strokeWidth="0.6"/>
+                <line x1="115" y1="23%" x2="210" y2="16%" stroke="#8b5cf6" strokeWidth="0.5"/>
+                <line x1="35" y1="31%" x2="75" y2="46%" stroke="#a78bfa" strokeWidth="0.6"/>
+                <line x1="75" y1="46%" x2="185" y2="53%" stroke="#6366f1" strokeWidth="0.5"/>
+                <line x1="185" y1="53%" x2="275" y2="37%" stroke="#38bdf8" strokeWidth="0.6"/>
+                <line x1="25" y1="61%" x2="95" y2="76%" stroke="#c084fc" strokeWidth="0.5"/>
+                <line x1="95" y1="76%" x2="230" y2="68%" stroke="#06b6d4" strokeWidth="0.6"/>
+                <line x1="230" y1="68%" x2="260" y2="83%" stroke="#22d3ee" strokeWidth="0.5"/>
+                <line x1="45" y1="91%" x2="260" y2="83%" stroke="#3b82f6" strokeWidth="0.6"/>
+                <line x1="275" y1="37%" x2="210" y2="16%" stroke="#22d3ee" strokeWidth="0.5"/>
               </svg>
             </div>
 
-            {/* --- LAYER 5: Concentric ring system --- */}
-            <div className="absolute bottom-[5%] left-[20px]">
-              <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="animate-spin-slow">
+            {/* --- LAYER 5: Concentric Ring System (BRIGHT) --- */}
+            <div className="absolute bottom-[3%] left-[10px]" style={{ filter: 'drop-shadow(0 0 10px rgba(56,189,248,0.15))' }}>
+              <svg width="140" height="140" viewBox="0 0 140 140" fill="none" className="animate-spin-slow">
                 <defs>
                   <radialGradient id="ring-glow-l" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.2"/>
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35"/>
                     <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
                   </radialGradient>
                 </defs>
-                <circle cx="60" cy="60" r="55" fill="url(#ring-glow-l)"/>
-                <circle cx="60" cy="60" r="52" stroke="#06b6d4" strokeWidth="0.8" opacity="0.6"/>
-                <circle cx="60" cy="60" r="40" stroke="#818cf8" strokeWidth="0.8" strokeDasharray="6 3" opacity="0.5"/>
-                <circle cx="60" cy="60" r="28" stroke="#38bdf8" strokeWidth="0.8" opacity="0.7"/>
-                <circle cx="60" cy="60" r="16" stroke="#a78bfa" strokeWidth="0.6" opacity="0.6"/>
-                <circle cx="60" cy="60" r="6" fill="#38bdf8" opacity="0.8"/>
-                <circle cx="60" cy="60" r="10" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.3" className="animate-ping-slow"/>
+                <circle cx="70" cy="70" r="65" fill="url(#ring-glow-l)"/>
+                <circle cx="70" cy="70" r="60" stroke="#06b6d4" strokeWidth="1.2" opacity="0.8"/>
+                <circle cx="70" cy="70" r="47" stroke="#818cf8" strokeWidth="1.2" strokeDasharray="8 4" opacity="0.65"/>
+                <circle cx="70" cy="70" r="34" stroke="#38bdf8" strokeWidth="1.2" opacity="0.85"/>
+                <circle cx="70" cy="70" r="20" stroke="#a78bfa" strokeWidth="1" opacity="0.75"/>
+                <circle cx="70" cy="70" r="8" fill="#38bdf8" opacity="1"/>
+                <circle cx="70" cy="70" r="14" fill="none" stroke="#38bdf8" strokeWidth="0.8" opacity="0.45" className="animate-ping-slow"/>
               </svg>
             </div>
 
-            {/* --- LAYER 6: Hexagon accent --- */}
-            <div className="absolute top-[3%] left-[4%]">
-              <svg width="60" height="70" viewBox="0 0 60 70" fill="none" className="animate-pulse-slow">
+            {/* --- LAYER 6: Nested Hexagon Accent --- */}
+            <div className="absolute top-[2%] left-[2%]" style={{ filter: 'drop-shadow(0 0 4px rgba(167,139,250,0.2))' }}>
+              <svg width="70" height="82" viewBox="0 0 70 82" fill="none" className="animate-pulse-slow">
                 <defs>
                   <linearGradient id="hex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#a78bfa"/>
                     <stop offset="100%" stopColor="#06b6d4"/>
                   </linearGradient>
                 </defs>
-                <polygon points="30,2 56,18 56,52 30,68 4,52 4,18" stroke="url(#hex-grad)" strokeWidth="1" fill="rgba(167,139,250,0.05)"/>
-                <polygon points="30,14 46,24 46,46 30,56 14,46 14,24" stroke="#38bdf8" strokeWidth="0.6" fill="rgba(56,189,248,0.04)" opacity="0.7"/>
-                <polygon points="30,26 38,31 38,41 30,46 22,41 22,31" stroke="#06b6d4" strokeWidth="0.4" fill="rgba(6,182,212,0.03)" opacity="0.5"/>
+                <polygon points="35,2 66,21 66,61 35,80 4,61 4,21" stroke="url(#hex-grad)" strokeWidth="1.5" fill="rgba(167,139,250,0.09)"/>
+                <polygon points="35,16 54,28 54,54 35,66 16,54 16,28" stroke="#38bdf8" strokeWidth="1" fill="rgba(56,189,248,0.07)" opacity="0.85"/>
+                <polygon points="35,30 44,36 44,46 35,52 26,46 26,36" stroke="#06b6d4" strokeWidth="0.7" fill="rgba(6,182,212,0.05)" opacity="0.7"/>
               </svg>
             </div>
 
-            {/* --- LAYER 7: Vertical light streak --- */}
-            <div className="absolute top-[10%] left-[2px] w-[2px] h-[80%] rounded-full overflow-hidden opacity-20">
+            {/* --- LAYER 7: Vertical Light Streak (VISIBLE) --- */}
+            <div className="absolute top-[8%] left-[2px] w-[3px] h-[85%] rounded-full overflow-hidden opacity-45">
               <div className="w-full h-[30%] bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-light-streak"/>
             </div>
 
-            {/* --- LAYER 8: Ambient glow orb --- */}
-            <div className="absolute top-[45%] left-[100px] w-[150px] h-[150px] rounded-full animate-pulse-slow"
+            {/* --- LAYER 8: Ambient Glow Orb (STRONGER) --- */}
+            <div className="absolute top-[45%] left:[90px] w-[180px] h-[180px] rounded-full animate-pulse-slow"
                  style={{
-                   background: 'radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(99,102,241,0.06) 40%, transparent 70%)',
-                   filter: 'blur(30px)',
+                   background: 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(99,102,241,0.1) 40%, transparent 70%)',
+                   filter: 'blur(25px)',
                  }}
             />
           </div>

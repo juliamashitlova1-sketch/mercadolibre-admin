@@ -298,6 +298,81 @@
   animation: neonBar 4s ease-in-out infinite;
 }
 
+/* === Enhanced Sci-Fi Decorative Animations === */
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+.animate-float-slow {
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse-slow {
+  animation: pulseSlow 5s ease-in-out infinite;
+}
+
+@keyframes pingSlow {
+  0% { transform: scale(1); opacity: 0.4; }
+  70% { transform: scale(2); opacity: 0; }
+  100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-slow {
+  animation: pingSlow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+.animate-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes nebulaDrift {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10px, -15px) scale(1.05); }
+  66% { transform: translate(-8px, 10px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.animate-nebula-drift {
+  animation: nebulaDrift 20s ease-in-out infinite;
+}
+
+@keyframes lightStreak {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+.animate-light-streak {
+  animation: lightStreak 8s linear infinite;
+}
+
+@keyframes lightBand {
+  0% { opacity: 0; transform: scaleX(0.3); }
+  50% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(0.3); }
+}
+.animate-light-band {
+  animation: lightBand 6s ease-in-out infinite;
+}
+
+/* Enhanced draw-line for longer paths */
+@keyframes drawLineLong {
+  from { stroke-dashoffset: 800; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+.animate-draw-line-long {
+  stroke-dasharray: 800;
+  animation: drawLineLong 6s ease-out forwards;
+}
+
+
+
+
 
 
 

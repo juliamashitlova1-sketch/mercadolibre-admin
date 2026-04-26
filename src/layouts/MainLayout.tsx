@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { SKUStats } from '../types';
@@ -80,6 +80,52 @@ function CurrencyConverter() {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ===== Particle Connection Lines Component ===== */
+function ParticleField({ particles }: { particles: {top:string;left:string;size:number;delay:string;color:string}[] }) {
+  return (
+    <>
+      {particles.map((p, i) => (
+        <div key={i}
+          className="rounded-full animate-float-particle"
+          style={{
+            top: p.top,
+            left: p.left,
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            boxShadow: `0 0 ${p.size * 4}px ${p.color}, 0 0 ${p.size * 8}px ${p.color}40`,
+            animationDelay: p.delay,
+            opacity: 0.5,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+/* ===== Right-side Particle Field (positioned by right) ===== */
+function ParticleFieldRight({ particles }: { particles: {top:string;right:string;size:number;delay:string;color:string}[] }) {
+  return (
+    <>
+      {particles.map((p, i) => (
+        <div key={i}
+          className="rounded-full animate-float-particle"
+          style={{
+            top: p.top,
+            right: p.right,
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            boxShadow: `0 0 ${p.size * 4}px ${p.color}, 0 0 ${p.size * 8}px ${p.color}40`,
+            animationDelay: p.delay,
+            opacity: 0.45,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -179,6 +225,10 @@ export default function MainLayout({
     },
   ];
 
+  // Stable random grid for DATA_STREAM card
+  const streamGrid = useMemo(() => 
+    Array.from({length: 16}).map((_, i) => i % 3 === 0 ? 'rgba(56,189,248,0.2)' : i % 5 === 0 ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)')
+  , []);
 
   return (
     <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-[#020617] text-slate-300' : 'bg-transparent'}`}>
@@ -254,9 +304,6 @@ export default function MainLayout({
           </nav>
 
           <div className="p-4 mt-auto space-y-4">
-            {/* 全局数据导出 - 移至侧边栏底部以保持高度可见 */}
-
-
             <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
               <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
                 <span>管理员</span>
@@ -401,235 +448,472 @@ export default function MainLayout({
 
         {/* Content Scroll Area */}
         <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-8 pb-10 custom-scrollbar relative">
-          {/* === LEFT SIDE DECORATIONS: Holographic Data Structures === */}
+
+          {/* ============================================================ */}
+          {/* === LEFT SIDE: 3D Data Cubes / Glowing Grid / Flowing Lines / Particles === */}
+          {/* ============================================================ */}
           <div className="pointer-events-none fixed left-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
-            {/* Floating cube cluster - top-left */}
-            <div className="absolute top-[15%] left-[30px] opacity-[0.07]">
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="animate-float-slow">
-                <path d="M40 5L75 25V55L40 75L5 55V25L40 5Z" stroke="url(#grad-cyan-blue)" strokeWidth="1" fill="none"/>
-                <path d="M40 5V40" stroke="#38bdf8" strokeWidth="1" opacity="0.6"/>
-                <path d="M5 25H75" stroke="#818cf8" strokeWidth="1" opacity="0.3"/>
-                <path d="M5 55L40 40L75 55" stroke="#06b6d4" strokeWidth="1" opacity="0.5"/>
-                <circle cx="40" cy="40" r="2" fill="#38bdf8" opacity="0.8"/>
-              </svg>
-            </div>
-            {/* Wireframe grid - middle-left */}
-            <div className="absolute top-[45%] left-[10px] opacity-[0.05]">
-              <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="animate-pulse-slow">
-                {[0,20,40,60,80,100].map(y => (
-                  <line key={`h${y}`} x1="0" y1={y} x2="120" y2={y} stroke="#6366f1" strokeWidth="0.5"/>
-                ))}
-                {[0,20,40,60,80,100,120].map(x => (
-                  <line key={`v${x}`} x1={x} y1="0" x2={x} y2="120" stroke="#6366f1" strokeWidth="0.5"/>
-                ))}
-              </svg>
-            </div>
-            {/* Glowing data line chart */}
-            <div className="absolute top-[70%] left-[50px] opacity-[0.08] w-[160px]">
-              <svg width="160" height="60" viewBox="0 0 160 60" fill="none">
+
+            {/* --- LAYER 1: Deep background grid with glow --- */}
+            <div className="absolute inset-0 overflow-hidden">
+              <svg width="100%" height="100%" className="opacity-[0.08]">
                 <defs>
-                  <linearGradient id="line-glow-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0"/>
-                    <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8"/>
-                    <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.3"/>
+                  <linearGradient id="grid-grad-l" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3"/>
                   </linearGradient>
                 </defs>
-                <polyline points="0,45 20,35 40,48 60,20 80,30 100,12 120,28 140,18 160,22"
-                  stroke="url(#line-glow-l)" strokeWidth="1.5" fill="none"
-                  strokeLinecap="round" strokeLinejoin="round"
-                  className="animate-draw-line"/>
-                <g opacity="0.5">
-                  {[[20,35],[60,20],[100,12],[140,18]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="2.5" fill="#38bdf8" opacity="0.7"
-                      className={i % 2 === 0 ? 'animate-pulse' : ''}/>
-                  ))}
-                </g>
+                {Array.from({length: 25}).map((_, i) => (
+                  <line key={`gh${i}`} x1="0" y1={i * 40} x2="400" y2={i * 40} stroke="url(#grid-grad-l)" strokeWidth="0.4"/>
+                ))}
+                {Array.from({length: 12}).map((_, i) => (
+                  <line key={`gv${i}`} x1={i * 35} y1="0" x2={i * 35} y2="1000" stroke="url(#grid-grad-l)" strokeWidth="0.4"/>
+                ))}
               </svg>
             </div>
-            {/* Small floating particles - left */}
-            {[
-              {top:'25%', left:'80px', size:4, delay:'0s', color:'#38bdf8'},
-              {top:'55%', left:'20px', size:3, delay:'1.5s', color:'#818cf8'},
-              {top:'80%', left:'110px', size:5, delay:'0.8s', color:'#06b6d4'},
-              {top:'38%', left:'130px', size:2, delay:'2s', color:'#a78bfa'},
-              {top:'65%', left:'150px', size:3, delay:'1.2s', color:'#22d3ee'},
-              {top:'90%', left:'40px', size:2, delay:'0.5s', color:'#6366f1'},
-            ].map((p, i) => (
-              <div key={i}
-                className="rounded-full animate-float-particle"
-                style={{
-                  top: p.top,
-                  left: p.left,
-                  width: p.size,
-                  height: p.size,
-                  backgroundColor: p.color,
-                  boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
-                  animationDelay: p.delay,
-                  opacity: 0.15,
-                }}
-              />
-            ))}
-            {/* Geometric layered rings - bottom-left */}
-            <div className="absolute bottom-[10%] left-[20px] opacity-[0.04]">
-              <svg width="100" height="100" viewBox="0 0 100 100" fill="none" className="animate-spin-slow">
-                <circle cx="50" cy="50" r="45" stroke="#06b6d4" strokeWidth="0.5"/>
-                <circle cx="50" cy="50" r="32" stroke="#818cf8" strokeWidth="0.5" strokeDasharray="4 4"/>
-                <circle cx="50" cy="50" r="18" stroke="#38bdf8" strokeWidth="0.5"/>
-                <circle cx="50" cy="50" r="5" fill="#38bdf8" opacity="0.6"/>
-              </svg>
-            </div>
-            {/* Hexagon pattern - upper left accent */}
-            <div className="absolute top-[8%] left-[5%] opacity-[0.03]">
-              <svg width="50" height="58" viewBox="0 0 50 58" fill="none">
-                <polygon points="25,2 47,16 47,42 25,56 3,42 3,16" stroke="#a78bfa" strokeWidth="0.8" fill="none"/>
-                <polygon points="25,14 37,21 37,37 25,44 13,37 13,21" stroke="#38bdf8" strokeWidth="0.5" fill="none" opacity="0.5"/>
-              </svg>
-            </div>
-          </div>
 
-          {/* === RIGHT SIDE DECORATIONS: Data Visualization Style === */}
-          <div className="pointer-events-none fixed right-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
-            {/* Radial / polar chart - top-right */}
-            <div className="absolute top-[12%] right-[40px] opacity-[0.06]">
-              <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+            {/* --- LAYER 2: Primary 3D Cube Cluster (large, top-left) --- */}
+            <div className="absolute top-[8%] left-[25px]">
+              <svg width="140" height="140" viewBox="0 0 140 140" fill="none" className="animate-float-slow">
                 <defs>
-                  <radialGradient id="radial-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.3"/>
-                    <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.1"/>
+                  <linearGradient id="cube3d-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4"/>
+                    <stop offset="50%" stopColor="#3b82f6"/>
+                    <stop offset="100%" stopColor="#8b5cf6"/>
+                  </linearGradient>
+                  <linearGradient id="cube3d-1-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.12"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.04"/>
+                  </linearGradient>
+                  <filter id="cube-glow-1">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                {/* Main cube */}
+                <path d="M70 15L120 42V98L70 125L20 98V42L70 15Z" stroke="url(#cube3d-1)" strokeWidth="1.5" fill="url(#cube3d-1-fill)" filter="url(#cube-glow-1)"/>
+                <path d="M70 15V70" stroke="#38bdf8" strokeWidth="1" opacity="0.8"/>
+                <path d="M20 42H120" stroke="#818cf8" strokeWidth="1" opacity="0.5"/>
+                <path d="M20 98L70 70L120 98" stroke="#06b6d4" strokeWidth="1" opacity="0.7"/>
+                <path d="M70 70L120 42" stroke="#3b82f6" strokeWidth="0.8" opacity="0.4"/>
+                <path d="M70 70L20 42" stroke="#6366f1" strokeWidth="0.8" opacity="0.4"/>
+                {/* Center node with pulse */}
+                <circle cx="70" cy="70" r="4" fill="#38bdf8" opacity="0.9" className="animate-pulse"/>
+                <circle cx="70" cy="70" r="8" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.4" className="animate-ping-slow"/>
+                {/* Vertex dots */}
+                <circle cx="70" cy="15" r="2" fill="#06b6d4" opacity="0.7"/>
+                <circle cx="120" cy="42" r="2" fill="#8b5cf6" opacity="0.6"/>
+                <circle cx="120" cy="98" r="2" fill="#6366f1" opacity="0.5"/>
+                <circle cx="70" cy="125" r="2" fill="#818cf8" opacity="0.6"/>
+                <circle cx="20" cy="98" r="2" fill="#a78bfa" opacity="0.5"/>
+                <circle cx="20" cy="42" r="2" fill="#06b6d4" opacity="0.6"/>
+              </svg>
+            </div>
+
+            {/* --- Secondary smaller cube (offset) --- */}
+            <div className="absolute top-[28%] left-[150px]">
+              <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="animate-float-slow" style={{animationDelay: '2s'}}>
+                <defs>
+                  <linearGradient id="cube3d-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a78bfa"/>
+                    <stop offset="100%" stopColor="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+                <path d="M30 8L52 22V48L30 56L8 48V22L30 8Z" stroke="url(#cube3d-2)" strokeWidth="1" fill="rgba(167,139,250,0.06)"/>
+                <path d="M30 8V30" stroke="#c084fc" strokeWidth="0.8" opacity="0.6"/>
+                <path d="M8 22H52" stroke="#a78bfa" strokeWidth="0.8" opacity="0.4"/>
+                <path d="M8 48L30 30L52 48" stroke="#06b6d4" strokeWidth="0.8" opacity="0.5"/>
+                <circle cx="30" cy="30" r="2" fill="#c084fc" opacity="0.8"/>
+              </svg>
+            </div>
+
+            {/* --- Third mini cube (bottom-left) --- */}
+            <div className="absolute top-[75%] left-[180px]">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="animate-float-slow" style={{animationDelay: '3.5s'}}>
+                <path d="M20 5L35 14V30L20 37L5 30V14L20 5Z" stroke="#22d3ee" strokeWidth="0.8" fill="rgba(34,211,238,0.05)"/>
+                <path d="M20 5V20" stroke="#22d3ee" strokeWidth="0.6" opacity="0.5"/>
+                <path d="M5 14H35" stroke="#06b6d4" strokeWidth="0.6" opacity="0.3"/>
+                <path d="M5 30L20 20L35 30" stroke="#818cf8" strokeWidth="0.6" opacity="0.5"/>
+                <circle cx="20" cy="20" r="1.5" fill="#22d3ee" opacity="0.7"/>
+              </svg>
+            </div>
+
+            {/* --- LAYER 3: Flowing energy lines --- */}
+            <div className="absolute top-[40%] left-[10px] w-[240px]">
+              <svg width="240" height="80" viewBox="0 0 240 80" fill="none">
+                <defs>
+                  <linearGradient id="flow-line-1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0"/>
+                    <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.7"/>
+                    <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.9"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2"/>
+                  </linearGradient>
+                  <linearGradient id="flow-line-2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.1"/>
+                    <stop offset="40%" stopColor="#a78bfa" stopOpacity="0.6"/>
+                    <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.8"/>
                     <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+                  </linearGradient>
+                  <filter id="line-glow-filter">
+                    <feGaussianBlur stdDeviation="2" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                {/* Primary flowing line */}
+                <path d="M0,60 C20,55 35,25 55,30 C75,35 90,55 110,35 C130,15 150,40 170,20 C190,0 210,30 240,15"
+                  stroke="url(#flow-line-1)" strokeWidth="2" fill="none" strokeLinecap="round"
+                  filter="url(#line-glow-filter)" className="animate-draw-line"/>
+                {/* Secondary flowing line */}
+                <path d="M0,70 C30,65 50,45 70,50 C90,55 105,35 125,45 C145,55 165,30 185,40 C205,50 225,25 240,30"
+                  stroke="url(#flow-line-2)" strokeWidth="1.2" fill="none" strokeLinecap="round"
+                  opacity="0.6" className="animate-draw-line" style={{animationDelay: '1.5s'}}/>
+                {/* Data points on lines */}
+                {[[55,30],[110,35],[170,20],[240,15]].map(([cx, cy], i) => (
+                  <g key={i}>
+                    <circle cx={cx} cy={cy} r="3.5" fill="#38bdf8" opacity="0.9" className={i % 2 === 0 ? 'animate-pulse' : ''}/>
+                    <circle cx={cx} cy={cy} r="7" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.3" className="animate-ping-slow"/>
+                  </g>
+                ))}
+              </svg>
+            </div>
+
+            {/* --- LAYER 4: Dense particle field with connection lines --- */}
+            <ParticleField particles={[
+              {top:'12%', left:'60px', size:4, delay:'0s', color:'#38bdf8'},
+              {top:'18%', left:'200px', size:3, delay:'1.2s', color:'#8b5cf6'},
+              {top:'25%', left:'120px', size:5, delay:'0.6s', color:'#06b6d4'},
+              {top:'32%', left:'40px', size:3, delay:'2.1s', color:'#a78bfa'},
+              {top:'38%', left:'260px', size:4, delay:'0.3s', color:'#22d3ee'},
+              {top:'48%', left:'80px', size:3, delay:'1.8s', color:'#6366f1'},
+              {top:'55%', left:'180px', size:5, delay:'0.9s', color:'#38bdf8'},
+              {top:'62%', left:'30px', size:3, delay:'2.5s', color:'#c084fc'},
+              {top:'70%', left:'220px', size:4, delay:'1.5s', color:'#06b6d4'},
+              {top:'78%', left:'100px', size:3, delay:'0.4s', color:'#818cf8'},
+              {top:'85%', left:'250px', size:4, delay:'1.1s', color:'#22d3ee'},
+              {top:'92%', left:'50px', size:3, delay:'2.2s', color:'#3b82f6'},
+            ]}/>
+
+            {/* --- Particle connection lines (SVG overlay) --- */}
+            <div className="absolute inset-0">
+              <svg width="100%" height="100%" className="opacity-[0.15]">
+                <line x1="60" y1="12%" x2="120" y2="25%" stroke="#38bdf8" strokeWidth="0.4"/>
+                <line x1="120" y1="25%" x2="200" y2="18%" stroke="#8b5cf6" strokeWidth="0.3"/>
+                <line x1="40" y1="32%" x2="80" y2="48%" stroke="#a78bfa" strokeWidth="0.4"/>
+                <line x1="80" y1="48%" x2="180" y2="55%" stroke="#6366f1" strokeWidth="0.3"/>
+                <line x1="180" y1="55%" x2="260" y2="38%" stroke="#38bdf8" strokeWidth="0.4"/>
+                <line x1="30" y1="62%" x2="100" y2="78%" stroke="#c084fc" strokeWidth="0.3"/>
+                <line x1="100" y1="78%" x2="220" y2="70%" stroke="#06b6d4" strokeWidth="0.4"/>
+                <line x1="220" y1="70%" x2="250" y2="85%" stroke="#22d3ee" strokeWidth="0.3"/>
+                <line x1="50" y1="92%" x2="250" y2="85%" stroke="#3b82f6" strokeWidth="0.4"/>
+                <line x1="260" y1="38%" x2="200" y2="18%" stroke="#22d3ee" strokeWidth="0.3"/>
+              </svg>
+            </div>
+
+            {/* --- LAYER 5: Concentric ring system --- */}
+            <div className="absolute bottom-[5%] left-[20px]">
+              <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="animate-spin-slow">
+                <defs>
+                  <radialGradient id="ring-glow-l" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.2"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
                   </radialGradient>
                 </defs>
-                {[20,35,50].map((r, i) => (
-                  <circle key={i} cx="50" cy="50" r={r} stroke="#6366f1" strokeWidth="0.5" opacity={0.4-i*0.1}/>
-                ))}
-                {['M50,10 A40,40 0 0,1 85,30','M85,30 A40,40 0 0,1 90,50','M90,50 A40,40 0 0,1 72,82',
-                  'M72,82 A40,40 0 0,1 28,82','M28,82 A40,40 0 0,1 10,50','M10,50 A40,40 0 0,1 26,24',
-                  'M26,24 A40,40 0 0,1 50,10'].map((d, i) => (
-                    <path key={i} d={d} stroke={['#38bdf8','#06b6d4','#818cf8','#a78bfa','#06b6d4','#22d3ee','#38bdf8'][i]}
-                      strokeWidth="1" fill="none" opacity="0.4" className="animate-draw-radial"
-                      style={{animationDelay: `${i * 0.3}s`}}/>
-                  ))
-                }
-                <circle cx="50" cy="50" r="3" fill="#38bdf8" opacity="0.8"/>
+                <circle cx="60" cy="60" r="55" fill="url(#ring-glow-l)"/>
+                <circle cx="60" cy="60" r="52" stroke="#06b6d4" strokeWidth="0.8" opacity="0.6"/>
+                <circle cx="60" cy="60" r="40" stroke="#818cf8" strokeWidth="0.8" strokeDasharray="6 3" opacity="0.5"/>
+                <circle cx="60" cy="60" r="28" stroke="#38bdf8" strokeWidth="0.8" opacity="0.7"/>
+                <circle cx="60" cy="60" r="16" stroke="#a78bfa" strokeWidth="0.6" opacity="0.6"/>
+                <circle cx="60" cy="60" r="6" fill="#38bdf8" opacity="0.8"/>
+                <circle cx="60" cy="60" r="10" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.3" className="animate-ping-slow"/>
               </svg>
             </div>
 
-            {/* Floating glass panel - right side */}
-            <div className="absolute top-[35%] right-[30px] w-[140px] opacity-[0.05] backdrop-blur-sm bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/5 rounded-xl p-3 animate-float-slow"
+            {/* --- LAYER 6: Hexagon accent --- */}
+            <div className="absolute top-[3%] left-[4%]">
+              <svg width="60" height="70" viewBox="0 0 60 70" fill="none" className="animate-pulse-slow">
+                <defs>
+                  <linearGradient id="hex-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a78bfa"/>
+                    <stop offset="100%" stopColor="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="30,2 56,18 56,52 30,68 4,52 4,18" stroke="url(#hex-grad)" strokeWidth="1" fill="rgba(167,139,250,0.05)"/>
+                <polygon points="30,14 46,24 46,46 30,56 14,46 14,24" stroke="#38bdf8" strokeWidth="0.6" fill="rgba(56,189,248,0.04)" opacity="0.7"/>
+                <polygon points="30,26 38,31 38,41 30,46 22,41 22,31" stroke="#06b6d4" strokeWidth="0.4" fill="rgba(6,182,212,0.03)" opacity="0.5"/>
+              </svg>
+            </div>
+
+            {/* --- LAYER 7: Vertical light streak --- */}
+            <div className="absolute top-[10%] left-[2px] w-[2px] h-[80%] rounded-full overflow-hidden opacity-20">
+              <div className="w-full h-[30%] bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-light-streak"/>
+            </div>
+
+            {/* --- LAYER 8: Ambient glow orb --- */}
+            <div className="absolute top-[45%] left-[100px] w-[150px] h-[150px] rounded-full animate-pulse-slow"
+                 style={{
+                   background: 'radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(99,102,241,0.06) 40%, transparent 70%)',
+                   filter: 'blur(30px)',
+                 }}
+            />
+          </div>
+
+          {/* ============================================================ */}
+          {/* === RIGHT SIDE: Cosmic Universe / Sci-fi City / Nebula / Energy Flows === */}
+          {/* ============================================================ */}
+          <div className="pointer-events-none fixed right-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
+
+            {/* --- FAR LAYER: Deep space nebula background --- */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-[5%] right-[-20px] w-[300px] h-[250px] rounded-full animate-nebula-drift"
+                   style={{
+                     background: 'radial-gradient(ellipse at 40% 50%, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.08) 30%, rgba(6,182,212,0.04) 60%, transparent 80%)',
+                     filter: 'blur(40px)',
+                   }}
+              />
+              <div className="absolute top-[50%] right-[-40px] w-[250px] h-[200px] rounded-full animate-nebula-drift"
+                   style={{
+                     background: 'radial-gradient(ellipse at 60% 40%, rgba(6,182,212,0.15) 0%, rgba(56,189,248,0.06) 35%, rgba(139,92,246,0.03) 60%, transparent 80%)',
+                     filter: 'blur(35px)',
+                     animationDelay: '3s',
+                   }}
+              />
+              <div className="absolute bottom-[10%] right-[20px] w-[200px] h-[180px] rounded-full animate-nebula-drift"
+                   style={{
+                     background: 'radial-gradient(ellipse at 50% 60%, rgba(99,102,241,0.14) 0%, rgba(6,182,212,0.06) 40%, transparent 70%)',
+                     filter: 'blur(30px)',
+                     animationDelay: '6s',
+                   }}
+              />
+            </div>
+
+            {/* --- MID LAYER: Star field --- */}
+            <div className="absolute inset-0">
+              {[
+                {top:'4%', right:'45px', size:2, opacity:0.7, delay:'0s'},
+                {top:'8%', right:'180px', size:1.5, opacity:0.5, delay:'1s'},
+                {top:'15%', right:'90px', size:2.5, opacity:0.8, delay:'0.5s'},
+                {top:'22%', right:'250px', size:1, opacity:0.4, delay:'2s'},
+                {top:'30%', right:'30px', size:2, opacity:0.6, delay:'1.5s'},
+                {top:'38%', right:'200px', size:1.5, opacity:0.5, delay:'0.8s'},
+                {top:'45%', right:'120px', size:2, opacity:0.7, delay:'2.5s'},
+                {top:'52%', right:'280px', size:1, opacity:0.3, delay:'1.2s'},
+                {top:'60%', right:'60px', size:2.5, opacity:0.6, delay:'0.3s'},
+                {top:'68%', right:'220px', size:1.5, opacity:0.5, delay:'1.8s'},
+                {top:'75%', right:'150px', size:2, opacity:0.7, delay:'0.7s'},
+                {top:'82%', right:'40px', size:1, opacity:0.4, delay:'2.2s'},
+                {top:'88%', right:'260px', size:2, opacity:0.6, delay:'1.3s'},
+                {top:'95%', right:'100px', size:1.5, opacity:0.5, delay:'0.6s'},
+              ].map((s, i) => (
+                <div key={`star-${i}`}
+                  className="rounded-full animate-twinkle"
+                  style={{
+                    top: s.top,
+                    right: s.right,
+                    width: s.size,
+                    height: s.size,
+                    backgroundColor: '#e0f2fe',
+                    boxShadow: `0 0 ${s.size * 3}px rgba(224,242,254,0.6)`,
+                    opacity: s.opacity,
+                    animationDelay: s.delay,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* --- MID LAYER: Energy ring / halo system --- */}
+            <div className="absolute top-[8%] right-[30px]">
+              <svg width="130" height="130" viewBox="0 0 130 130" fill="none" className="animate-spin-slow">
+                <defs>
+                  <radialGradient id="halo-glow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25"/>
+                    <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.08"/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+                  </radialGradient>
+                  <filter id="halo-blur">
+                    <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <circle cx="65" cy="65" r="60" fill="url(#halo-glow)"/>
+                <circle cx="65" cy="65" r="55" stroke="#6366f1" strokeWidth="0.6" opacity="0.5"/>
+                <circle cx="65" cy="65" r="45" stroke="#8b5cf6" strokeWidth="0.8" opacity="0.4"/>
+                <circle cx="65" cy="65" r="35" stroke="#06b6d4" strokeWidth="1" opacity="0.5"/>
+                <circle cx="65" cy="65" r="25" stroke="#38bdf8" strokeWidth="0.8" opacity="0.6"/>
+                <circle cx="65" cy="65" r="15" stroke="#a78bfa" strokeWidth="0.6" opacity="0.5"/>
+                {/* Arc segments */}
+                <path d="M65,10 A55,55 0 0,1 112,35" stroke="#38bdf8" strokeWidth="1.5" fill="none" opacity="0.6" className="animate-draw-radial" filter="url(#halo-blur)"/>
+                <path d="M112,35 A55,55 0 0,1 112,95" stroke="#8b5cf6" strokeWidth="1.5" fill="none" opacity="0.5" className="animate-draw-radial" style={{animationDelay: '0.5s'}} filter="url(#halo-blur)"/>
+                <path d="M112,95 A55,55 0 0,1 65,120" stroke="#06b6d4" strokeWidth="1.5" fill="none" opacity="0.6" className="animate-draw-radial" style={{animationDelay: '1s'}} filter="url(#halo-blur)"/>
+                <path d="M65,120 A55,55 0 0,1 18,95" stroke="#a78bfa" strokeWidth="1.2" fill="none" opacity="0.4" className="animate-draw-radial" style={{animationDelay: '1.5s'}} filter="url(#halo-blur)"/>
+                <path d="M18,95 A55,55 0 0,1 18,35" stroke="#22d3ee" strokeWidth="1.2" fill="none" opacity="0.5" className="animate-draw-radial" style={{animationDelay: '2s'}} filter="url(#halo-blur)"/>
+                <path d="M18,35 A55,55 0 0,1 65,10" stroke="#38bdf8" strokeWidth="1.5" fill="none" opacity="0.6" className="animate-draw-radial" style={{animationDelay: '2.5s'}} filter="url(#halo-blur)"/>
+                <circle cx="65" cy="65" r="4" fill="#38bdf8" opacity="0.9"/>
+                <circle cx="65" cy="65" r="8" fill="none" stroke="#38bdf8" strokeWidth="0.5" opacity="0.3" className="animate-ping-slow"/>
+              </svg>
+            </div>
+
+            {/* --- MID LAYER: Floating glass panel (SYS.ACTIVE) --- */}
+            <div className="absolute top-[35%] right-[25px] w-[140px] backdrop-blur-md bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-cyan-500/20 rounded-xl p-3 animate-float-slow shadow-lg shadow-cyan-500/10"
                  style={{animationDelay: '1s'}}>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[8px] text-cyan-400/60 font-mono">SYS.ACTIVE</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse"/>
+                  <span className="text-[8px] text-cyan-400 font-mono font-bold tracking-wider">SYS.ACTIVE</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"/>
                 </div>
-                <div className="h-[1px] bg-white/10"/>
+                <div className="h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"/>
                 {[68, 42, 85, 57, 73].map((v, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className="text-[7px] text-slate-500 font-mono w-4">{`M${i+1}`}</span>
                     <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
                       <div 
-                        className="h-full rounded-full bg-gradient-to-r from-cyan-500/40 to-purple-500/30"
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-500/50 to-purple-500/40"
                         style={{width: `${v}%`, animationDelay: `${i * 0.2}s`}}
                       />
                     </div>
-                    <span className="text-[7px] text-slate-600 font-mono w-5 text-right">{v}</span>
+                    <span className="text-[7px] text-slate-400 font-mono w-5 text-right">{v}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Neon line graph - right middle */}
-            <div className="absolute top-[62%] right-[20px] w-[180px] opacity-[0.07]">
-              <svg width="180" height="70" viewBox="0 0 180 70" fill="none">
+            {/* --- NEAR LAYER: Neon wave graph --- */}
+            <div className="absolute top-[58%] right-[15px] w-[200px]">
+              <svg width="200" height="80" viewBox="0 0 200 80" fill="none">
                 <defs>
-                  <linearGradient id="neon-fill-r" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.15"/>
-                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0"/>
+                  <linearGradient id="neon-fill-r2" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
                   </linearGradient>
-                  <linearGradient id="neon-stroke-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <linearGradient id="neon-stroke-r2" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#06b6d4"/>
-                    <stop offset="60%" stopColor="#818cf8"/>
-                    <stop offset="100%" stopColor="#a78bfa"/>
+                    <stop offset="40%" stopColor="#3b82f6"/>
+                    <stop offset="70%" stopColor="#8b5cf6"/>
+                    <stop offset="100%" stopColor="#c084fc"/>
                   </linearGradient>
+                  <filter id="wave-glow">
+                    <feGaussianBlur stdDeviation="2" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
                 </defs>
-                <path d="M0,55 C15,52 25,35 40,38 C55,41 65,20 80,25 C95,30 105,45 120,35 C135,25 155,15 180,22 V70 H0 Z"
-                  fill="url(#neon-fill-r)"/>
-                <path d="M0,55 C15,52 25,35 40,38 C55,41 65,20 80,25 C95,30 105,45 120,35 C135,25 155,15 180,22"
-                  stroke="url(#neon-stroke-r)" strokeWidth="1.2" fill="none" strokeLinecap="round"
-                  className="animate-draw-wave"/>
-                <g opacity="0.6">
-                  {[[40,38],[80,25],[120,35],[180,22]].map(([cx, cy], i) => (
-                    <circle key={i} cx={cx} cy={cy} r="2" fill="#a78bfa" className={i===1 ? 'animate-pulse' : ''}/>
-                  ))}
-                </g>
+                <path d="M0,60 C18,55 30,30 50,35 C70,40 80,18 100,22 C120,26 130,50 150,38 C170,26 185,12 200,18 V80 H0 Z"
+                  fill="url(#neon-fill-r2)"/>
+                <path d="M0,60 C18,55 30,30 50,35 C70,40 80,18 100,22 C120,26 130,50 150,38 C170,26 185,12 200,18"
+                  stroke="url(#neon-stroke-r2)" strokeWidth="2" fill="none" strokeLinecap="round"
+                  filter="url(#wave-glow)" className="animate-draw-wave"/>
+                {[[50,35],[100,22],[150,38],[200,18]].map(([cx, cy], i) => (
+                  <g key={i}>
+                    <circle cx={cx} cy={cy} r="3" fill="#a78bfa" className={i===1 ? 'animate-pulse' : ''}/>
+                    <circle cx={cx} cy={cy} r="6" fill="none" stroke="#a78bfa" strokeWidth="0.5" opacity="0.3"/>
+                  </g>
+                ))}
               </svg>
             </div>
 
-            {/* Particle flow effect - right side */}
-            {[
-              {top:'20%', right:'60px', size:3, delay:'0.5s', color:'#818cf8'},
-              {top:'45%', right:'170px', size:4, delay:'1.8s', color:'#a78bfa'},
-              {top:'72%', right:'50px', size:2, delay:'0.3s', color:'#06b6d4'},
-              {top:'88%', right:'140px', size:3, delay:'1.1s', color:'#38bdf8'},
-              {top:'33%', right:'190px', size:2, delay:'2.2s', color:'#22d3ee'},
-              {top:'58%', right:'200px', size:3, delay:'0.9s', color:'#6366f1'},
-              {top:'15%', right:'150px', size:2, delay:'1.6s', color:'#c084fc'},
-              {top:'82%', right:'210px', size:2, delay:'0.6s', color:'#38bdf8'},
-            ].map((p, i) => (
-              <div key={i}
-                className="rounded-full animate-float-particle"
-                style={{
-                  top: p.top,
-                  right: p.right,
-                  width: p.size,
-                  height: p.size,
-                  backgroundColor: p.color,
-                  boxShadow: `0 0 ${p.size * 3}px ${p.color}`,
-                  animationDelay: p.delay,
-                  opacity: 0.12,
-                }}
-              />
-            ))}
+            {/* --- NEAR LAYER: Particle energy streams --- */}
+            <ParticleFieldRight particles={[
+              {top:'10%', right:'55px', size:4, delay:'0.5s', color:'#8b5cf6'},
+              {top:'18%', right:'180px', size:3, delay:'1.8s', color:'#a78bfa'},
+              {top:'28%', right:'100px', size:5, delay:'0.3s', color:'#06b6d4'},
+              {top:'35%', right:'250px', size:3, delay:'2.2s', color:'#22d3ee'},
+              {top:'42%', right:'40px', size:4, delay:'1.1s', color:'#38bdf8'},
+              {top:'50%', right:'200px', size:3, delay:'0.7s', color:'#6366f1'},
+              {top:'58%', right:'130px', size:5, delay:'1.5s', color:'#c084fc'},
+              {top:'65%', right:'270px', size:3, delay:'2.0s', color:'#06b6d4'},
+              {top:'72%', right:'70px', size:4, delay:'0.9s', color:'#38bdf8'},
+              {top:'80%', right:'210px', size:3, delay:'1.3s', color:'#8b5cf6'},
+              {top:'88%', right:'160px', size:4, delay:'0.4s', color:'#22d3ee'},
+              {top:'94%', right:'30px', size:3, delay:'2.5s', color:'#3b82f6'},
+            ]}/>
 
-            {/* Soft UI card decoration - lower-right */}
-            <div className="absolute bottom-[15%] right-[40px] w-[120px] opacity-[0.04] bg-gradient-to-br from-indigo-900/30 to-purple-900/20 border border-white/5 rounded-lg p-2.5 animate-float"
+            {/* --- NEAR LAYER: DATA_STREAM card --- */}
+            <div className="absolute bottom-[12%] right-[35px] w-[120px] backdrop-blur-sm bg-gradient-to-br from-indigo-900/40 to-purple-900/30 border border-violet-500/20 rounded-lg p-2.5 animate-float shadow-lg shadow-indigo-500/10"
                  style={{animationDelay: '2s'}}>
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/50"/>
-                <span className="text-[7px] text-emerald-400/50 font-mono tracking-wider">DATA_STREAM</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"/>
+                <span className="text-[7px] text-emerald-400 font-mono font-bold tracking-wider">DATA_STREAM</span>
               </div>
               <div className="grid grid-cols-4 gap-[2px]">
-                {Array.from({length: 16}).map((_, i) => (
+                {streamGrid.map((bg, i) => (
                   <div key={i} 
                     className="aspect-square rounded-sm"
-                    style={{
-                      background: Math.random() > 0.7 ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.02)',
-                    }}
+                    style={{ background: bg }}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Vertical neon bar indicator */}
-            <div className="absolute top-[28%] right-[8px] w-[3px] h-[120px] opacity-[0.06] rounded-full overflow-hidden bg-white/5">
-              <div className="w-full h-[65%] bg-gradient-to-b from-cyan-400 via-blue-400 to-purple-400 rounded-full animate-neon-bar"/>
+            {/* --- NEAR LAYER: Vertical neon bars (multiple) --- */}
+            <div className="absolute top-[20%] right-[6px] w-[3px] h-[130px] rounded-full overflow-hidden bg-white/5 border border-white/5">
+              <div className="w-full h-[60%] bg-gradient-to-b from-cyan-400 via-blue-500 to-violet-500 rounded-full animate-neon-bar"/>
+            </div>
+            <div className="absolute top-[55%] right-[12px] w-[2px] h-[80px] rounded-full overflow-hidden bg-white/5">
+              <div className="w-full h-[55%] bg-gradient-to-b from-purple-400 via-fuchsia-500 to-cyan-400 rounded-full animate-neon-bar" style={{animationDelay: '2s'}}/>
             </div>
 
-            {/* Triangle / delta shape - upper right accent */}
-            <div className="absolute top-[5%] right-[8%] opacity-[0.03]">
-              <svg width="40" height="46" viewBox="0 0 40 46" fill="none" className="animate-pulse-slow">
-                <polygon points="20,2 38,44 2,44" stroke="#c084fc" strokeWidth="0.8" fill="none"/>
-                <polygon points="20,12 30,36 10,36" stroke="#38bdf8" strokeWidth="0.5" fill="none" opacity="0.5"/>
+            {/* --- NEAR LAYER: Triangle accent --- */}
+            <div className="absolute top-[3%] right-[7%]">
+              <svg width="50" height="58" viewBox="0 0 50 58" fill="none" className="animate-pulse-slow">
+                <defs>
+                  <linearGradient id="tri-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" stopColor="#c084fc"/>
+                    <stop offset="100%" stopColor="#06b6d4"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="25,2 48,56 2,56" stroke="url(#tri-grad)" strokeWidth="1" fill="rgba(192,132,252,0.06)"/>
+                <polygon points="25,16 38,44 12,44" stroke="#38bdf8" strokeWidth="0.6" fill="rgba(56,189,248,0.04)" opacity="0.7"/>
+                <polygon points="25,28 32,38 18,38" stroke="#06b6d4" strokeWidth="0.4" fill="rgba(6,182,212,0.03)" opacity="0.5"/>
               </svg>
+            </div>
+
+            {/* --- DECORATION: Sci-fi city silhouette (bottom) --- */}
+            <div className="absolute bottom-0 right-0 w-full">
+              <svg width="100%" height="80" viewBox="0 0 360 80" preserveAspectRatio="none" fill="none" className="opacity-[0.08]">
+                <defs>
+                  <linearGradient id="city-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6"/>
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0,80 L0,55 L20,55 L20,40 L30,40 L30,50 L45,50 L45,25 L55,25 L55,35 L65,35 L65,50 L80,50 L80,30 L90,30 L90,20 L95,15 L100,20 L100,30 L110,30 L110,55 L130,55 L130,45 L140,45 L140,35 L150,35 L150,50 L170,50 L170,22 L180,22 L180,10 L185,5 L190,10 L190,22 L200,22 L200,40 L215,40 L215,55 L230,55 L230,45 L240,45 L240,30 L250,30 L250,50 L270,50 L270,35 L280,35 L280,18 L285,12 L290,18 L290,35 L300,35 L300,50 L320,50 L320,40 L330,40 L330,55 L345,55 L345,45 L360,45 L360,80 Z"
+                  fill="url(#city-grad)"/>
+              </svg>
+            </div>
+
+            {/* --- DECORATION: Horizontal light band --- */}
+            <div className="absolute top-[46%] right-0 w-[80%] h-[1px]">
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-light-band"/>
+            </div>
+            <div className="absolute top-[47%] right-0 w-[60%] h-[1px]">
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-purple-400/20 to-transparent animate-light-band" style={{animationDelay: '3s'}}/>
+            </div>
+
+            {/* --- DECORATION: Vertical light streak --- */}
+            <div className="absolute top-[5%] right-[3px] w-[2px] h-[90%] rounded-full overflow-hidden opacity-20">
+              <div className="w-full h-[25%] bg-gradient-to-b from-transparent via-purple-400 to-transparent animate-light-streak" style={{animationDelay: '2s'}}/>
             </div>
           </div>
 
-          {/* Subtle ambient glow behind center content */}
+          {/* === CENTER: Enhanced ambient glow === */}
           <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] opacity-[0.03]"
+            {/* Primary central glow */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px]"
                  style={{
-                   background: 'rad-gradient(ellipse at center, rgba(56,189,248,0.15) 0%, rgba(99,102,241,0.08) 40%, transparent 70%)',
+                   background: 'radial-gradient(ellipse at center, rgba(56,189,248,0.08) 0%, rgba(99,102,241,0.04) 35%, transparent 65%)',
                    filter: 'blur(60px)',
+                 }}
+            />
+            {/* Secondary warm accent */}
+            <div className="absolute left-[40%] top-[30%] w-[400px] h-[300px]"
+                 style={{
+                   background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.06) 0%, transparent 60%)',
+                   filter: 'blur(50px)',
+                 }}
+            />
+            {/* Bottom accent */}
+            <div className="absolute left-[55%] bottom-[10%] w-[500px] h-[300px]"
+                 style={{
+                   background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.05) 0%, transparent 55%)',
+                   filter: 'blur(45px)',
                  }}
             />
           </div>

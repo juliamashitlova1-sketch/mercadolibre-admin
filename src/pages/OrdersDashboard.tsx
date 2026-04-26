@@ -58,8 +58,14 @@ export default function OrdersDashboard() {
         if (order.status === 'Valid') {
           // Normalize date format (YYYY-MM-DD)
           // ML date format might vary, simple normalization here
-          const date = new Date(order.date).toISOString().split('T')[0];
+          const d = new Date(order.date);
+          if (isNaN(d.getTime())) {
+            console.warn(`Invalid date encountered for order ${order.orderId}: ${order.date}`);
+            return;
+          }
+          const date = d.toISOString().split('T')[0];
           const key = `${order.sku}_${date}`;
+
           
           if (!aggregates[key]) aggregates[key] = { orders: 0, sales: 0 };
           aggregates[key].orders += 1;

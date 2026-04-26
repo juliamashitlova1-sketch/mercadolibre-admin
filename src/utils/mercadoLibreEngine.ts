@@ -100,16 +100,42 @@ export const parseMercadoLibreExcel = (jsonData: any[][]): ParsingSummary => {
       order[header] = row[index];
     });
 
-    // 提取关键字段的别名映射
+    // --- 3. 字段提取与规范化 ---
     const orderId = String(findValue(order, ['Número de venda', 'Order ID', '订单号', 'Order Number', 'Venda #', 'Order #']) || '').trim();
     const sku = String(findValue(order, ['SKU', 'External ID', 'Item SKU', 'Referencia', 'SKU #']) || '').trim();
     const statusStr = String(findValue(order, ['Status', 'Estado', 'Situación', 'Outcome', 'Status da venda']) || '').toLowerCase();
-    const dateStr = String(findValue(order, ['Data da venda', 'Data de aprovação', 'Date', 'Fecha', 'Data', 'Sale Date']) || '');
+    const rawDate = findValue(order, ['Data da venda', 'Data de aprovação', 'Date', 'Order date', 'Fecha', 'Data', 'Sale Date']);
     const amountVal = parseFloat(String(findValue(order, ['Total (USD)', 'Total_1', 'Amount', 'Total', 'Net amount', 'Valor']) || '0').replace(/[^0-9.-]+/g, ''));
 
     if (!orderId || orderId === 'null' || orderId === '') return;
 
+    // 日期处理逻辑
+    let dateStr = '';
+    if (rawDate) {
+      if (typeof rawDate === 'number') {
+        // 处理 Excel 数字日期
+        const jsDate = new Date((rawDate - 25569) * 86400 * 1000);
+        dateStr = jsDate.toISOString();
+      } else {
+        const str = String(rawDate).trim();
+        // 处理带 GMT 的复杂格式，例如 "April 24, 2026 08:40 PM GMT-06:00"
+        // 尝试移除 GMT 及其后的内容再解析
+        const cleanStr = str.split('GMT')[0].trim();
+        const d = new Date(cleanStr);
+        if (!isNaN(d.getTime())) {
+          dateStr = d.toISOString();
+        } else {
+          // 兜底尝试直接解析原始字符串
+          const d2 = new Date(str);
+          dateStr = !isNaN(d2.getTime()) ? d2.toISOString() : new Date().toISOString();
+        }
+      }
+    } else {
+      dateStr = new Date().toISOString();
+    }
+
     let status: 'Valid' | 'Canceled' | 'Refunded' = 'Valid';
+
     // 综合多语言状态词汇
     if (statusStr.includes('cancel') || statusStr.includes('anula') || statusStr.includes('returned') || statusStr.includes('devolv')) {
       status = 'Canceled';

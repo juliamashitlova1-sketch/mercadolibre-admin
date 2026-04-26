@@ -72,7 +72,7 @@ export default function Operations() {
               <Activity className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="v2-header-title">运营操作日志</h1>
+              <h1 className="v2-header-title">运营动作</h1>
               <p className="v2-header-subtitle">记录针对 SKU 的具体优化动作，沉淀运营经验</p>
             </div>
           </div>

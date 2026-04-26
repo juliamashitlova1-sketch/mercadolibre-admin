@@ -248,6 +248,56 @@
   }
 }
 
+/* === Dashboard Futuristic Decorative Animations === */
+
+@keyframes drawLine {
+  from { stroke-dashoffset: 400; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+.animate-draw-line {
+  stroke-dasharray: 400;
+  animation: drawLine 4s ease-out forwards;
+}
+
+@keyframes drawRadial {
+  from { stroke-dashoffset: 120; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 0.5; }
+}
+.animate-draw-radial {
+  stroke-dasharray: 120;
+  animation: drawRadial 2s ease-out forwards;
+}
+
+@keyframes drawWave {
+  from { stroke-dashoffset: 600; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+.animate-draw-wave {
+  stroke-dasharray: 600;
+  animation: drawWave 5s ease-out forwards;
+}
+
+@keyframes floatParticle {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.12; }
+  25% { transform: translateY(-8px) translateX(3px); opacity: 0.18; }
+  50% { transform: translateY(-15px) translateX(-2px); opacity: 0.10; }
+  75% { transform: translateY(-6px) translateX(4px); opacity: 0.16; }
+}
+.animate-float-particle {
+  animation: floatParticle 6s ease-in-out infinite;
+}
+
+@keyframes neonBar {
+  0% { transform: translateY(-100%); }
+  40% { transform: translateY(0%); }
+  60% { transform: translateY(20%); }
+  80% { transform: translateY(-10%); }
+  100% { transform: translateY(-100%); }
+}
+.animate-neon-bar {
+  animation: neonBar 4s ease-in-out infinite;
+}
+
 
 
 

@@ -400,8 +400,242 @@ export default function MainLayout({
         </header>
 
         {/* Content Scroll Area */}
-        <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-8 pb-10 custom-scrollbar">
-          <div className="max-w-7xl mx-auto min-h-full animate-slide-in-right">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-8 pb-10 custom-scrollbar relative">
+          {/* === LEFT SIDE DECORATIONS: Holographic Data Structures === */}
+          <div className="pointer-events-none fixed left-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
+            {/* Floating cube cluster - top-left */}
+            <div className="absolute top-[15%] left-[30px] opacity-[0.07]">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="animate-float-slow">
+                <path d="M40 5L75 25V55L40 75L5 55V25L40 5Z" stroke="url(#grad-cyan-blue)" strokeWidth="1" fill="none"/>
+                <path d="M40 5V40" stroke="#38bdf8" strokeWidth="1" opacity="0.6"/>
+                <path d="M5 25H75" stroke="#818cf8" strokeWidth="1" opacity="0.3"/>
+                <path d="M5 55L40 40L75 55" stroke="#06b6d4" strokeWidth="1" opacity="0.5"/>
+                <circle cx="40" cy="40" r="2" fill="#38bdf8" opacity="0.8"/>
+              </svg>
+            </div>
+            {/* Wireframe grid - middle-left */}
+            <div className="absolute top-[45%] left-[10px] opacity-[0.05]">
+              <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="animate-pulse-slow">
+                {[0,20,40,60,80,100].map(y => (
+                  <line key={`h${y}`} x1="0" y1={y} x2="120" y2={y} stroke="#6366f1" strokeWidth="0.5"/>
+                ))}
+                {[0,20,40,60,80,100,120].map(x => (
+                  <line key={`v${x}`} x1={x} y1="0" x2={x} y2="120" stroke="#6366f1" strokeWidth="0.5"/>
+                ))}
+              </svg>
+            </div>
+            {/* Glowing data line chart */}
+            <div className="absolute top-[70%] left-[50px] opacity-[0.08] w-[160px]">
+              <svg width="160" height="60" viewBox="0 0 160 60" fill="none">
+                <defs>
+                  <linearGradient id="line-glow-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0"/>
+                    <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8"/>
+                    <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.3"/>
+                  </linearGradient>
+                </defs>
+                <polyline points="0,45 20,35 40,48 60,20 80,30 100,12 120,28 140,18 160,22"
+                  stroke="url(#line-glow-l)" strokeWidth="1.5" fill="none"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  className="animate-draw-line"/>
+                <g opacity="0.5">
+                  {[[20,35],[60,20],[100,12],[140,18]].map(([cx, cy], i) => (
+                    <circle key={i} cx={cx} cy={cy} r="2.5" fill="#38bdf8" opacity="0.7"
+                      className={i % 2 === 0 ? 'animate-pulse' : ''}/>
+                  ))}
+                </g>
+              </svg>
+            </div>
+            {/* Small floating particles - left */}
+            {[
+              {top:'25%', left:'80px', size:4, delay:'0s', color:'#38bdf8'},
+              {top:'55%', left:'20px', size:3, delay:'1.5s', color:'#818cf8'},
+              {top:'80%', left:'110px', size:5, delay:'0.8s', color:'#06b6d4'},
+              {top:'38%', left:'130px', size:2, delay:'2s', color:'#a78bfa'},
+              {top:'65%', left:'150px', size:3, delay:'1.2s', color:'#22d3ee'},
+              {top:'90%', left:'40px', size:2, delay:'0.5s', color:'#6366f1'},
+            ].map((p, i) => (
+              <div key={i}
+                className="rounded-full animate-float-particle"
+                style={{
+                  top: p.top,
+                  left: p.left,
+                  width: p.size,
+                  height: p.size,
+                  backgroundColor: p.color,
+                  boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+                  animationDelay: p.delay,
+                  opacity: 0.15,
+                }}
+              />
+            ))}
+            {/* Geometric layered rings - bottom-left */}
+            <div className="absolute bottom-[10%] left-[20px] opacity-[0.04]">
+              <svg width="100" height="100" viewBox="0 0 100 100" fill="none" className="animate-spin-slow">
+                <circle cx="50" cy="50" r="45" stroke="#06b6d4" strokeWidth="0.5"/>
+                <circle cx="50" cy="50" r="32" stroke="#818cf8" strokeWidth="0.5" strokeDasharray="4 4"/>
+                <circle cx="50" cy="50" r="18" stroke="#38bdf8" strokeWidth="0.5"/>
+                <circle cx="50" cy="50" r="5" fill="#38bdf8" opacity="0.6"/>
+              </svg>
+            </div>
+            {/* Hexagon pattern - upper left accent */}
+            <div className="absolute top-[8%] left-[5%] opacity-[0.03]">
+              <svg width="50" height="58" viewBox="0 0 50 58" fill="none">
+                <polygon points="25,2 47,16 47,42 25,56 3,42 3,16" stroke="#a78bfa" strokeWidth="0.8" fill="none"/>
+                <polygon points="25,14 37,21 37,37 25,44 13,37 13,21" stroke="#38bdf8" strokeWidth="0.5" fill="none" opacity="0.5"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* === RIGHT SIDE DECORATIONS: Data Visualization Style === */}
+          <div className="pointer-events-none fixed right-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
+            {/* Radial / polar chart - top-right */}
+            <div className="absolute top-[12%] right-[40px] opacity-[0.06]">
+              <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+                <defs>
+                  <radialGradient id="radial-glow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.3"/>
+                    <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.1"/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+                  </radialGradient>
+                </defs>
+                {[20,35,50].map((r, i) => (
+                  <circle key={i} cx="50" cy="50" r={r} stroke="#6366f1" strokeWidth="0.5" opacity={0.4-i*0.1}/>
+                ))}
+                {['M50,10 A40,40 0 0,1 85,30','M85,30 A40,40 0 0,1 90,50','M90,50 A40,40 0 0,1 72,82',
+                  'M72,82 A40,40 0 0,1 28,82','M28,82 A40,40 0 0,1 10,50','M10,50 A40,40 0 0,1 26,24',
+                  'M26,24 A40,40 0 0,1 50,10'].map((d, i) => (
+                    <path key={i} d={d} stroke={['#38bdf8','#06b6d4','#818cf8','#a78bfa','#06b6d4','#22d3ee','#38bdf8'][i]}
+                      strokeWidth="1" fill="none" opacity="0.4" className="animate-draw-radial"
+                      style={{animationDelay: `${i * 0.3}s`}}/>
+                  ))
+                }
+                <circle cx="50" cy="50" r="3" fill="#38bdf8" opacity="0.8"/>
+              </svg>
+            </div>
+
+            {/* Floating glass panel - right side */}
+            <div className="absolute top-[35%] right-[30px] w-[140px] opacity-[0.05] backdrop-blur-sm bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/5 rounded-xl p-3 animate-float-slow"
+                 style={{animationDelay: '1s'}}>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[8px] text-cyan-400/60 font-mono">SYS.ACTIVE</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse"/>
+                </div>
+                <div className="h-[1px] bg-white/10"/>
+                {[68, 42, 85, 57, 73].map((v, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[7px] text-slate-500 font-mono w-4">{`M${i+1}`}</span>
+                    <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-500/40 to-purple-500/30"
+                        style={{width: `${v}%`, animationDelay: `${i * 0.2}s`}}
+                      />
+                    </div>
+                    <span className="text-[7px] text-slate-600 font-mono w-5 text-right">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Neon line graph - right middle */}
+            <div className="absolute top-[62%] right-[20px] w-[180px] opacity-[0.07]">
+              <svg width="180" height="70" viewBox="0 0 180 70" fill="none">
+                <defs>
+                  <linearGradient id="neon-fill-r" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8" stopOpacity="0.15"/>
+                    <stop offset="100%" stopColor="#818cf8" stopOpacity="0"/>
+                  </linearGradient>
+                  <linearGradient id="neon-stroke-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4"/>
+                    <stop offset="60%" stopColor="#818cf8"/>
+                    <stop offset="100%" stopColor="#a78bfa"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0,55 C15,52 25,35 40,38 C55,41 65,20 80,25 C95,30 105,45 120,35 C135,25 155,15 180,22 V70 H0 Z"
+                  fill="url(#neon-fill-r)"/>
+                <path d="M0,55 C15,52 25,35 40,38 C55,41 65,20 80,25 C95,30 105,45 120,35 C135,25 155,15 180,22"
+                  stroke="url(#neon-stroke-r)" strokeWidth="1.2" fill="none" strokeLinecap="round"
+                  className="animate-draw-wave"/>
+                <g opacity="0.6">
+                  {[[40,38],[80,25],[120,35],[180,22]].map(([cx, cy], i) => (
+                    <circle key={i} cx={cx} cy={cy} r="2" fill="#a78bfa" className={i===1 ? 'animate-pulse' : ''}/>
+                  ))}
+                </g>
+              </svg>
+            </div>
+
+            {/* Particle flow effect - right side */}
+            {[
+              {top:'20%', right:'60px', size:3, delay:'0.5s', color:'#818cf8'},
+              {top:'45%', right:'170px', size:4, delay:'1.8s', color:'#a78bfa'},
+              {top:'72%', right:'50px', size:2, delay:'0.3s', color:'#06b6d4'},
+              {top:'88%', right:'140px', size:3, delay:'1.1s', color:'#38bdf8'},
+              {top:'33%', right:'190px', size:2, delay:'2.2s', color:'#22d3ee'},
+              {top:'58%', right:'200px', size:3, delay:'0.9s', color:'#6366f1'},
+              {top:'15%', right:'150px', size:2, delay:'1.6s', color:'#c084fc'},
+              {top:'82%', right:'210px', size:2, delay:'0.6s', color:'#38bdf8'},
+            ].map((p, i) => (
+              <div key={i}
+                className="rounded-full animate-float-particle"
+                style={{
+                  top: p.top,
+                  right: p.right,
+                  width: p.size,
+                  height: p.size,
+                  backgroundColor: p.color,
+                  boxShadow: `0 0 ${p.size * 3}px ${p.color}`,
+                  animationDelay: p.delay,
+                  opacity: 0.12,
+                }}
+              />
+            ))}
+
+            {/* Soft UI card decoration - lower-right */}
+            <div className="absolute bottom-[15%] right-[40px] w-[120px] opacity-[0.04] bg-gradient-to-br from-indigo-900/30 to-purple-900/20 border border-white/5 rounded-lg p-2.5 animate-float"
+                 style={{animationDelay: '2s'}}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/50"/>
+                <span className="text-[7px] text-emerald-400/50 font-mono tracking-wider">DATA_STREAM</span>
+              </div>
+              <div className="grid grid-cols-4 gap-[2px]">
+                {Array.from({length: 16}).map((_, i) => (
+                  <div key={i} 
+                    className="aspect-square rounded-sm"
+                    style={{
+                      background: Math.random() > 0.7 ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.02)',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Vertical neon bar indicator */}
+            <div className="absolute top-[28%] right-[8px] w-[3px] h-[120px] opacity-[0.06] rounded-full overflow-hidden bg-white/5">
+              <div className="w-full h-[65%] bg-gradient-to-b from-cyan-400 via-blue-400 to-purple-400 rounded-full animate-neon-bar"/>
+            </div>
+
+            {/* Triangle / delta shape - upper right accent */}
+            <div className="absolute top-[5%] right-[8%] opacity-[0.03]">
+              <svg width="40" height="46" viewBox="0 0 40 46" fill="none" className="animate-pulse-slow">
+                <polygon points="20,2 38,44 2,44" stroke="#c084fc" strokeWidth="0.8" fill="none"/>
+                <polygon points="20,12 30,36 10,36" stroke="#38bdf8" strokeWidth="0.5" fill="none" opacity="0.5"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* Subtle ambient glow behind center content */}
+          <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] opacity-[0.03]"
+                 style={{
+                   background: 'rad-gradient(ellipse at center, rgba(56,189,248,0.15) 0%, rgba(99,102,241,0.08) 40%, transparent 70%)',
+                   filter: 'blur(60px)',
+                 }}
+            />
+          </div>
+
+          {/* Actual content (above decorations in stacking context) */}
+          <div className="relative z-10 max-w-7xl mx-auto min-h-full animate-slide-in-right">
             <Outlet />
           </div>
         </div>

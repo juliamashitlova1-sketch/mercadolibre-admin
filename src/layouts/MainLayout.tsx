@@ -196,6 +196,12 @@ export default function MainLayout({
 
   const menuItems = [
     { 
+      id: '/data-dashboard', 
+      label: '数据大屏', 
+      icon: LayoutDashboard,
+      color: 'text-cyan-400',
+    },
+    { 
       id: '/data-cleaning', 
       label: '数据清洗', 
       icon: Database,

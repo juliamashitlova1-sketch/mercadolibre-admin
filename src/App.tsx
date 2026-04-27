@@ -10,6 +10,7 @@ import AiBrain from './pages/AiBrain';
 import Pricing from './pages/Pricing';
 import FakeOrders from './pages/FakeOrders';
 import CargoDamage from './pages/CargoDamage';
+import DataDashboard from './pages/DataDashboard';
 import DataCleaning from './pages/DataCleaning';
 import SkuVisitCleaning from './pages/SkuVisitCleaning';
 import SkuManagement from './pages/SkuManagement';
@@ -169,6 +170,7 @@ function AppContent() {
         }>
           <Route element={<ContextWrapper contextValue={contextValue} />}>
             <Route path="/" element={<Navigate to="/fake-orders" replace />} />
+            <Route path="/data-dashboard" element={<DataDashboard />} />
             <Route path="/data-cleaning" element={<Navigate to="/data-cleaning/orders" replace />} />
             <Route path="/data-cleaning/orders" element={<DataCleaning />} />
             <Route path="/data-cleaning/visits" element={<SkuVisitCleaning />} />

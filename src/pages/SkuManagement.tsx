@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { OperationLog } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Activity, Eye, Loader2, PackageX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -8,16 +10,11 @@ export default function SkuManagement() {
   const [skus, setSkus] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
+
   useEffect(() => {
     fetchCloudData();
     fetchAuxiliaryData();
-
-    // 实时监听 operation_logs 变更，自动同步运营动作
-    const opsChannel = supabase.channel('sku-mgmt-ops-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'operation_logs' }, () => fetchAuxiliaryData())
-      .subscribe();
-
-    return () => { supabase.removeChannel(opsChannel); };
   }, []);
 
   const fetchCloudData = async () => {
@@ -95,10 +92,8 @@ export default function SkuManagement() {
       });
       setAdsHistory(adsObj);
 
-      // 4. Fetch Operations
-      const { data: ops, error: opsError } = await supabase.from('operation_logs').select('*');
-      if (opsError) throw opsError;
-      setOpsData(ops);
+      // 4. Operations are now handled by operationLogs from context
+      setOpsData([]); // Clear local opsData as we use the context one
 
     } catch (err) {
       console.error('Error fetching local aux data:', err);
@@ -179,6 +174,48 @@ export default function SkuManagement() {
     processEntries(mlData.validSales, 'valid');
     processEntries(mlData.cancellations, 'cancel');
     processEntries(mlData.refunds, 'refund');
+
+    // Also include dates that have visits but no sales
+    if (visitsHistory) {
+      Object.keys(visitsHistory).forEach(dateKey => {
+        const snapshot = visitsHistory[dateKey];
+        if (snapshot.skuData?.some(v => v.sku === skuCode)) {
+          if (!dailyMap[dateKey]) {
+            dailyMap[dateKey] = { date: dateKey, salesCount: 0, unitsCount: 0, salesMxn: 0, cancelCount: 0, cancelUnits: 0, refundCount: 0, refundUnits: 0, lossUsd: 0 };
+          }
+        }
+      });
+    }
+
+    // Also include dates that have ads data but no sales
+    if (adsHistory) {
+      Object.keys(adsHistory).forEach(dateKey => {
+        if (adsHistory[dateKey][skuCode]) {
+          if (!dailyMap[dateKey]) {
+            dailyMap[dateKey] = { date: dateKey, salesCount: 0, unitsCount: 0, salesMxn: 0, cancelCount: 0, cancelUnits: 0, refundCount: 0, refundUnits: 0, lossUsd: 0 };
+          }
+        }
+      });
+    }
+
+    // New: Fill gaps to ensure a continuous timeline from the earliest data point until today
+    const dates = Object.keys(dailyMap).map(d => new Date(d).getTime());
+    if (dates.length > 0) {
+      const minDate = new Date(Math.min(...dates));
+      const today = new Date();
+      // Set to midnight for easier comparison
+      minDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      
+      const current = new Date(minDate);
+      while (current <= today) {
+        const dateKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+        if (!dailyMap[dateKey]) {
+          dailyMap[dateKey] = { date: dateKey, salesCount: 0, unitsCount: 0, salesMxn: 0, cancelCount: 0, cancelUnits: 0, refundCount: 0, refundUnits: 0, lossUsd: 0 };
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    }
     
     // Convert to sorted array
     return Object.values(dailyMap).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -531,9 +568,8 @@ export default function SkuManagement() {
                                         <span className="ml-2 text-[11px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">全局【运营动作】同步</span>
                                       </h4>
                                     </div>
-                                    
                                     {(() => {
-                                      const skuOps = (opsData || []).filter(op => op.sku === item.sku);
+                                      const skuOps = (operationLogs || []).filter((op: any) => op.sku === item.sku);
                                       if (skuOps.length === 0) {
                                         return <div className="text-center py-4 text-sm text-gray-500">该 SKU 暂无相关的运营打卡记录</div>;
                                       }
@@ -560,7 +596,7 @@ export default function SkuManagement() {
                                               </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-800/50">
-                                              {skuOps.map((op, oIdx) => {
+                                              {skuOps.map((op: any, oIdx: number) => {
                                                 const displayType = op.actionType === 'Price' ? '调价' : 
                                                                   op.actionType === 'Image' ? '改图' : 
                                                                   op.actionType === 'Ads' ? '广告' : 

@@ -24,6 +24,7 @@ export interface OperationLog {
   id: string;
   sku: string;
   date: string;
+  action?: string;
   actionType: 'Price' | 'Image' | 'Ads' | 'Title' | 'Stock' | 'Other';
   description: string;
   createdAt: string;

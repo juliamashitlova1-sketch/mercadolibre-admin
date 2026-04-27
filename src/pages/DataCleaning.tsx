@@ -67,23 +67,49 @@ export default function DataCleaning() {
 
       for (let i = 0; i < Math.min(20, rawData.length); i++) {
         const row = rawData[i];
-        if (!row) continue;
-        const currentOrderIdIdx = row.findIndex(val => String(val).toLowerCase().includes('order #') || String(val).includes('订单号'));
+        if (!row || !Array.isArray(row)) continue;
+        
+        // Find Order # column (Spanish: # de venta, Orden #; Chinese: 订单号)
+        const currentOrderIdIdx = row.findIndex(val => {
+          const s = String(val).toLowerCase();
+          return s.includes('order #') || s.includes('订单号') || s.includes('# de venta') || s.includes('orden #') || s.includes('订单?');
+        });
+
         if (currentOrderIdIdx !== -1) {
           headerRowIndex = i;
           orderIdIdx = currentOrderIdIdx;
-          orderDateIdx = row.findIndex(val => String(val).toLowerCase().includes('order date') || String(val).includes('订单时间'));
           
-          const unitsIndices = row.map((val, idx) => (String(val).toLowerCase() === 'units' || String(val).includes('件数')) ? idx : -1).filter(idx => idx !== -1);
-          unitsIdx = unitsIndices.length > 0 ? unitsIndices[0] : -1;
+          // Find Order Date (Spanish: Fecha de venta, Fecha; Chinese: 销售日期, 订单时间)
+          orderDateIdx = row.findIndex(val => {
+            const s = String(val).toLowerCase();
+            return s.includes('order date') || s.includes('订单时间') || s.includes('销售日期') || s.includes('fecha') || s.includes('销售日?');
+          });
           
-          const addressIndices = row.map((val, idx) => (String(val).toLowerCase() === 'address' || String(val).includes('地址')) ? idx : -1).filter(idx => idx !== -1);
+          // Find Units (Chinese: 件数, 单位, 数量; Spanish: Unidades, Cantidad)
+          unitsIdx = row.findIndex(val => {
+            const s = String(val).toLowerCase();
+            return s === 'units' || s.includes('件数') || s === '单位' || s.includes('数量') || s.includes('unidades') || s.includes('cantidad');
+          });
+          
+          // Find Address (pick the last "Address" / "地址" column usually found in ML reports)
+          const addressIndices = row.map((val, idx) => {
+            const s = String(val).toLowerCase();
+            return (s === 'address' || s.includes('地址') || s.includes('dirección')) ? idx : -1;
+          }).filter(idx => idx !== -1);
           addressIdx = addressIndices.length > 0 ? addressIndices[addressIndices.length - 1] : -1;
           
-          skuIdx = row.findIndex(val => String(val).toLowerCase() === 'sku' || String(val) === '商品编码');
+          // Find SKU (explicit match)
+          skuIdx = row.findIndex(val => {
+            const s = String(val).toLowerCase();
+            return s === 'sku' || s === '商品编码' || s === '商品代码';
+          });
           if (skuIdx === -1 && row.length > 24) skuIdx = 24; // Fallback to column Y
           
-          statusIdx = row.findIndex(val => String(val).toLowerCase().includes('shipment status'));
+          // Find Status (Spanish: Estado; Chinese: 运输状态)
+          statusIdx = row.findIndex(val => {
+            const s = String(val).toLowerCase();
+            return s.includes('shipment status') || s.includes('运输状态') || s.includes('estado');
+          });
           if (statusIdx === -1 && row.length > 6) statusIdx = 6; // Fallback to column G
           
           break;
@@ -107,15 +133,47 @@ export default function DataCleaning() {
         let _type: 'valid' | 'cancel' | 'refund' = 'valid';
         
         const statusStr = statusIdx !== -1 && row[statusIdx] ? String(row[statusIdx]).toLowerCase() : '';
-        if (statusStr.includes('cancel')) {
+        if (statusStr.includes('cancel') || statusStr.includes('取消') || statusStr.includes('cancela')) {
             _type = 'cancel';
-        } else if (statusStr.includes('return') || statusStr.includes('refund')) {
+        } else if (statusStr.includes('return') || statusStr.includes('refund') || statusStr.includes('退款') || statusStr.includes('devolu')) {
             _type = 'refund';
+        }
+
+        // Clean up the date string (e.g. from "四月 27, 2026 01:06 AM" to "2026-04-27")
+        let rawDate = orderDateIdx !== -1 && row[orderDateIdx] ? String(row[orderDateIdx]) : '';
+        let cleanedDate = rawDate;
+        
+        // Basic extraction of Date part if it looks like "Month DD, YYYY ..."
+        if (rawDate.includes(', 202')) {
+          const parts = rawDate.split(',');
+          if (parts.length >= 2) {
+             const monthDay = parts[0].trim(); // e.g. "四月 27"
+             const yearPart = parts[1].trim().split(' ')[0]; // e.g. "2026"
+             
+             const monthMap: {[key: string]: string} = {
+               '一月': '01', '二月': '02', '三月': '03', '四月': '04', '五月': '05', '六月': '06',
+               '七月': '07', '八月': '08', '九月': '09', '十月': '10', '十一月': '11', '十二月': '12',
+               'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04', 'mayo': '05', 'junio': '06',
+               'julio': '07', 'agosto': '08', 'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+             };
+
+             let month = '01';
+             let day = '01';
+             
+             Object.keys(monthMap).forEach(m => {
+               if (monthDay.includes(m)) month = monthMap[m];
+             });
+             
+             const dayMatch = monthDay.match(/\d+/);
+             if (dayMatch) day = dayMatch[0].padStart(2, '0');
+             
+             cleanedDate = `${yearPart}-${month}-${day}`;
+          }
         }
 
         parsedRecords.push({
           order_id: orderId,
-          order_date: orderDateIdx !== -1 && row[orderDateIdx] ? String(row[orderDateIdx]) : '',
+          order_date: cleanedDate || rawDate,
           sku: skuIdx !== -1 && row[skuIdx] ? String(row[skuIdx]) : 'N/A',
           units: unitsIdx !== -1 && row[unitsIdx] ? parseInt(String(row[unitsIdx])) : 1,
           status: _type,

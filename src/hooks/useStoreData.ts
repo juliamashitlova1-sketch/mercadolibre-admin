@@ -3,6 +3,39 @@ import { supabase } from '../lib/supabase';
 import { DailyStats, SKUStats, Claim, OperationLog, FakeOrder, CargoDamage } from '../types';
 import { parseISO } from 'date-fns';
 
+// Standardized mapping for operation logs to handle snake_case/camelCase and JSON details
+export const mapOperationLog = (row: any): OperationLog => {
+  let skuVal = row.sku || '';
+  let descriptionVal = row.description || row.details || '';
+  let actionTypeVal: any = row.action_type || 'Price';
+
+  // Try to parse details if it contains the full JSON data (legacy or additional context)
+  if (row.details && typeof row.details === 'string' && row.details.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(row.details);
+      if (!skuVal && parsed.sku) skuVal = parsed.sku;
+      if (parsed.actionType) actionTypeVal = parsed.actionType;
+      // Preference: explicitly saved description -> parsed description -> raw row action
+      if (parsed.description) descriptionVal = parsed.description;
+    } catch (e) {
+      console.error('Error parsing log details:', e);
+    }
+  }
+  
+  // Final mapping adjustment: if it's still 'Price' but row has specific action_type
+  if (row.action_type) actionTypeVal = row.action_type;
+
+  return {
+    id: row.id,
+    date: row.date,
+    sku: skuVal,
+    action: row.action,
+    createdAt: row.created_at,
+    actionType: actionTypeVal,
+    description: descriptionVal,
+  };
+};
+
 export function useSkuData() {
   const [skuData, setSkuData] = useState<SKUStats[]>([]);
   const [allSkuData, setAllSkuData] = useState<SKUStats[]>([]);
@@ -293,36 +326,10 @@ export function useOperationLogs() {
       .from('operation_logs')
       .select('*')
       .order('date', { ascending: false })
-      .limit(100);
+      .limit(500);
       
     if (!error) {
-      setOperationLogs((data || []).map((row: any) => {
-        let skuVal = row.sku || ''; // Fallback for missing column
-        let descriptionVal = row.details || '';
-        let actionTypeVal: any = 'Price';
-
-        // Try to parse details if it contains the full JSON data
-        try {
-          if (row.details && row.details.startsWith('{')) {
-            const parsed = JSON.parse(row.details);
-            if (!skuVal && parsed.sku) skuVal = parsed.sku;
-            if (parsed.actionType) actionTypeVal = parsed.actionType;
-            if (parsed.description) descriptionVal = parsed.description;
-          }
-        } catch (e) {
-          console.error('Error parsing log details:', e);
-        }
-
-        return {
-          id: row.id,
-          date: row.date,
-          sku: skuVal,
-          action: row.action,
-          createdAt: row.created_at,
-          actionType: actionTypeVal,
-          description: descriptionVal,
-        };
-      }));
+      setOperationLogs((data || []).map(mapOperationLog));
     }
   }, []);
 

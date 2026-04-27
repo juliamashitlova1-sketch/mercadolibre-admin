@@ -231,6 +231,8 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
           date: data.date,
           sku: data.sku,
           action: `[自动记录] ${actionMessage}`,
+          action_type: 'Other',
+          description: actionMessage,
           details: JSON.stringify({
             sku: data.sku,
             date: data.date,

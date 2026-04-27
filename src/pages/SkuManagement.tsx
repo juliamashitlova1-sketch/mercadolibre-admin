@@ -2,7 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { OperationLog } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Activity, Eye, Loader2, PackageX } from 'lucide-react';
+import { 
+  Plus, Edit2, Trash2, X, Save, Image as ImageIcon, 
+  ChevronDown, ChevronUp, TrendingUp, AlertTriangle, 
+  Activity, Eye, Loader2, PackageX, MousePointer2, 
+  BarChart3, RefreshCw
+} from 'lucide-react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, Legend, AreaChart, Area 
+} from 'recharts';
 import { supabase } from '../lib/supabase';
 
 export default function SkuManagement() {
@@ -89,7 +98,12 @@ export default function SkuManagement() {
       const adsObj = {};
       ads.forEach(a => {
         if (!adsObj[a.date]) adsObj[a.date] = {};
-        adsObj[a.date][a.sku] = { adOrders: a.ad_orders, adSpend: a.ad_spend };
+        adsObj[a.date][a.sku] = { 
+          adOrders: a.ad_orders, 
+          adSpend: a.ad_spend,
+          clicks: a.clicks,
+          impressions: a.impressions
+        };
       });
       setAdsHistory(adsObj);
 
@@ -476,6 +490,26 @@ export default function SkuManagement() {
                                         return <div className="text-center py-6 text-sm text-gray-500">无法从清洗引擎中找到该 SKU 的流水 (可能暂未在引擎中导入相关报表)</div>;
                                       }
 
+                                      // Process analytics for chart and summary
+                                      const enrichedAnalytics = [...analytics].reverse().map(row => {
+                                        const ads = getSkuAdsForDate(item.sku, row.date);
+                                        const visitInfo = getSkuVisitForDate(item.sku, row.date);
+                                        const adUnits = ads ? (parseInt(ads.adOrders, 10) || 0) : 0;
+                                        const totalUnits = row.unitsCount || 0;
+                                        const organicUnits = Math.max(0, totalUnits - adUnits);
+                                        const adSpend = ads ? (parseFloat(ads.adSpend) || 0) : 0;
+                                        const visits = visitInfo ? visitInfo.uniqueVisits : 0;
+                                        
+                                        return {
+                                          ...row,
+                                          adUnits,
+                                          organicUnits,
+                                          adSpend,
+                                          visits,
+                                          dateShort: row.date.slice(5) // MM-DD
+                                        };
+                                      });
+
                                       const totalSalesCount = analytics.reduce((acc, curr) => acc + curr.salesCount, 0);
                                       const totalUnitsCount = analytics.reduce((acc, curr) => acc + (curr.unitsCount || 0), 0);
                                       const totalSalesMxn = analytics.reduce((acc, curr) => acc + curr.salesMxn, 0);
@@ -485,109 +519,178 @@ export default function SkuManagement() {
                                       const totalRefundUnits = analytics.reduce((acc, curr) => acc + (curr.refundUnits || 0), 0);
                                       const totalLossUsd = analytics.reduce((acc, curr) => acc + curr.lossUsd, 0);
 
-                                      const totalVisits = analytics.reduce((acc: number, curr: any) => {
-                                        const v = getSkuVisitForDate(item.sku, curr.date);
-                                        return acc + (v ? v.uniqueVisits : 0);
-                                      }, 0);
-
-                                      const totalAdUnits = analytics.reduce((acc: number, curr: any) => {
-                                        const ads = getSkuAdsForDate(item.sku, curr.date);
-                                        return acc + (ads ? (parseInt(ads.adOrders, 10) || 0) : 0);
-                                      }, 0);
-
+                                      const totalVisits = enrichedAnalytics.reduce((acc, curr) => acc + curr.visits, 0);
+                                      const totalAdUnits = enrichedAnalytics.reduce((acc, curr) => acc + curr.adUnits, 0);
+                                      const totalAdSpend = enrichedAnalytics.reduce((acc, curr) => acc + curr.adSpend, 0);
                                       const totalOrganicUnits = Math.max(0, totalUnitsCount - totalAdUnits);
                                       const overallOrganicRate = totalVisits > 0 ? ((totalOrganicUnits / totalVisits) * 100).toFixed(2) : '0';
 
-
                                       return (
-                                        <div className="v2-table-wrapper">
-                                          <table className="v2-table">
-                                            <thead className="bg-slate-800/80 text-slate-500 tracking-wider sticky top-0 z-10 font-medium text-[10px]">
-                                              <tr>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-left">业务日期</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">独立访问量</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">销量拆分 (总件数 / 广告单 / 自然单)</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">自然转化率</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">取消量 (单/件)</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">退货量 (单/件)</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-right text-red-400">绝对亏损 (USD)</th>
-                                              </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-800/50">
-                                              {/* 顶部总计汇总行 */}
-                                              <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
-                                                <td className="px-3 py-2.5 text-sky-300 text-left text-xs font-bold">全局汇总</td>
-                                                <td className="px-3 py-2.5 text-purple-400 font-mono">
-                                                  {(totalVisits as any) > 0 ? (totalVisits as any).toLocaleString() : '-'}
-                                                </td>
-                                                <td className="px-3 py-2.5 text-emerald-400">
-                                                  总 {totalUnitsCount} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {totalAdUnits} / 自然单 {totalOrganicUnits})</span>
-                                                </td>
-                                                <td className="px-3 py-2.5 text-yellow-400 font-mono">
-                                                  {(totalVisits as any) > 0 ? `${overallOrganicRate}%` : '-'}
-                                                </td>
-                                                <td className="px-3 py-2.5 text-slate-500">{(totalCancelCount as any) > 0 ? `${totalCancelCount}单 / ${totalCancelUnits}件` : '-'}</td>
-                                                <td className="px-3 py-2.5 text-orange-400">{(totalRefundCount as any) > 0 ? `${totalRefundCount}单 / ${totalRefundUnits}件` : '-'}</td>
-                                                <td className="px-3 py-2.5 text-right font-mono text-red-400">
-                                                  {(totalLossUsd as any) > 0 ? 
-                                                    <span className="flex items-center justify-end"><AlertTriangle className="w-3 h-3 mr-1" />- ${(totalLossUsd as any).toFixed(2)}</span> : 
-                                                    <span className="text-slate-700">-</span>
-                                                  }
-                                                </td>
-                                              </tr>
+                                        <div className="space-y-4">
+                                          {/* Trend Chart Section */}
+                                          <div className="v2-card bg-slate-900/40 p-4 border-slate-800/50">
+                                            <div className="flex items-center justify-between mb-4 px-2">
+                                              <div className="flex items-center gap-2">
+                                                <BarChart3 className="w-4 h-4 text-sky-400" />
+                                                <span className="text-xs font-bold text-slate-300">广告与自然销量趋势 (近30天)</span>
+                                              </div>
+                                              <div className="flex gap-4">
+                                                <div className="flex items-center gap-1.5">
+                                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                  <span className="text-[10px] text-slate-500">总件数</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                                                  <span className="text-[10px] text-slate-500">广告单</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                                  <span className="text-[10px] text-slate-500">自然单</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div className="h-[200px] w-full">
+                                              <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={enrichedAnalytics.slice(-30)}>
+                                                  <defs>
+                                                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                                                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                  </defs>
+                                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                                  <XAxis dataKey="dateShort" stroke="#475569" fontSize={9} />
+                                                  <YAxis stroke="#475569" fontSize={9} />
+                                                  <Tooltip 
+                                                    contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', fontSize: '10px' }}
+                                                  />
+                                                  <Area type="monotone" name="总件数" dataKey="unitsCount" stroke="#10b981" fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
+                                                  <Area type="monotone" name="广告单" dataKey="adUnits" stroke="#22d3ee" fill="transparent" strokeWidth={2} />
+                                                  <Area type="monotone" name="自然单" dataKey="organicUnits" stroke="#6366f1" fill="transparent" strokeWidth={1} strokeDasharray="4 4" />
+                                                </AreaChart>
+                                              </ResponsiveContainer>
+                                            </div>
+                                          </div>
 
-                                              
-                                              {/* 逐日明细行 */}
-                                              {analytics.map((row: any, rIdx: number) => {
-                                                const adsD = getSkuAdsForDate(item.sku, row.date);
-                                                const adUnits = adsD ? (parseInt(adsD.adOrders, 10) || 0) : 0;
-                                                const totalUnits = row.unitsCount || 0;
-                                                const organicUnits = Math.max(0, totalUnits - adUnits);
-                                                
-                                                const visitInfo = getSkuVisitForDate(item.sku, row.date);
-                                                const organicRate = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((organicUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
-                                                
-                                                return (
-                                                  <tr 
-                                                    key={rIdx} 
-                                                    className="v2-table-tr text-center"
-                                                  >
-                                                    <td className="px-3 py-2 text-slate-400 text-left text-xs">
-                                                      {row.date}
-                                                    </td>
-                                                    <td className="px-3 py-2 font-bold text-purple-400 font-mono">
-                                                      {visitInfo ? visitInfo.uniqueVisits.toLocaleString() : '-'}
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                      <div className={`px-2 py-0.5 rounded inline-block text-xs ${row.salesCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-600'}`}>
-                                                        总 {totalUnits} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {adUnits} / 自然单 {organicUnits})</span>
-                                                      </div>
-                                                    </td>
-                                                    <td className="px-3 py-2 font-bold font-mono">
-                                                      {visitInfo && visitInfo.uniqueVisits > 0 ? (
-                                                        <span className={organicRate >= 5 ? 'text-emerald-400' : organicRate >= 3 ? 'text-yellow-400' : 'text-red-400'}>
-                                                          {organicRate}%
-                                                        </span>
-                                                      ) : '-'}
-                                                    </td>
-                                                    <td className="px-3 py-2 text-slate-500">{row.cancelCount > 0 ? `${row.cancelCount}单 / ${row.cancelUnits || 0}件` : '-'}</td>
-                                                    <td className="px-3 py-2 text-orange-400">{row.refundCount > 0 ? `${row.refundCount}单 / ${row.refundUnits || 0}件` : '-'}</td>
-                                                    <td className="px-3 py-2 text-right font-mono">
-                                                      {row.lossUsd > 0 ? (
-                                                        <span className="text-red-400 flex items-center justify-end">
-                                                          <AlertTriangle className="w-3 h-3 mr-1" />
-                                                          - ${row.lossUsd.toFixed(2)}
-                                                        </span>
-                                                      ) : (
-                                                        <span className="text-slate-700">-</span>
-                                                      )}
-                                                    </td>
-                                                  </tr>
-                                                );
-                                              })}
+                                          <div className="v2-table-wrapper">
+                                            <table className="v2-table">
+                                              <thead className="bg-slate-800/80 text-slate-500 tracking-wider sticky top-0 z-10 font-medium text-[10px]">
+                                                <tr>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-left">业务日期</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">曝光 / 点击</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">销量拆分 (总 / 广告 / 自然)</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">广告数据 (消耗/ROAS)</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">转化率 (自然/全店)</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">取消/退货 (件)</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-right text-red-400">绝对亏损 (USD)</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody className="divide-y divide-slate-800/50">
+                                                {/* 顶部总计汇总行 */}
+                                                <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
+                                                  <td className="px-3 py-2.5 text-sky-300 text-left text-xs font-bold">全局汇总</td>
+                                                  <td className="px-3 py-2.5 text-slate-400 font-mono text-[11px]">
+                                                    {totalVisits > 0 ? totalVisits.toLocaleString() : '-'} 访客
+                                                  </td>
+                                                  <td className="px-3 py-2.5 text-emerald-400 text-xs text-center">
+                                                    总 {totalUnitsCount} <span className="text-slate-500">/</span> <span className="text-cyan-400">{totalAdUnits}</span> <span className="text-slate-500">/</span> <span className="text-indigo-400">{totalOrganicUnits}</span>
+                                                  </td>
+                                                  <td className="px-3 py-2.5 text-rose-400 font-mono text-[11px]">
+                                                    Spend: ${totalAdSpend.toFixed(2)}
+                                                  </td>
+                                                  <td className="px-3 py-2.5 text-yellow-400 font-mono text-[11px]">
+                                                    Conv: {((totalUnitsCount / (totalVisits || 1)) * 100).toFixed(2)}%
+                                                  </td>
+                                                  <td className="px-3 py-2.5 text-slate-500 text-[11px]">
+                                                    -{totalCancelUnits} / -{totalRefundUnits}
+                                                  </td>
+                                                  <td className="px-3 py-2.5 text-right font-mono text-red-400">
+                                                    {totalLossUsd > 0 ? 
+                                                      <span className="flex items-center justify-end"><AlertTriangle className="w-3 h-3 mr-1" />- ${totalLossUsd.toFixed(2)}</span> : 
+                                                      <span className="text-slate-700">-</span>
+                                                    }
+                                                  </td>
+                                                </tr>
 
-                                            </tbody>
-                                          </table>
+                                                
+                                                {/* 逐日明细行 */}
+                                                {analytics.map((row: any, rIdx: number) => {
+                                                  const adsD = getSkuAdsForDate(item.sku, row.date);
+                                                  const adUnits = enrichedAnalytics.find(e => e.date === row.date)?.adUnits || 0;
+                                                  const totalUnits = row.unitsCount || 0;
+                                                  const organicUnits = Math.max(0, totalUnits - adUnits);
+                                                  
+                                                  const visitInfo = getSkuVisitForDate(item.sku, row.date);
+                                                  const totalCVR = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((totalUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
+                                                  const organicCVR = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((organicUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
+                                                  
+                                                  const adSpend = adsD ? (parseFloat(adsD.adSpend) || 0) : 0;
+                                                  const clicks = adsD ? (parseInt(adsD.clicks, 10) || 0) : 0;
+                                                  const imps = adsD ? (parseInt(adsD.impressions, 10) || 0) : 0;
+                                                  const roas = adSpend > 0 ? ( (adUnits * (parseFloat(item.priceMXN) || 0)) / 17.3 / adSpend ).toFixed(2) : '0';
+
+                                                  return (
+                                                    <tr 
+                                                      key={rIdx} 
+                                                      className="v2-table-tr text-center"
+                                                    >
+                                                      <td className="px-3 py-2 text-slate-400 text-left text-[10px] font-mono">
+                                                        {row.date}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">
+                                                        {imps ? imps : '-'} / {clicks ? clicks : '-'}
+                                                      </td>
+                                                      <td className="px-3 py-2">
+                                                        <div className={`px-2 py-0.5 rounded inline-flex items-center gap-1.5 text-[10px] ${row.salesCount > 0 ? 'bg-slate-800/80 border border-slate-700/50' : 'text-slate-600'}`}>
+                                                          <span className="text-emerald-400 font-bold">{totalUnits}</span>
+                                                          <span className="text-slate-700">|</span>
+                                                          <span className="text-cyan-400">{adUnits}</span>
+                                                          <span className="text-slate-700">|</span>
+                                                          <span className="text-indigo-400">{organicUnits}</span>
+                                                        </div>
+                                                      </td>
+                                                      <td className="px-3 py-2 font-mono text-[10px]">
+                                                        {adSpend > 0 ? (
+                                                          <div className="flex flex-col items-center">
+                                                            <span className="text-rose-400">${adSpend.toFixed(1)}</span>
+                                                            <span className="text-[9px] text-slate-600">ROAS: {roas}</span>
+                                                          </div>
+                                                        ) : '-'}
+                                                      </td>
+                                                      <td className="px-3 py-2 font-mono text-[10px]">
+                                                        {visitInfo && visitInfo.uniqueVisits > 0 ? (
+                                                          <div className="flex flex-col items-center">
+                                                            <span className={organicCVR >= 3 ? 'text-emerald-400' : 'text-slate-500'}>
+                                                              Org: {organicCVR}%
+                                                            </span>
+                                                            <span className="text-[9px] text-slate-600">All: {totalCVR}%</span>
+                                                          </div>
+                                                        ) : '-'}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-slate-500 text-[10px]">
+                                                        {row.cancelUnits > 0 || row.refundUnits > 0 ? (
+                                                          <span className={row.refundUnits > 0 ? 'text-orange-400' : ''}>
+                                                            -{row.cancelUnits || 0} / -{row.refundUnits || 0}
+                                                          </span>
+                                                        ) : '-'}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-right font-mono text-[10px]">
+                                                        {row.lossUsd > 0 ? (
+                                                          <span className="text-red-400 flex items-center justify-end">
+                                                            <AlertTriangle className="w-2.5 h-2.5 mr-1" />
+                                                            -${row.lossUsd.toFixed(1)}
+                                                          </span>
+                                                        ) : (
+                                                          <span className="text-slate-800">-</span>
+                                                        )}
+                                                      </td>
+                                                    </tr>
+                                                  );
+                                                })}
+
+                                              </tbody>
+                                            </table>
+                                          </div>
                                         </div>
                                       );
                                     })()}

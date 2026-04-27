@@ -352,16 +352,29 @@ export default function SkuManagement() {
     if (!element) return;
 
     try {
+      // Add a small delay to ensure everything is rendered
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const canvas = await html2canvas(element, {
         backgroundColor: '#0f172a',
         scale: 2,
         logging: false,
-        useCORS: true
+        useCORS: true,
+        allowTaint: true,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Special handling for cloned documents if needed
+          const clonedElement = clonedDoc.getElementById(`sku-dashboard-${skuCode}`);
+          if (clonedElement) {
+            clonedElement.style.padding = '20px';
+          }
+        }
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
-        orientation: 'landscape',
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
         format: [canvas.width, canvas.height]
       });
@@ -371,7 +384,7 @@ export default function SkuManagement() {
       pdf.save(`SKU_Report_${skuCode}_${dateStr}.pdf`);
     } catch (err) {
       console.error('PDF Export Error:', err);
-      alert('导出 PDF 失败，请重试');
+      alert('导出 PDF 失败，请检查浏览器权限并重试');
     }
   };
 
@@ -524,11 +537,11 @@ export default function SkuManagement() {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className="p-5">
-                                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                                    {/* Left Column: Dashboard content */}
-                                    <div className="lg:col-span-3" id={`sku-dashboard-${item.sku}`}>
-                                      <div className="v2-card bg-slate-800/30 p-4 border-slate-800">
+                                <div className="p-4 w-full">
+                                  <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 w-full">
+                                    {/* Left Column: Dashboard content (60%) */}
+                                    <div className="xl:col-span-3 w-full" id={`sku-dashboard-${item.sku}`}>
+                                      <div className="v2-card bg-slate-800/30 p-5 border-slate-800 w-full h-full shadow-2xl">
                                         <div className="flex items-center justify-between mb-3">
                                           <h4 className="text-xs font-bold text-slate-300 flex items-center">
                                             <TrendingUp className="w-3.5 h-3.5 mr-1.5 text-indigo-400" /> 
@@ -793,16 +806,16 @@ export default function SkuManagement() {
                                       </div>
                                     </div>
 
-                                    {/* Right Column: AI Analysis & PDF Export */}
-                                    <div className="lg:col-span-1 space-y-4">
-                                      <div className="v2-card bg-slate-900/40 p-4 border-slate-800 flex flex-col h-full min-h-[500px]">
-                                        <div className="mb-4">
+                                    {/* Right Column: AI Analysis & PDF Export (40%) */}
+                                    <div className="xl:col-span-2 space-y-4 w-full h-full flex flex-col">
+                                      <div className="v2-card bg-[#0f172a] p-5 border-slate-800 flex flex-col flex-1 shadow-2xl h-full w-full">
+                                        <div className="mb-5">
                                           <button 
                                             onClick={() => handleExportPdf(item.sku)}
-                                            className="w-full h-9 bg-sky-600 hover:bg-sky-500 text-white rounded-lg flex items-center justify-center gap-2 text-[11px] font-bold shadow-lg shadow-sky-500/10 transition-all active:scale-95"
+                                            className="w-full h-11 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white rounded-xl flex items-center justify-center gap-3 text-xs font-bold shadow-xl shadow-sky-500/10 transition-all active:scale-[0.98] border border-white/5"
                                           >
-                                            <Download className="w-3.5 h-3.5" />
-                                            <span>导出 SKU 实时数据 (PDF)</span>
+                                            <Download className="w-4 h-4" />
+                                            <span>导出 SKU 全量分析报告 (PDF)</span>
                                           </button>
                                         </div>
                                         

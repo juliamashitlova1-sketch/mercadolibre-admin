@@ -349,42 +349,53 @@ export default function SkuManagement() {
 
   const handleExportPdf = async (skuCode: string) => {
     const element = document.getElementById(`sku-dashboard-${skuCode}`);
-    if (!element) return;
+    if (!element) {
+      alert('未找到看板区域，请展开后再试');
+      return;
+    }
 
     try {
-      // Add a small delay to ensure everything is rendered
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Add a small delay to ensure all assets (charts, icons) are fully settled
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       const canvas = await html2canvas(element, {
         backgroundColor: '#0f172a',
-        scale: 2,
-        logging: false,
+        scale: 1.5, // Reduced slightly for memory safety on mobile/large screens
+        logging: true, // Enable logging for easier debugging if it fails again
         useCORS: true,
-        allowTaint: true,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
+        allowTaint: false, // Changed to false to avoid SecurityErrors
+        imageTimeout: 15000,
+        removeContainer: true,
         onclone: (clonedDoc) => {
-          // Special handling for cloned documents if needed
-          const clonedElement = clonedDoc.getElementById(`sku-dashboard-${skuCode}`);
-          if (clonedElement) {
-            clonedElement.style.padding = '20px';
+          const el = clonedDoc.getElementById(`sku-dashboard-${skuCode}`);
+          if (el) {
+            el.style.padding = '30px';
+            el.style.width = 'auto';
+            el.style.height = 'auto';
           }
         }
       });
       
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('生成的画布无效');
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95); // Use JPEG for better performance with large areas
       const pdf = new jsPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
-        format: [canvas.width, canvas.height]
+        format: [canvas.width, canvas.height],
+        hotfixes: ["px_scaling"]
       });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
       const dateStr = new Date().toISOString().split('T')[0];
       pdf.save(`SKU_Report_${skuCode}_${dateStr}.pdf`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('PDF Export Error:', err);
-      alert('导出 PDF 失败，请检查浏览器权限并重试');
+      // Give more specific error if possible
+      const msg = err.message || '未知错误';
+      alert(`导出 PDF 失败 (${msg})。请确保页面已完全加载，或尝试使用更先进的浏览器。`);
     }
   };
 

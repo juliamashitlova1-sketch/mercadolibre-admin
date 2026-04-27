@@ -87,8 +87,10 @@ export default function SkuManagement() {
       // Convert flat array to date-keyed object for component logic
       const visitsObj = {};
       visits.forEach(v => {
-        if (!visitsObj[v.date]) visitsObj[v.date] = { skuData: [] };
-        visitsObj[v.date].skuData.push({ sku: v.sku, uniqueVisits: v.unique_visits });
+        const d = new Date(v.date);
+        const dateKey = isNaN(d.getTime()) ? v.date : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (!visitsObj[dateKey]) visitsObj[dateKey] = { skuData: [] };
+        visitsObj[dateKey].skuData.push({ sku: String(v.sku).trim().toUpperCase(), uniqueVisits: v.unique_visits });
       });
       setVisitsHistory(visitsObj);
 
@@ -97,8 +99,10 @@ export default function SkuManagement() {
       if (adsError) throw adsError;
       const adsObj = {};
       ads.forEach(a => {
-        if (!adsObj[a.date]) adsObj[a.date] = {};
-        adsObj[a.date][a.sku] = { 
+        const d = new Date(a.date);
+        const dateKey = isNaN(d.getTime()) ? a.date : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (!adsObj[dateKey]) adsObj[dateKey] = {};
+        adsObj[dateKey][String(a.sku).trim().toUpperCase()] = { 
           adOrders: a.ad_orders, 
           adSpend: a.ad_spend,
           clicks: a.clicks,
@@ -120,11 +124,13 @@ export default function SkuManagement() {
   const getSkuVisitForDate = (skuCode, dateKey) => {
     const snapshot = visitsHistory?.[dateKey];
     if (!snapshot?.skuData) return null;
-    return snapshot.skuData.find(v => v.sku === skuCode) || null;
+    const searchSku = String(skuCode || '').trim().toUpperCase();
+    return snapshot.skuData.find(v => v.sku === searchSku) || null;
   };
 
   const getSkuAdsForDate = (skuCode, dateKey) => {
-    return adsHistory?.[dateKey]?.[skuCode] || null;
+    const searchSku = String(skuCode || '').trim().toUpperCase();
+    return adsHistory?.[dateKey]?.[searchSku] || null;
   };
 
   const handleStatusChange = async (skuCode, newStatus) => {
@@ -167,8 +173,9 @@ export default function SkuManagement() {
     // Group helper
     const processEntries = (entries, type) => {
       if (!entries) return;
+      const searchSku = String(skuCode || '').trim().toUpperCase();
       entries.forEach(entry => {
-        if (entry._sku === skuCode) {
+        if (String(entry._sku || '').trim().toUpperCase() === searchSku) {
           let rawDate = String(entry._date || 'Unknown Date').trim();
           let dateKey = rawDate;
           
@@ -208,9 +215,10 @@ export default function SkuManagement() {
 
     // Also include dates that have visits but no sales
     if (visitsHistory) {
+      const searchSku = String(skuCode || '').trim().toUpperCase();
       Object.keys(visitsHistory).forEach(dateKey => {
         const snapshot = visitsHistory[dateKey];
-        if (snapshot.skuData?.some(v => v.sku === skuCode)) {
+        if (snapshot.skuData?.some(v => v.sku === searchSku)) {
           if (!dailyMap[dateKey]) {
             dailyMap[dateKey] = { date: dateKey, salesCount: 0, unitsCount: 0, salesMxn: 0, cancelCount: 0, cancelUnits: 0, refundCount: 0, refundUnits: 0, lossUsd: 0 };
           }
@@ -220,8 +228,9 @@ export default function SkuManagement() {
 
     // Also include dates that have ads data but no sales
     if (adsHistory) {
+      const searchSku = String(skuCode || '').trim().toUpperCase();
       Object.keys(adsHistory).forEach(dateKey => {
-        if (adsHistory[dateKey][skuCode]) {
+        if (adsHistory[dateKey][searchSku]) {
           if (!dailyMap[dateKey]) {
             dailyMap[dateKey] = { date: dateKey, salesCount: 0, unitsCount: 0, salesMxn: 0, cancelCount: 0, cancelUnits: 0, refundCount: 0, refundUnits: 0, lossUsd: 0 };
           }
@@ -347,13 +356,22 @@ export default function SkuManagement() {
               <p className="v2-header-subtitle">管理产品图文、成本售价及库存信息</p>
             </div>
           </div>
-          <button 
-            onClick={() => openForm()}
-            className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>新增 SKU</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => { fetchCloudData(); fetchAuxiliaryData(); }}
+              className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all p-2 rounded-lg flex items-center justify-center shadow-md active:scale-95 border border-slate-700"
+              title="刷新云端同步数据"
+            >
+              <RefreshCw className={`w-4 h-4 ${(isLoading || isLoadingAux) ? 'animate-spin' : ''}`} />
+            </button>
+            <button 
+              onClick={() => openForm()}
+              className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>新增 SKU</span>
+            </button>
+          </div>
         </header>
 
         {/* Table Display */}

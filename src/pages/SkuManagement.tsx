@@ -35,7 +35,8 @@ export default function SkuManagement() {
         productName: item.product_name,
         imageUrl: item.image_url,
         replenishInventory: item.replenish_inventory,
-        listedDate: item.listed_date
+        listedDate: item.listed_date,
+        status: item.status || '活跃中'
       }));
       
       setSkus(mappedData);
@@ -110,6 +111,22 @@ export default function SkuManagement() {
 
   const getSkuAdsForDate = (skuCode, dateKey) => {
     return adsHistory?.[dateKey]?.[skuCode] || null;
+  };
+
+  const handleStatusChange = async (skuCode, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('skus')
+        .update({ status: newStatus })
+        .eq('sku', skuCode);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setSkus(prev => prev.map(s => s.sku === skuCode ? { ...s, status: newStatus } : s));
+    } catch (err) {
+      alert('状态更新失败: ' + err.message);
+    }
   };
 
   const [selectedVisitDate, setSelectedVisitDate] = useState(null);
@@ -229,7 +246,8 @@ export default function SkuManagement() {
     priceMXN: '',
     inventory: '',
     replenishInventory: '', // Added replenishment inventory
-    listedDate: new Date().toISOString().split('T')[0]
+    listedDate: new Date().toISOString().split('T')[0],
+    status: '活跃中'
   };
   
   const [formData, setFormData] = useState(initialFormState);
@@ -267,7 +285,8 @@ export default function SkuManagement() {
         price_mxn: formData.priceMXN,
         inventory: formData.inventory,
         replenish_inventory: formData.replenishInventory || 0,
-        listed_date: formData.listedDate
+        listed_date: formData.listedDate,
+        status: formData.status || '活跃中'
       };
 
       const { error } = await supabase
@@ -338,6 +357,7 @@ export default function SkuManagement() {
                   <th className="v2-table-th">补货库存</th>
                   <th className="v2-table-th">现有库存</th>
                   <th className="v2-table-th">上架时间</th>
+                  <th className="v2-table-th">当前状态</th>
                   <th className="v2-table-th text-right">操作</th>
                 </tr>
               </thead>
@@ -402,6 +422,22 @@ export default function SkuManagement() {
                           </div>
                         </td>
                         <td className="v2-table-td text-slate-500">{item.listedDate}</td>
+                        <td className="v2-table-td">
+                           <select 
+                             value={item.status || '活跃中'} 
+                             onChange={(e) => handleStatusChange(item.sku, e.target.value)}
+                             onClick={(e) => e.stopPropagation()}
+                             className={`text-[10px] font-bold px-2 py-1 rounded bg-slate-800/80 border transition-all cursor-pointer outline-none ${
+                               item.status === '缺货' ? 'text-rose-400 border-rose-500/30' : 
+                               item.status === '补货中' ? 'text-yellow-400 border-yellow-500/30' : 
+                               'text-emerald-400 border-emerald-500/30'
+                             }`}
+                           >
+                              <option value="活跃中">活跃中</option>
+                              <option value="补货中">补货中</option>
+                              <option value="缺货">缺货</option>
+                           </select>
+                        </td>
                         <td className="v2-table-td text-right">
                           <div className="flex justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                             <button onClick={() => openForm(index)} className="p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all">
@@ -679,6 +715,15 @@ export default function SkuManagement() {
                   <div className="col-span-2">
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">产品名称</label>
                     <input required type="text" name="productName" value={formData.productName} onChange={handleInputChange} className="v2-input" placeholder="输入完整的商品标题" />
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">当前状态</label>
+                    <select name="status" value={formData.status} onChange={handleInputChange} className="v2-input">
+                      <option value="活跃中">活跃中 (Active)</option>
+                      <option value="补货中">补货中 (Restocking)</option>
+                      <option value="缺货">缺货 (Out of Stock)</option>
+                    </select>
                   </div>
 
                   <div className="col-span-2">

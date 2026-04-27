@@ -312,7 +312,7 @@ export default function Pricing() {
   };
 
   const inputCls = "v2-input";
-  const labelCls = "block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1";
+  const labelCls = "block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1";
 
   return (
     <div className="v2-page-container">
@@ -461,7 +461,7 @@ export default function Pricing() {
               <section className="v2-card p-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div>
-                      <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase mb-3"><Package className="w-3 h-3" /> 单品规格</h4>
+                      <h4 className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase mb-3"><Package className="w-3 h-3" /> 单品规格</h4>
                       <div className="grid grid-cols-3 gap-2">
                         <input className={inputCls} type="number" step="any" placeholder="长" value={form.unitLength} onChange={e=>setForm({...form, unitLength: Number(e.target.value)})} />
                         <input className={inputCls} type="number" step="any" placeholder="宽" value={form.unitWidth} onChange={e=>setForm({...form, unitWidth: Number(e.target.value)})} />
@@ -482,7 +482,7 @@ export default function Pricing() {
                    </div>
 
                    <div>
-                      <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-600 uppercase mb-3"><Box className="w-3 h-3" /> 整箱规格</h4>
+                      <h4 className="flex items-center gap-2 text-xs font-black text-slate-600 uppercase mb-3"><Box className="w-3 h-3" /> 整箱规格</h4>
                       <div className="grid grid-cols-3 gap-2">
                         <input className={inputCls} type="number" step="any" placeholder="长" value={form.boxLength} onChange={e=>setForm({...form, boxLength: Number(e.target.value)})} />
                         <input className={inputCls} type="number" step="any" placeholder="宽" value={form.boxWidth} onChange={e=>setForm({...form, boxWidth: Number(e.target.value)})} />
@@ -501,17 +501,17 @@ export default function Pricing() {
                    </div>
                    
                    <div className="bg-amber-50/30 p-3 rounded-xl border border-amber-100/50">
-                      <h4 className="flex items-center gap-2 text-[10px] font-black text-amber-700 uppercase mb-3"><Truck className="w-3 h-3" /> 物流报价</h4>
+                      <h4 className="flex items-center gap-2 text-xs font-black text-amber-700 uppercase mb-3"><Truck className="w-3 h-3" /> 物流报价</h4>
                       <div className="space-y-3">
                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-500 italic">海运 (/m³)</span>
+                            <span className="text-xs text-slate-500 italic">海运 (/m³)</span>
                             <div className="flex items-center gap-1">
                                <span className="text-xs text-slate-400">¥</span>
                                <input className="w-16 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-xs font-mono text-slate-900" type="number" value={form.seaFreightUnitPrice} onChange={e=>setForm({...form, seaFreightUnitPrice: Number(e.target.value)})} />
                             </div>
                          </div>
                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-500 italic">空运 (/KG)</span>
+                            <span className="text-xs text-slate-500 italic">空运 (/KG)</span>
                             <div className="flex items-center gap-1">
                                <span className="text-xs text-slate-400">¥</span>
                                <input className="w-16 bg-white border border-slate-200 rounded px-1.5 py-0.5 text-xs font-mono text-slate-900" type="number" value={form.airFreightUnitPrice} onChange={e=>setForm({...form, airFreightUnitPrice: Number(e.target.value)})} />
@@ -534,11 +534,11 @@ export default function Pricing() {
 
                       <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl">
                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-[10px] font-bold text-indigo-700">海运分摊 (¥/Psc)</span>
+                            <span className="text-xs font-bold text-indigo-700">海运分摊 (¥/Psc)</span>
                             <span className="text-xs font-mono font-black text-indigo-800">¥{metrics.seaFreightPerUnit.toFixed(2)}</span>
                          </div>
                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-indigo-700">空运分摊 (¥/Psc)</span>
+                            <span className="text-xs font-bold text-indigo-700">空运分摊 (¥/Psc)</span>
                             <span className="text-xs font-mono font-black text-indigo-800">¥{metrics.airFreightPerUnit.toFixed(2)}</span>
                          </div>
                       </div>
@@ -557,7 +557,7 @@ export default function Pricing() {
                   
                   <div className="grid grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">海运模式 / 总毛利 (¥)</div>
+                      <div className="text-xs uppercase font-black text-slate-500 tracking-tighter">海运模式 / 总毛利 (¥)</div>
                       <div className="text-4xl font-mono font-black text-emerald-400">¥{metrics.profitSeaUnit.toFixed(1)}</div>
                       <div className="flex items-center gap-3 pt-1">
                          <span className="text-xs font-black px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-lg italic">ROI: {(metrics.roiSea*100).toFixed(0)}%</span>
@@ -565,7 +565,7 @@ export default function Pricing() {
                       </div>
                     </div>
                     <div className="space-y-2 opacity-50 transition-opacity hover:opacity-100">
-                      <div className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">空运模式 / 总毛利 (¥)</div>
+                      <div className="text-xs uppercase font-black text-slate-500 tracking-tighter">空运模式 / 总毛利 (¥)</div>
                       <div className="text-3xl font-mono font-black text-sky-400">¥{metrics.profitAirUnit.toFixed(1)}</div>
                       <div className="flex items-center gap-3 pt-1">
                          <span className="text-xs font-black px-2 py-0.5 bg-sky-500/20 text-sky-400 rounded-lg italic">ROI: {(metrics.roiAir*100).toFixed(0)}%</span>
@@ -584,8 +584,8 @@ export default function Pricing() {
                   <div className="mt-8 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 shadow-inner">
                      <div className="flex justify-between items-center">
                         <div className="flex flex-col">
-                           <span className="text-[11px] text-emerald-500 font-black uppercase tracking-widest mb-1 text-shadow-sm">盈亏平衡建议售价 (MXN)</span>
-                           <span className="text-[10px] text-slate-500 italic font-medium">在此价格成交 利润刚好对冲所有成本</span>
+                           <span className="text-xs text-emerald-500 font-black uppercase tracking-widest mb-1 text-shadow-sm">盈亏平衡建议售价 (MXN)</span>
+                           <span className="text-xs text-slate-500 italic font-medium">在此价格成交 利润刚好对冲所有成本</span>
                         </div>
                         <span className="text-4xl font-mono font-black text-emerald-400 drop-shadow-sm">${metrics.breakEvenSellingMxn.toFixed(0)}</span>
                      </div>
@@ -603,7 +603,7 @@ export default function Pricing() {
                    <Save className="w-8 h-8" /> 
                    <span className="text-2xl">{saving ? '正在提交...' : '提交核价结果'}</span>
                 </div>
-                {!saving && <span className="text-[10px] opacity-70">结果将保存至“已核价清单”供后续审阅</span>}
+                {!saving && <span className="text-xs opacity-70">结果将保存至“已核价清单”供后续审阅</span>}
               </button>
               
               {errorMessage && (
@@ -611,14 +611,14 @@ export default function Pricing() {
                    <AlertCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                    <div>
                       <h4 className="text-xs font-bold text-rose-400 mb-1">保存失败</h4>
-                      <p className="text-[11px] text-rose-400/80 leading-relaxed">{errorMessage}</p>
+                      <p className="text-xs text-rose-400/80 leading-relaxed">{errorMessage}</p>
                    </div>
                 </div>
               )}
               
               <div className="v2-card bg-amber-500/5 border-amber-500/20 p-4 flex gap-3 items-start">
                  <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                 <p className="text-[10px] text-amber-400/80 font-medium leading-relaxed">
+                 <p className="text-xs text-amber-400/80 font-medium leading-relaxed">
                    提示：核价逻辑已严格对齐跨境物流现实。抛重按照长宽高/6000计算，海运按照单方运价，空运取实重与抛重之大者。
                  </p>
               </div>
@@ -628,7 +628,7 @@ export default function Pricing() {
           <>
             {isSuccessView && (
               <div className="v2-card bg-slate-900/30 p-3 flex items-center gap-3 mb-4">
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <div className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter className="w-4 h-4" /> 排序方式:
                 </div>
                 {[
@@ -643,7 +643,7 @@ export default function Pricing() {
                       key: sort.key, 
                       order: sortConfig.key === sort.key && sortConfig.order === 'desc' ? 'asc' : 'desc' 
                     })}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       sortConfig.key === sort.key 
                         ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' 
                         : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300 border border-transparent'
@@ -688,7 +688,7 @@ export default function Pricing() {
                             </div>
                             <div className="max-w-[180px]">
                                <div className="text-sm font-bold text-slate-200 truncate" title={rec.name}>{rec.name || '未命名产品'}</div>
-                               <div className="text-[10px] font-medium text-slate-500 mt-0.5 flex items-center gap-1.5 uppercase">
+                               <div className="text-xs font-medium text-slate-500 mt-0.5 flex items-center gap-1.5 uppercase">
                                   <span>型号: {rec.model || '--'}</span>
                                   {rec.competitor_link && (
                                      <a href={rec.competitor_link} target="_blank" className="text-sky-400 hover:text-sky-300"><ExternalLink className="w-3 h-3" /></a>
@@ -700,19 +700,19 @@ export default function Pricing() {
                       <td className="v2-table-td">
                          <div className="inline-flex flex-col">
                             <div className="text-base font-mono font-bold text-emerald-400 leading-none">{(rec.margin || 0).toFixed(1)}%</div>
-                            <div className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter mt-1">MARGIN ONLY</div>
+                            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-tighter mt-1">MARGIN ONLY</div>
                          </div>
                       </td>
                       <td className="v2-table-td">
                          <div className="space-y-0.5">
-                            <div className="text-[11px] font-mono font-bold text-sky-300">总额: ¥{(rec.replenishment_qty * rec.purchase_price_cny).toLocaleString()}</div>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                            <div className="text-xs font-mono font-bold text-sky-300">总额: ¥{(rec.replenishment_qty * rec.purchase_price_cny).toLocaleString()}</div>
+                            <div className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
                                {rec.replenishment_qty} PSC × ¥{rec.purchase_price_cny}
                             </div>
                          </div>
                       </td>
                       <td className="v2-table-td">
-                         <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold ${
+                         <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-bold ${
                             rec.logistics_mode === '空运' 
                               ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' 
                               : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
@@ -726,18 +726,18 @@ export default function Pricing() {
                       <td className="v2-table-td">
                         <div className="space-y-0.5">
                            <div className="text-sm font-mono font-bold text-slate-200">{rec.selling_price_mxn} MXN</div>
-                           <div className="text-[10px] text-slate-600 font-bold italic">EX: {rec.exchange_rate}</div>
+                           <div className="text-xs text-slate-600 font-bold italic">EX: {rec.exchange_rate}</div>
                         </div>
                       </td>
                       <td className="v2-table-td">
-                         <span className="px-2 py-0.5 bg-slate-800 rounded text-[10px] font-bold text-slate-400">{rec.auditor || '系统'}</span>
+                         <span className="px-2 py-0.5 bg-slate-800 rounded text-xs font-bold text-slate-400">{rec.auditor || '系统'}</span>
                       </td>
                       {isSuccessView && (
                         <td className="v2-table-td">
                           <select 
                             value={rec.operation_status || '待采购'} 
                             onChange={(e) => updateOperationStatus(rec.id, e.target.value)}
-                            className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] font-bold text-slate-300 outline-none focus:border-sky-500/50 transition-colors"
+                            className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs font-bold text-slate-300 outline-none focus:border-sky-500/50 transition-colors"
                           >
                             {operationStatuses.map(s => (
                               <option key={s} value={s}>{s}</option>
@@ -749,14 +749,14 @@ export default function Pricing() {
                          <div className="flex items-center justify-end gap-1.5">
                             <button 
                               onClick={() => handleRollback(rec)} 
-                              className="px-2.5 py-1 bg-slate-800 text-sky-400 hover:bg-sky-500/10 rounded flex items-center gap-1 text-[10px] font-bold transition-all"
+                              className="px-2.5 py-1 bg-slate-800 text-sky-400 hover:bg-sky-500/10 rounded flex items-center gap-1 text-xs font-bold transition-all"
                             >
                                <ArrowLeftCircle className="w-3 h-3" /> 回退
                             </button>
                             {isListView && (
                                <>
-                                 <button onClick={() => updateStatus(rec.id, 'success')} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded flex items-center gap-1 text-[9px] font-bold border border-transparent hover:border-emerald-500/20 transition-all"><CheckCircle className="w-3 h-3" /> 确认</button>
-                                 <button onClick={() => updateStatus(rec.id, 'staging')} className="p-1.5 text-amber-400 hover:bg-amber-500/10 rounded flex items-center gap-1 text-[9px] font-bold border border-transparent hover:border-amber-500/20 transition-all"><Inbox className="w-3 h-3" /> 暂存</button>
+                                 <button onClick={() => updateStatus(rec.id, 'success')} className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded flex items-center gap-1 text-[11px] font-bold border border-transparent hover:border-emerald-500/20 transition-all"><CheckCircle className="w-3 h-3" /> 确认</button>
+                                 <button onClick={() => updateStatus(rec.id, 'staging')} className="p-1.5 text-amber-400 hover:bg-amber-500/10 rounded flex items-center gap-1 text-[11px] font-bold border border-transparent hover:border-amber-500/20 transition-all"><Inbox className="w-3 h-3" /> 暂存</button>
                                </>
                             )}
                             <button onClick={() => deleteRecord(rec.id)} className="p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -803,7 +803,7 @@ export default function Pricing() {
                            <div className="flex flex-col justify-center">
                               <div className="text-base font-bold text-white">{detailRecord.name}</div>
                               <div className="text-xs text-slate-400 uppercase mt-1">型号: {detailRecord.model || '--'}</div>
-                              <div className="text-[10px] font-mono text-slate-600 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
+                              <div className="text-xs font-mono text-slate-600 mt-2 uppercase tracking-tighter">ID: {detailRecord.id}</div>
                            </div>
                         </div>
 
@@ -836,7 +836,7 @@ export default function Pricing() {
                           ]}
                         ].map(sec => (
                           <div key={sec.title} className="space-y-2">
-                             <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">{sec.title}</h4>
+                             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">{sec.title}</h4>
                              <div className="bg-slate-800/50 border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/50">
                                 {sec.items.map(item => (
                                   <div key={item.l} className="flex items-center justify-between p-3 px-4">

@@ -11,7 +11,7 @@ import { USD_TO_MXN, MXN_TO_CNY } from '../constants';
 import { getMexicoDateString } from '../lib/time';
 
 export default function FakeOrders() {
-  const { skuData } = useOutletContext<{ skuData: SKUStats[] }>();
+  const { skuData, managedSkus } = useOutletContext<{ skuData: SKUStats[], managedSkus: any[] }>();
   const [data, setData] = useState<FakeOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -108,11 +108,12 @@ export default function FakeOrders() {
   };
 
   const handleSkuSelect = (sku: string) => {
-    const selected = skuData.find(s => s.sku === sku);
+    const selectedManaged = managedSkus.find(s => s.sku === sku);
+    const selectedStats = skuData.find(s => s.sku === sku);
     setCurrentRecord({
       ...currentRecord,
       sku: sku,
-      skuName: selected?.skuName || ''
+      skuName: selectedManaged?.name || selectedStats?.skuName || ''
     });
   };
 
@@ -153,7 +154,7 @@ export default function FakeOrders() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">业务日期</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">业务日期</Label>
                 <Input 
                   type="date" 
                   value={currentRecord.date} 
@@ -162,22 +163,23 @@ export default function FakeOrders() {
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">选择 SKU</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">选择 SKU</Label>
                 <Select value={currentRecord.sku} onValueChange={handleSkuSelect}>
                   <SelectTrigger className="v2-input">
                     <SelectValue placeholder="选择 SKU" />
                   </SelectTrigger>
                   <SelectContent>
-                    {skuData.map(s => (
+                    {managedSkus.map(s => (
                       <SelectItem key={s.sku} value={s.sku}>
                         <span className="font-bold">{s.sku}</span>
+                        <span className="ml-2 text-xs text-slate-500 italic">({s.name})</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">测评费 (CNY)</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">测评费 (CNY)</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -187,7 +189,7 @@ export default function FakeOrders() {
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">回款额 (USD)</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">回款额 (USD)</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -202,7 +204,7 @@ export default function FakeOrders() {
               </div>
             </div>
             {currentRecord.skuName && (
-              <div className="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">
+              <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
                 <div className="w-1 h-1 rounded-full bg-emerald-500" />
                 自动匹配: <span className="text-sky-400 font-mono">{currentRecord.skuName}</span>
               </div>
@@ -274,7 +276,7 @@ export default function FakeOrders() {
                       <td className="v2-table-td">
                          <div className="flex flex-col">
                            <span className="text-sky-400 font-bold">{record.sku}</span>
-                           <span className="text-[9px] text-slate-500 truncate max-w-[120px]">{record.skuName}</span>
+                           <span className="text-[11px] text-slate-500 truncate max-w-[120px]">{record.skuName}</span>
                          </div>
                       </td>
                       <td className="v2-table-td text-slate-300">¥{(record.reviewFeeCNY || 0).toLocaleString()}</td>

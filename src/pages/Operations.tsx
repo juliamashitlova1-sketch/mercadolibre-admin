@@ -121,7 +121,7 @@ export default function Operations() {
               <FileText className="w-4 h-4 text-sky-400" />
               历史日志
             </h2>
-            <span className="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full flex items-center gap-1">
               <Filter className="w-3 h-3" /> 共 {operationLogs.length} 条记录
             </span>
           </div>
@@ -148,13 +148,13 @@ export default function Operations() {
                         </div>
                       </td>
                       <td className="v2-table-td">
-                        <span className="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-[11px] font-mono font-bold">
+                        <span className="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-mono font-bold">
                           {log.sku}
                         </span>
                       </td>
                       <td className="v2-table-td">
                         <div className="flex justify-center">
-                          <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${getCategoryColor(log.actionType)} flex items-center gap-1.5`}>
+                          <div className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${getCategoryColor(log.actionType)} flex items-center gap-1.5`}>
                             {getActionIcon(log.actionType)}
                             {getActionLabel(log.actionType)}
                           </div>
@@ -162,10 +162,10 @@ export default function Operations() {
                       </td>
                       <td className="v2-table-td">
                         <div className="max-w-[450px]">
-                          <p className="text-slate-300 whitespace-pre-wrap leading-relaxed truncate group-hover:whitespace-normal group-hover:overflow-visible text-[11px]">
+                          <p className="text-slate-300 whitespace-pre-wrap leading-relaxed truncate group-hover:whitespace-normal group-hover:overflow-visible text-xs">
                             {log.description}
                           </p>
-                          <div className="flex items-center gap-2 mt-1 text-[9px] text-slate-600 font-mono">
+                          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-600 font-mono">
                             <span>{format(parseISO(log.createdAt), 'HH:mm:ss')} 记录</span>
                           </div>
                         </div>

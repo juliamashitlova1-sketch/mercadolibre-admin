@@ -62,7 +62,7 @@ export default function Health() {
                   defaultValue={latestStats.reputation} 
                   onValueChange={(val) => onUpdateReputation(val)}
                 >
-                  <SelectTrigger className="w-40 bg-slate-900/50 border-slate-700 text-[11px] h-9 text-slate-300">
+                  <SelectTrigger className="w-40 bg-slate-900/50 border-slate-700 text-xs h-9 text-slate-300">
                     <SelectValue placeholder="更新状态" />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-slate-700">
@@ -95,7 +95,7 @@ export default function Health() {
               <History className="w-4 h-4 text-emerald-400" />
               近期纠纷处理记录
             </h2>
-            <span className="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">共 {claims.length} 条记录</span>
+            <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">共 {claims.length} 条记录</span>
           </div>
           <div className="v2-table-wrapper">
             <table className="v2-table">

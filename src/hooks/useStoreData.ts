@@ -6,6 +6,7 @@ import { parseISO } from 'date-fns';
 export function useSkuData() {
   const [skuData, setSkuData] = useState<SKUStats[]>([]);
   const [allSkuData, setAllSkuData] = useState<SKUStats[]>([]);
+  const [managedSkus, setManagedSkus] = useState<any[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refreshSkuData = useCallback(async () => {
@@ -99,6 +100,20 @@ export function useSkuData() {
       }
     });
 
+    // 2.5 Fetch Managed SKUs (Source of Truth for SKU selection)
+    const { data: managedSkusData } = await supabase
+      .from('skus')
+      .select('*')
+      .order('sku', { ascending: true });
+    
+    if (managedSkusData) {
+      setManagedSkus(managedSkusData.map(s => ({
+        sku: s.sku,
+        name: s.product_name || s.name,
+        imageUrl: s.image_url
+      })));
+    }
+
     // 3. Map Daily Records
     const mapped = (data || []).map((row: any) => {
       const meta = skuMetadataMap[row.sku];
@@ -181,6 +196,7 @@ export function useSkuData() {
   return { 
     skuData, 
     allSkuData,
+    managedSkus,
     refreshSkuData: () => setRefreshKey(k => k + 1) 
   };
 }

@@ -102,3 +102,19 @@ export interface CargoDamage {
   skuValueCNY: number;
   createdAt?: string;
 }
+export interface SkuAdStats {
+  id?: string;
+  date: string;
+  sku: string;
+  targetRoas: number;
+  budgetUsd: number;
+  impressions: number;
+  clicks: number;
+  adOrders: number;
+  adSpend: number;
+  // Optional calculated fields if stored
+  cpc?: number;
+  roas?: number;
+  acos?: number;
+  createdAt?: string;
+}

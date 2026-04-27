@@ -283,7 +283,7 @@ export default function DataDashboard() {
       </div>
       <div className="flex flex-col">
         <span className="v2-stat-value text-white text-2xl">{value}</span>
-        {subValue && <span className="text-[10px] text-slate-500 font-medium mt-0.5">{subValue}</span>}
+        {subValue && <span className="text-xs text-slate-500 font-medium mt-0.5">{subValue}</span>}
       </div>
     </div>
   );
@@ -348,7 +348,7 @@ export default function DataDashboard() {
           <div className="flex gap-2 relative z-10">
              <div className="px-2 py-1 bg-sky-500/10 rounded-md border border-sky-500/20 flex items-center gap-1.5">
                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[9px] font-bold text-sky-400">SYNC LIVE</span>
+               <span className="text-[11px] font-bold text-sky-400">SYNC LIVE</span>
             </div>
           </div>
         </header>
@@ -394,11 +394,11 @@ export default function DataDashboard() {
               <div className="flex gap-4">
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-sky-500" />
-                  <span className="text-[9px] text-slate-400">销售核心</span>
+                  <span className="text-[11px] text-slate-400">销售核心</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-[9px] text-slate-400">广告支点</span>
+                  <span className="text-[11px] text-slate-400">广告支点</span>
                 </div>
               </div>
             </div>
@@ -457,8 +457,8 @@ export default function DataDashboard() {
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-2">
                    {costStructure.slice(0, 4).map((item, i) => (
                      <div key={i} className="flex items-center justify-between">
-                       <span className="text-[9px] text-slate-500">{item.name}</span>
-                       <span className="text-[9px] font-mono font-bold text-slate-300">{item.value.toFixed(0)}%</span>
+                       <span className="text-[11px] text-slate-500">{item.name}</span>
+                       <span className="text-[11px] font-mono font-bold text-slate-300">{item.value.toFixed(0)}%</span>
                      </div>
                    ))}
               </div>
@@ -468,15 +468,15 @@ export default function DataDashboard() {
             <div className="v2-card p-4 bg-gradient-to-br from-sky-500/10 to-indigo-500/10">
                <div className="flex justify-between gap-4">
                   <div className="flex-1">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">ROAS</span>
+                    <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">ROAS</span>
                     <div className="text-2xl font-black text-white mt-1">{metrics.roas.toFixed(2)}</div>
-                    <div className="text-[9px] text-sky-400 font-medium">广告产出比</div>
+                    <div className="text-[11px] text-sky-400 font-medium">广告产出比</div>
                   </div>
                   <div className="w-px h-12 bg-white/10 mt-2" />
                   <div className="flex-1">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">CVR</span>
+                    <span className="text-xs text-slate-500 uppercase font-bold tracking-wider">CVR</span>
                     <div className="text-2xl font-black text-white mt-1">{metrics.conversionRate.toFixed(2)}%</div>
-                    <div className="text-[9px] text-indigo-400 font-medium">全店转化率</div>
+                    <div className="text-[11px] text-indigo-400 font-medium">全店转化率</div>
                   </div>
                </div>
             </div>
@@ -491,15 +491,15 @@ export default function DataDashboard() {
             <div className="space-y-2 flex-1">
               <div className="p-2 bg-amber-500/5 border border-amber-500/10 rounded-lg flex gap-2">
                 <AlertCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[9px] text-slate-400 leading-tight">ML-X89 库存紧急：仅剩 12 件。</p>
+                <p className="text-[11px] text-slate-400 leading-tight">ML-X89 库存紧急：仅剩 12 件。</p>
               </div>
               <div className="p-2 bg-rose-500/5 border border-rose-500/10 rounded-lg flex gap-2">
                 <AlertCircle className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
-                <p className="text-[9px] text-slate-400 leading-tight">今日广告 ACOS (45%) 偏高。</p>
+                <p className="text-[11px] text-slate-400 leading-tight">今日广告 ACOS (45%) 偏高。</p>
               </div>
               <div className="p-2 bg-sky-500/5 border border-sky-500/10 rounded-lg flex gap-2">
                 <Activity className="w-3 h-3 text-sky-400 shrink-0 mt-0.5" />
-                <p className="text-[9px] text-slate-400 leading-tight">转化率对比昨日下降 1.2%。</p>
+                <p className="text-[11px] text-slate-400 leading-tight">转化率对比昨日下降 1.2%。</p>
               </div>
             </div>
           </div>

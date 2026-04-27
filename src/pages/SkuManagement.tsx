@@ -359,7 +359,11 @@ export default function SkuManagement() {
                         <td className="v2-table-td text-sky-400 font-mono">${item.priceMXN}</td>
                         <td className="v2-table-td text-slate-300 font-mono">{listedInv}</td>
                         <td className="v2-table-td text-purple-400 font-mono">{replenishInv > 0 ? `+${replenishInv}` : '-'}</td>
-                        <td className="v2-table-td font-bold text-emerald-400 bg-emerald-500/10 rounded px-2 py-0.5 inline-block min-w-[40px] text-center">{currentInv}</td>
+                        <td className="v2-table-td">
+                          <div className="font-bold text-emerald-400 bg-emerald-500/10 rounded px-2.5 py-1 inline-flex items-center justify-center min-w-[40px] text-xs">
+                            {currentInv}
+                          </div>
+                        </td>
                         <td className="v2-table-td text-slate-500">{item.listedDate}</td>
                         <td className="v2-table-td text-right">
                           <div className="flex justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
@@ -386,10 +390,10 @@ export default function SkuManagement() {
                                 <div className="p-5">
                                   <div className="v2-card bg-slate-800/30 p-4 border-slate-800">
                                     <div className="flex items-center justify-between mb-3">
-                                      <h4 className="text-[11px] font-bold text-slate-300 flex items-center">
+                                      <h4 className="text-xs font-bold text-slate-300 flex items-center">
                                         <TrendingUp className="w-3.5 h-3.5 mr-1.5 text-indigo-400" /> 
                                         销量引擎追踪看板 
-                                        <span className="ml-2 text-[9px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">基于左侧【数据清洗】模块同步分析</span>
+                                        <span className="ml-2 text-[11px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">基于左侧【数据清洗】模块同步分析</span>
                                       </h4>
                                     </div>
                                     
@@ -439,12 +443,12 @@ export default function SkuManagement() {
                                             <tbody className="divide-y divide-slate-800/50">
                                               {/* 顶部总计汇总行 */}
                                               <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
-                                                <td className="px-3 py-2.5 text-sky-300 text-left text-[11px] font-bold">全局汇总</td>
+                                                <td className="px-3 py-2.5 text-sky-300 text-left text-xs font-bold">全局汇总</td>
                                                 <td className="px-3 py-2.5 text-purple-400 font-mono">
                                                   {(totalVisits as any) > 0 ? (totalVisits as any).toLocaleString() : '-'}
                                                 </td>
                                                 <td className="px-3 py-2.5 text-emerald-400">
-                                                  总 {totalUnitsCount} 件 <span className="text-cyan-400 text-[9px] ml-1">(广告单 {totalAdUnits} / 自然单 {totalOrganicUnits})</span>
+                                                  总 {totalUnitsCount} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {totalAdUnits} / 自然单 {totalOrganicUnits})</span>
                                                 </td>
                                                 <td className="px-3 py-2.5 text-yellow-400 font-mono">
                                                   {(totalVisits as any) > 0 ? `${overallOrganicRate}%` : '-'}
@@ -475,15 +479,15 @@ export default function SkuManagement() {
                                                     key={rIdx} 
                                                     className="v2-table-tr text-center"
                                                   >
-                                                    <td className="px-3 py-2 text-slate-400 text-left text-[11px]">
+                                                    <td className="px-3 py-2 text-slate-400 text-left text-xs">
                                                       {row.date}
                                                     </td>
                                                     <td className="px-3 py-2 font-bold text-purple-400 font-mono">
                                                       {visitInfo ? visitInfo.uniqueVisits.toLocaleString() : '-'}
                                                     </td>
                                                     <td className="px-3 py-2">
-                                                      <div className={`px-2 py-0.5 rounded inline-block text-[11px] ${row.salesCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-600'}`}>
-                                                        总 {totalUnits} 件 <span className="text-cyan-400 text-[9px] ml-1">(广告单 {adUnits} / 自然单 {organicUnits})</span>
+                                                      <div className={`px-2 py-0.5 rounded inline-block text-xs ${row.salesCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-600'}`}>
+                                                        总 {totalUnits} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {adUnits} / 自然单 {organicUnits})</span>
                                                       </div>
                                                     </td>
                                                     <td className="px-3 py-2 font-bold font-mono">
@@ -521,10 +525,10 @@ export default function SkuManagement() {
                                   {/* Operation Actions Nested Panel */}
                                   <div className="v2-card bg-slate-800/30 p-4 mt-4 border-slate-800">
                                     <div className="flex items-center justify-between mb-3">
-                                      <h4 className="text-[11px] font-bold text-slate-300 flex items-center">
+                                      <h4 className="text-xs font-bold text-slate-300 flex items-center">
                                         <Activity className="w-3.5 h-3.5 mr-1.5 text-orange-400" /> 
                                         运营动作与策略跟踪
-                                        <span className="ml-2 text-[9px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">全局【运营动作】同步</span>
+                                        <span className="ml-2 text-[11px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">全局【运营动作】同步</span>
                                       </h4>
                                     </div>
                                     
@@ -564,13 +568,13 @@ export default function SkuManagement() {
                                                                   op.actionType === 'Stock' ? '库存' : '其他';
                                                 return (
                                                   <tr key={oIdx} className="v2-table-tr">
-                                                    <td className="px-3 py-2 text-slate-400 text-[11px]">{op.date}</td>
+                                                    <td className="px-3 py-2 text-slate-400 text-xs">{op.date}</td>
                                                     <td className="px-3 py-2">
-                                                      <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${getCategoryColor(displayType)}`}>
+                                                      <span className={`px-1.5 py-0.5 rounded border text-[11px] font-bold ${getCategoryColor(displayType)}`}>
                                                         {displayType}
                                                       </span>
                                                     </td>
-                                                    <td className="px-3 py-2 text-slate-500 whitespace-normal min-w-[280px] text-[11px]">
+                                                    <td className="px-3 py-2 text-slate-500 whitespace-normal min-w-[280px] text-xs">
                                                       {op.description || op.action}
                                                     </td>
                                                   </tr>
@@ -628,21 +632,21 @@ export default function SkuManagement() {
               <form onSubmit={saveSku} className="p-5 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">SKU</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">SKU</label>
                     <input required type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="v2-input" placeholder="例如: MILY-A01" />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">上架时间</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">上架时间</label>
                     <input required type="date" name="listedDate" value={formData.listedDate} onChange={handleInputChange} className="v2-input" />
                   </div>
                   
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">产品名称</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">产品名称</label>
                     <input required type="text" name="productName" value={formData.productName} onChange={handleInputChange} className="v2-input" placeholder="输入完整的商品标题" />
                   </div>
 
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">图片 URL (网络地址)</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">图片 URL (网络地址)</label>
                     <div className="flex gap-3 items-start">
                       <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleInputChange} className="v2-input flex-1" placeholder="https://example.com/image.png" />
                       {formData.imageUrl && (
@@ -654,22 +658,22 @@ export default function SkuManagement() {
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">成本 (RMB)</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">成本 (RMB)</label>
                     <input required type="number" step="0.01" name="costRMB" value={formData.costRMB} onChange={handleInputChange} className="v2-input" placeholder="0.00" />
                   </div>
 
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">售价 (MXN)</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">售价 (MXN)</label>
                     <input required type="number" step="0.01" name="priceMXN" value={formData.priceMXN} onChange={handleInputChange} className="v2-input" placeholder="0.00" />
                   </div>
 
                   <div className="col-span-2 grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">上架库存</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">上架库存</label>
                       <input required type="number" name="inventory" value={formData.inventory} onChange={handleInputChange} className="v2-input" placeholder="库房库存" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">补货库存 (在途/采购)</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">补货库存 (在途/采购)</label>
                       <input type="number" name="replenishInventory" value={formData.replenishInventory || ''} onChange={handleInputChange} className="v2-input" placeholder="0" />
                     </div>
                   </div>

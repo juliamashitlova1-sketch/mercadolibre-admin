@@ -12,7 +12,7 @@ import { getMexicoDateString } from '../lib/time';
 const REASONS = ['送仓差异', '货代丢失', '退货无法二次利用'] as const;
 
 export default function CargoDamagePage() {
-  const { skuData } = useOutletContext<{ skuData: SKUStats[] }>();
+  const { skuData, managedSkus } = useOutletContext<{ skuData: SKUStats[], managedSkus: any[] }>();
   const [data, setData] = useState<CargoDamage[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -96,11 +96,12 @@ export default function CargoDamagePage() {
   };
 
   const handleSkuSelect = (sku: string) => {
-    const selected = skuData.find(s => s.sku === sku);
+    const selectedManaged = managedSkus.find(s => s.sku === sku);
+    const selectedStats = skuData.find(s => s.sku === sku);
     setCurrentRecord({
       ...currentRecord,
       sku: sku,
-      skuName: selected?.skuName || ''
+      skuName: selectedManaged?.name || selectedStats?.skuName || ''
     });
   };
 
@@ -145,7 +146,7 @@ export default function CargoDamagePage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">货损日期</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">货损日期</Label>
                 <Input 
                   type="date" 
                   value={currentRecord.date} 
@@ -154,22 +155,23 @@ export default function CargoDamagePage() {
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">选择 SKU</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">选择 SKU</Label>
                 <Select value={currentRecord.sku} onValueChange={handleSkuSelect}>
                   <SelectTrigger className="v2-input">
                     <SelectValue placeholder="选择 SKU" />
                   </SelectTrigger>
                   <SelectContent>
-                    {skuData.map(s => (
+                    {managedSkus.map(s => (
                       <SelectItem key={s.sku} value={s.sku}>
                         <span className="font-bold">{s.sku}</span>
+                        <span className="ml-2 text-xs text-slate-500 italic">({s.name})</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">货损数量</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">货损数量</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -179,7 +181,7 @@ export default function CargoDamagePage() {
                 />
               </div>
               <div className="space-y-1.5 min-w-0">
-                <Label className="text-[10px] font-bold text-slate-500 uppercase">单件货值 (CNY)</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase">单件货值 (CNY)</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -194,13 +196,13 @@ export default function CargoDamagePage() {
               </div>
             </div>
             <div className="mt-4 space-y-1.5">
-               <Label className="text-[10px] font-bold text-slate-500 uppercase">原因分类</Label>
+               <Label className="text-xs font-bold text-slate-500 uppercase">原因分类</Label>
                <div className="flex flex-wrap gap-2">
                   {REASONS.map(r => (
                     <button
                       key={r}
                       onClick={() => setCurrentRecord({...currentRecord, reason: r})}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                         currentRecord.reason === r 
                         ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' 
                         : 'bg-slate-800/10 border-slate-800 text-slate-500'
@@ -276,7 +278,7 @@ export default function CargoDamagePage() {
                     <td className="v2-table-td">
                        <div className="flex flex-col">
                          <span className="text-rose-400 font-bold">{record.sku}</span>
-                         <span className="text-[9px] text-slate-500 truncate max-w-[150px]">{record.skuName}</span>
+                         <span className="text-[11px] text-slate-500 truncate max-w-[150px]">{record.skuName}</span>
                        </div>
                     </td>
                     <td className="v2-table-td text-white font-mono font-bold">{record.quantity}</td>

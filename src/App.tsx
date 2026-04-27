@@ -13,6 +13,7 @@ import CargoDamage from './pages/CargoDamage';
 import DataDashboard from './pages/DataDashboard';
 import DataCleaning from './pages/DataCleaning';
 import SkuVisitCleaning from './pages/SkuVisitCleaning';
+import SkuAdCleaning from './pages/SkuAdCleaning';
 import SkuManagement from './pages/SkuManagement';
 
 import DataEntry from './components/DataEntry';
@@ -84,7 +85,7 @@ export default function App() {
 function AppContent() {
   const uiVersion = 'v2';
 
-  const { skuData, allSkuData, refreshSkuData } = useSkuData();
+  const { skuData, allSkuData, managedSkus, refreshSkuData } = useSkuData();
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
   const { operationLogs, refreshLogs } = useOperationLogs();
@@ -101,6 +102,7 @@ function AppContent() {
   const contextValue = {
     skuData,
     allSkuData,
+    managedSkus,
     dailyData,
     claims,
     operationLogs,
@@ -174,6 +176,7 @@ function AppContent() {
             <Route path="/data-cleaning" element={<Navigate to="/data-cleaning/orders" replace />} />
             <Route path="/data-cleaning/orders" element={<DataCleaning />} />
             <Route path="/data-cleaning/visits" element={<SkuVisitCleaning />} />
+            <Route path="/data-cleaning/ads" element={<SkuAdCleaning />} />
             <Route path="/sku-management" element={<SkuManagement />} />
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
@@ -202,9 +205,9 @@ function AppContent() {
       </Routes>
 
       <DataEntry open={isEntryOpen} onOpenChange={setIsEntryOpen} skuData={skuData} onSuccess={() => console.log('Data saved')} />
-      <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} mode={skuEntryMode} onSuccess={() => refreshSkuData()} />
+      <SKUEntry open={isSkuEntryOpen} onOpenChange={setIsSkuEntryOpen} sku={selectedSku} mode={skuEntryMode} managedSkus={managedSkus} onSuccess={() => refreshSkuData()} />
       <ClaimEntry open={isClaimEntryOpen} onOpenChange={setIsClaimEntryOpen} claim={selectedClaim} onSuccess={() => console.log('Claim updated')} />
-      <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} skuData={skuData} onSuccess={() => { refreshLogs(); console.log('Operation log saved'); }} />
+      <OperationEntry open={isOperationEntryOpen} onOpenChange={setIsOperationEntryOpen} managedSkus={managedSkus} onSuccess={() => { refreshLogs(); console.log('Operation log saved'); }} />
     </>
   );
 }

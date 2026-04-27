@@ -175,7 +175,7 @@ export default function SkuVisitCleaning() {
 
   return (
     <div className="flex-1 overflow-y-auto min-h-screen py-6 px-4 bg-transparent custom-scrollbar">
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="max-w-[1600px] mx-auto space-y-4">
         {/* Header Compact */}
         <header className="flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md">
           <div className="flex items-center space-x-3">
@@ -186,7 +186,7 @@ export default function SkuVisitCleaning() {
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-100 tracking-tight">
                 各 SKU 访问数据清洗
               </h1>
-              <p className="text-[11px] text-slate-400 mt-0.5">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
+              <p className="text-xs text-slate-400 mt-0.5">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
             </div>
           </div>
           
@@ -235,7 +235,7 @@ export default function SkuVisitCleaning() {
             </h2>
           </div>
           <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-            <table className="w-full text-[11px] text-left">
+            <table className="w-full text-xs text-left">
               <thead className="bg-slate-800/90 text-slate-400 tracking-wider sticky top-0 z-10 font-medium">
                 <tr>
                   <th className="px-4 py-2 border-b border-slate-700/50">日期</th>

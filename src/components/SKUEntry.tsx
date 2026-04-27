@@ -13,6 +13,7 @@ import { SKUStats } from '../types';
 import { useEffect, useState } from 'react';
 import { getMexicoDateString } from '../lib/time';
 import { USD_TO_MXN } from '../constants';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const skuSchema = z.object({
   sku: z.string().min(1),
@@ -59,9 +60,10 @@ interface SKUEntryProps {
   sku?: SKUStats | null;
   onSuccess: () => void;
   mode?: 'full' | 'competitors';
+  managedSkus?: any[];
 }
 
-export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'full' }: SKUEntryProps) {
+export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'full', managedSkus = [] }: SKUEntryProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { isSubmitting }, reset, setValue, control, watch } = useForm({
     resolver: zodResolver(skuSchema),
@@ -298,7 +300,29 @@ export default function SKUEntry({ open, onOpenChange, sku, onSuccess, mode = 'f
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="sku" className="text-xs text-slate-700">SKU 编码</Label>
-                <Input {...register('sku')} disabled={!!sku} className="h-8 text-xs font-bold disabled:opacity-100 disabled:bg-slate-50 disabled:text-slate-900" placeholder="A16" />
+                {sku ? (
+                  <Input {...register('sku')} disabled className="h-8 text-xs font-bold disabled:opacity-100 disabled:bg-slate-50 disabled:text-slate-900" />
+                ) : (
+                  <Select onValueChange={(val: string) => {
+                    setValue('sku', val);
+                    const s = managedSkus.find(m => m.sku === val);
+                    if (s) {
+                      setValue('skuName', s.name || '');
+                      if (s.imageUrl) setValue('imageUrl', s.imageUrl);
+                    }
+                  }}>
+                    <SelectTrigger className="h-8 text-xs font-bold border-slate-300">
+                      <SelectValue placeholder="选择 SKU" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {managedSkus.map(s => (
+                        <SelectItem key={s.sku} value={s.sku}>
+                          {s.sku} ({s.name})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="skuName" className="text-xs text-slate-700">SKU 中文名称</Label>

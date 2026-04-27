@@ -25,12 +25,12 @@ const operationSchema = z.object({
 interface OperationEntryProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  skuData: SKUStats[];
+  managedSkus: any[];
   initialSku?: string;
   onSuccess: () => void;
 }
 
-export default function OperationEntry({ open, onOpenChange, skuData, initialSku, onSuccess }: OperationEntryProps) {
+export default function OperationEntry({ open, onOpenChange, managedSkus, initialSku, onSuccess }: OperationEntryProps) {
   const { register, handleSubmit, control, formState: { isSubmitting, errors }, reset } = useForm({
     resolver: zodResolver(operationSchema),
     defaultValues: {
@@ -84,9 +84,9 @@ export default function OperationEntry({ open, onOpenChange, skuData, initialSku
                       <SelectValue placeholder="选择SKU" />
                     </SelectTrigger>
                     <SelectContent>
-                      {skuData.map((s) => (
+                      {managedSkus.map((s) => (
                         <SelectItem key={s.sku} value={s.sku}>
-                          {s.sku} {s.skuName ? `(${s.skuName})` : ''}
+                          {s.sku} {s.name ? `(${s.name})` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>

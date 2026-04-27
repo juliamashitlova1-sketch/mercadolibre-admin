@@ -197,16 +197,16 @@ export default function MainLayout({
   , []);
 
   return (
-    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-slate-50 text-slate-700' : 'bg-transparent'}`}>
+    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-transparent text-slate-300' : 'bg-transparent'}`}>
       {/* Full App Background Image (V2 Only) with Enhanced Light Feel */}
       {uiVersion === 'v2' && (
         <>
           <div 
-            className="fixed inset-0 pointer-events-none z-0 bg-slate-50" 
+            className="fixed inset-0 pointer-events-none z-0 bg-[#020617]" 
           />
           {/* Subtle Ambient Glow */}
           <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute -top-[5%] left-[25%] w-[50%] h-[40%] bg-sky-200/40 blur-[120px] rounded-full animate-pulse-slow" />
+            <div className="absolute -top-[5%] left-[25%] w-[50%] h-[40%] bg-sky-500/[0.07] blur-[120px] rounded-full animate-pulse-slow" />
           </div>
           
           <div 
@@ -215,9 +215,9 @@ export default function MainLayout({
               backgroundImage: `url(${appBg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: 0.04, 
-              mixBlendMode: 'multiply',
-              filter: 'grayscale(1) brightness(0.9) contrast(1.1)'
+              opacity: 0.12, 
+              mixBlendMode: 'screen',
+              filter: 'grayscale(1) brightness(0.7) contrast(1.1)'
             }} 
           />
 
@@ -225,8 +225,8 @@ export default function MainLayout({
           <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" 
                style={{ backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-          {/* Bottom vignette for focus - adjusted for light theme */}
-          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60" />
+          {/* Bottom vignette for focus */}
+          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent opacity-80" />
         </>
       )}
 
@@ -240,7 +240,7 @@ export default function MainLayout({
             <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
               <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
-            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
+            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
               MILYFLY
             </div>
           </div>
@@ -259,10 +259,10 @@ export default function MainLayout({
                       w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 group
                       ${isActive 
                         ? (uiVersion === 'v2' 
-                            ? 'bg-sky-500/10 text-sky-700 border border-sky-200 shadow-sm' 
+                            ? 'bg-sky-500/10 text-white border border-sky-500/30' 
                             : 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm') 
                         : (uiVersion === 'v2'
-                            ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100/50 border border-transparent'
+                            ? 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent')}
                     `}
                   >
@@ -288,8 +288,8 @@ export default function MainLayout({
                             className={() => `
                               flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
                               ${isChildActive 
-                                ? (uiVersion === 'v2' ? 'text-sky-600 bg-sky-500/5' : 'text-sky-600 bg-sky-50/50') 
-                                : (uiVersion === 'v2' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
+                                ? (uiVersion === 'v2' ? 'text-sky-400 bg-sky-500/10' : 'text-sky-600 bg-sky-50/50') 
+                                : (uiVersion === 'v2' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
                             `}
                           >
                             <ChildIcon className="w-3.5 h-3.5" />
@@ -317,7 +317,7 @@ export default function MainLayout({
                   JC
                 </div>
                 <div>
-                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>Juan Carlos</div>
+                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>Juan Carlos</div>
                   <div className="text-xs text-slate-500 font-mono mt-1">v1.0.6</div>
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function MainLayout({
           <div className={`flex items-center gap-2 font-medium text-sm ${uiVersion === 'v2' ? 'text-slate-400' : 'text-slate-500'}`}>
             <span className="hidden sm:inline">MILYFLY 控制台</span>
             <span className="text-slate-300 hidden sm:inline">/</span>
-            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
+            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
               {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace(/-/g, ' ')}
             </span>
             <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.5</span>
@@ -401,45 +401,45 @@ export default function MainLayout({
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-[320px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-3 w-[320px] bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
-                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                      <div className="p-4 border-b border-slate-800 bg-slate-800/50">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <History className="w-4 h-4 text-sky-500" />
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                            <History className="w-4 h-4 text-sky-400" />
                             应用更新日志
                           </h3>
-                          <span className="text-[10px] bg-sky-500/10 text-sky-600 px-2 py-0.5 rounded-full font-mono font-bold">LIVE v1.0.5</span>
+                          <span className="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full font-mono font-bold">LIVE v1.0.5</span>
                         </div>
                       </div>
                       <div className="max-h-[400px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
                         {appUpdates.length === 0 ? (
-                          <div className="py-8 text-center text-slate-400 text-xs">暂无更新记录</div>
+                          <div className="py-8 text-center text-slate-500 text-xs">暂无更新记录</div>
                         ) : (
                           appUpdates.map((update) => (
-                            <div key={update.id} className="p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                            <div key={update.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group">
                               <div className="flex items-center justify-between mb-1">
                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                  update.type === 'feature' ? 'bg-emerald-50 text-emerald-600' :
-                                  update.type === 'fix' ? 'bg-rose-50 text-rose-600' :
-                                  'bg-sky-50 text-sky-600'
+                                  update.type === 'feature' ? 'bg-emerald-500/10 text-emerald-400' :
+                                  update.type === 'fix' ? 'bg-rose-500/10 text-rose-400' :
+                                  'bg-sky-500/10 text-sky-400'
                                 }`}>
                                   {update.version}
                                 </span>
-                                <span className="text-[9px] text-slate-400 font-mono">
+                                <span className="text-[9px] text-slate-500 font-mono">
                                   {new Date(update.created_at).toLocaleDateString()}
                                 </span>
                               </div>
-                              <h4 className="text-xs font-bold text-slate-800 mb-1 group-hover:text-sky-600 transition-colors">{update.title}</h4>
-                              <p className="text-[11px] text-slate-500 leading-relaxed whitespace-pre-line border-l-2 border-slate-100 pl-2 ml-1">
+                              <h4 className="text-xs font-bold text-slate-200 mb-1 group-hover:text-white transition-colors">{update.title}</h4>
+                              <p className="text-[11px] text-slate-400 leading-relaxed whitespace-pre-line border-l-2 border-slate-800 pl-2 ml-1">
                                 {update.content}
                               </p>
                             </div>
                           ))
                         )}
                       </div>
-                      <div className="p-3 bg-slate-50/50 border-t border-slate-100 text-center">
-                        <p className="text-[10px] text-slate-400">MILYFLY 云端同步系统已就绪</p>
+                      <div className="p-3 bg-slate-800/30 border-t border-slate-800 text-center">
+                        <p className="text-[10px] text-slate-500">MILYFLY 云端同步系统已就绪</p>
                       </div>
                     </motion.div>
                   </>

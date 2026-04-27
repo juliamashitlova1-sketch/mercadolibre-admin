@@ -73,7 +73,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-transparent text-slate-800 font-sans">
+      <div className="min-h-screen bg-transparent text-white font-sans">
         <AppErrorBoundary>
           <AppContent />
         </AppErrorBoundary>

@@ -29,14 +29,14 @@
 
 /* --- V2 Theme Global Overrides --- */
 .theme-v2 {
-  --v2-bg: #020617;
-  --v2-glass: rgba(15, 23, 42, 0.95);
-  --v2-border: rgba(51, 65, 85, 0.5);
-  --v2-accent: #0ea5e9;
-  --v2-accent-glow: rgba(14, 165, 233, 0.3);
+  --v2-bg: #030712;
+  --v2-glass: rgba(17, 24, 39, 0.96);
+  --v2-border: rgba(31, 41, 55, 0.5);
+  --v2-accent: #38bdf8;
+  --v2-accent-glow: rgba(56, 189, 248, 0.15);
   
-  background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%);
-  color: #f1f5f9;
+  background: radial-gradient(circle at 50% -20%, #111827 0%, #030712 100%);
+  color: #e2e8f0;
 }
 
 .theme-v2 .glass-panel {

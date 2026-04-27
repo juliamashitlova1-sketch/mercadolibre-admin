@@ -86,51 +86,6 @@ function CurrencyConverter() {
   );
 }
 
-/* ===== Particle Connection Lines Component ===== */
-function ParticleField({ particles }: { particles: {top:string;left:string;size:number;delay:string;color:string}[] }) {
-  return (
-    <>
-      {particles.map((p, i) => (
-        <div key={i}
-          className="rounded-full animate-float-particle"
-          style={{
-            top: p.top,
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            boxShadow: `0 0 ${p.size * 4}px ${p.color}, 0 0 ${p.size * 8}px ${p.color}40`,
-            animationDelay: p.delay,
-            opacity: 0.5,
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-/* ===== Right-side Particle Field (positioned by right) ===== */
-function ParticleFieldRight({ particles }: { particles: {top:string;right:string;size:number;delay:string;color:string}[] }) {
-  return (
-    <>
-      {particles.map((p, i) => (
-        <div key={i}
-          className="rounded-full animate-float-particle"
-          style={{
-            top: p.top,
-            right: p.right,
-            width: p.size,
-            height: p.size,
-            backgroundColor: p.color,
-            boxShadow: `0 0 ${p.size * 4}px ${p.color}, 0 0 ${p.size * 8}px ${p.color}40`,
-            animationDelay: p.delay,
-            opacity: 0.45,
-          }}
-        />
-      ))}
-    </>
-  );
-}
 
 interface LayoutProps {
   skuData: SKUStats[];
@@ -249,11 +204,9 @@ export default function MainLayout({
           <div 
             className="fixed inset-0 pointer-events-none z-0 bg-[#020617]" 
           />
-          {/* Ambient Glows for "Light Feel" */}
+          {/* Subtle Ambient Glow */}
           <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-sky-500/20 blur-[120px] rounded-full animate-pulse-slow" />
-            <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] bg-indigo-500/20 blur-[100px] rounded-full animate-pulse-slow" style={{ animationDelay: '1s' }} />
-            <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-blue-600/20 blur-[130px] rounded-full animate-pulse-slow" style={{ animationDelay: '2s' }} />
+            <div className="absolute -top-[5%] left-[25%] w-[50%] h-[40%] bg-sky-500/[0.07] blur-[120px] rounded-full animate-pulse-slow" />
           </div>
           
           <div 
@@ -262,15 +215,18 @@ export default function MainLayout({
               backgroundImage: `url(${appBg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: 0.7, 
+              opacity: 0.12, 
               mixBlendMode: 'screen',
-              filter: 'brightness(1.3) contrast(1.4) saturate(1.4)'
+              filter: 'grayscale(1) brightness(0.7) contrast(1.1)'
             }} 
           />
 
+          {/* Minimalist Grid Texture Overlay */}
+          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" 
+               style={{ backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-          {/* Center soft glow to illuminate the content area */}
-          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-sky-500/5 via-transparent to-indigo-500/5" />
+          {/* Bottom vignette for focus */}
+          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent opacity-80" />
         </>
       )}
 

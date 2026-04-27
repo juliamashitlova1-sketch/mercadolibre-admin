@@ -27,37 +27,37 @@
   }
 }
 
-/* --- V2 Theme Global Overrides --- */
+/* --- V2 Theme Global Overrides (White Glassmorphism) --- */
 .theme-v2 {
-  --v2-bg: #030712;
-  --v2-glass: rgba(17, 24, 39, 0.96);
-  --v2-border: rgba(31, 41, 55, 0.5);
-  --v2-accent: #38bdf8;
-  --v2-accent-glow: rgba(56, 189, 248, 0.15);
+  --v2-bg: #f8fafc;
+  --v2-glass: rgba(255, 255, 255, 0.7);
+  --v2-border: rgba(226, 232, 240, 0.8);
+  --v2-accent: #0ea5e9;
+  --v2-accent-glow: rgba(14, 165, 233, 0.1);
   
-  background: radial-gradient(circle at 50% -20%, #111827 0%, #030712 100%);
-  color: #e2e8f0;
+  background: #f8fafc;
+  color: #1e293b;
 }
 
 .theme-v2 .glass-panel {
-  @apply bg-[#0f172a]/95 backdrop-blur-3xl border-slate-700/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  @apply bg-white/70 backdrop-blur-3xl border-white shadow-[0_8px_32px_0_rgba(0,0,0,0.03)];
 }
 
 .theme-v2 .glass-card {
-  @apply bg-[#111827]/90 backdrop-blur-2xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-sky-500/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.2)] transition-all duration-500;
+  @apply bg-white/60 backdrop-blur-2xl border border-white/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:border-sky-400/30 hover:shadow-[0_10px_30px_rgba(14,165,233,0.08)] transition-all duration-500;
 }
 
 .theme-v2 .stat-card {
-  @apply bg-[#111827]/90 backdrop-blur-2xl border border-white/5 shadow-2xl hover:border-sky-400/30 transition-all duration-500;
+  @apply bg-white/80 backdrop-blur-2xl border border-white/40 shadow-sm hover:border-sky-400/30 transition-all duration-500;
 }
 
 
 .theme-v2 .stat-value {
-  @apply text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)];
+  @apply text-slate-900 drop-shadow-none font-extrabold;
 }
 
 .theme-v2 .stat-label {
-  @apply text-slate-400;
+  @apply text-slate-500;
 }
 
 /* --- End of V2 Overrides --- */
@@ -129,7 +129,7 @@
   }
 
   .v2-header {
-    @apply flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md;
+    @apply flex justify-between items-center bg-white/60 backdrop-blur-md p-4 rounded-xl border border-white shadow-sm;
   }
 
   .v2-header-icon {
@@ -137,36 +137,36 @@
   }
 
   .v2-header-title {
-    @apply text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-100 tracking-tight;
+    @apply text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-sky-700 tracking-tight;
   }
 
   .v2-header-subtitle {
-    @apply text-xs text-slate-400 mt-0.5;
+    @apply text-xs text-slate-500 mt-0.5;
   }
 
   .v2-card {
-    @apply bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl overflow-hidden shadow-lg;
+    @apply bg-white/60 backdrop-blur border border-white rounded-xl overflow-hidden shadow-sm;
   }
 
   .v2-card-header {
-    @apply px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-800/30;
+    @apply px-4 py-2 border-b border-slate-100 flex items-center justify-between bg-slate-50/50;
   }
 
   .v2-card-title {
-    @apply text-sm font-semibold text-white tracking-tight flex items-center gap-2;
+    @apply text-sm font-semibold text-slate-800 tracking-tight flex items-center gap-2;
   }
 
   .v2-table-wrapper {
     @apply overflow-x-auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+    scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
   }
 
   .v2-table-wrapper::-webkit-scrollbar {
     height: 6px;
   }
   .v2-table-wrapper::-webkit-scrollbar-thumb {
-    background-color: rgba(100, 116, 139, 0.4);
+    background-color: rgba(203, 213, 225, 0.5);
     border-radius: 3px;
   }
 
@@ -175,19 +175,19 @@
   }
 
   .v2-table-thead {
-    @apply bg-slate-800/90 text-slate-400 tracking-wider sticky top-0 z-10 font-medium;
+    @apply bg-slate-50/80 text-slate-500 tracking-wider sticky top-0 z-10 font-semibold;
   }
 
   .v2-table-th {
-    @apply px-4 py-2 border-b border-slate-700/50;
+    @apply px-4 py-2 border-b border-slate-100;
   }
 
   .v2-table-tr {
-    @apply hover:bg-slate-800/80 transition-colors;
+    @apply hover:bg-slate-50/60 transition-colors border-b border-slate-50/50;
   }
 
   .v2-table-td {
-    @apply px-4 py-1.5;
+    @apply px-4 py-1.5 text-slate-700;
   }
 
   .v2-stats-grid {
@@ -195,19 +195,19 @@
   }
 
   .v2-stat-card {
-    @apply backdrop-blur border p-3 rounded-xl flex flex-col justify-center shadow-sm;
+    @apply bg-white/70 backdrop-blur border border-white p-3 rounded-xl flex flex-col justify-center shadow-sm;
   }
 
   .v2-stat-label {
-    @apply text-xs font-medium tracking-wide uppercase mb-0.5;
+    @apply text-slate-500 text-xs font-bold tracking-wide uppercase mb-0.5;
   }
 
   .v2-stat-value {
-    @apply text-xl font-bold font-mono leading-tight;
+    @apply text-slate-900 text-xl font-extrabold font-mono leading-tight;
   }
 
   .v2-input {
-    @apply w-full bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-sky-500/50 focus:bg-slate-800/80 focus:ring-1 focus:ring-sky-500/20 transition-all;
+    @apply w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-500/5 transition-all;
   }
   
   .status-pill {

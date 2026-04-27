@@ -235,23 +235,23 @@ export default function SkuAdCleaning() {
     <div className="flex-1 overflow-y-auto min-h-screen py-6 px-4 bg-transparent custom-scrollbar">
       <div className="max-w-[1600px] mx-auto space-y-6">
         {/* Header Section */}
-        <header className="flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-5 rounded-2xl border border-slate-800 shadow-xl">
+        <header className="v2-header">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-sky-500 to-blue-700 rounded-xl shadow-lg ring-1 ring-white/20">
-              <TrendingUp className="w-6 h-6 text-white" />
+            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-blue-600">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-200 tracking-tight">
+              <h1 className="v2-header-title">
                 各 SKU 每日广告数据清洗
               </h1>
-              <p className="text-xs text-slate-200 mt-1">手动填写 SKU 广告消耗、效果及设定值</p>
+              <p className="v2-header-subtitle">手动填写 SKU 广告消耗、效果及设定值</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
              <div className="flex flex-col items-end">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">最后同步时间</span>
-                <span className="text-xs text-sky-400 font-mono font-bold">刚刚</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">最后同步时间</span>
+                <span className="text-[10px] text-sky-600 font-mono font-bold">刚刚</span>
              </div>
           </div>
         </header>
@@ -260,9 +260,9 @@ export default function SkuAdCleaning() {
         {/* Input Form Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-4">
-            <Card className="bg-slate-900/60 border-slate-800 overflow-hidden shadow-2xl relative">
+            <Card className="v2-card border-none shadow-xl relative">
               <div className="absolute top-0 left-0 w-1 h-full bg-sky-500" />
-              <CardHeader className="pb-2">
+              <CardHeader className="v2-card-header">
                 <CardTitle className="text-sm font-bold flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <PlusCircle className="w-4 h-4 text-sky-400" />
@@ -279,22 +279,22 @@ export default function SkuAdCleaning() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-200 uppercase font-bold">选择日期</Label>
+                      <Label className="text-[10px] text-slate-500 uppercase font-bold">选择日期</Label>
                       <Input 
                         type="date" 
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
                         disabled={!!editingRecord}
-                        className="bg-slate-950/50 border-slate-800 text-xs h-9 [color-scheme:dark] disabled:opacity-50"
+                        className="bg-slate-50 border-slate-200 text-xs h-9 [color-scheme:light] disabled:opacity-50"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-200 uppercase font-bold">选择 SKU</Label>
+                      <Label className="text-[10px] text-slate-500 uppercase font-bold">选择 SKU</Label>
                       <Select value={selectedSku} onValueChange={setSelectedSku} disabled={!!editingRecord}>
-                        <SelectTrigger className="bg-slate-950/50 border-slate-800 text-xs h-9 disabled:opacity-50">
+                        <SelectTrigger className="bg-slate-50 border-slate-200 text-xs h-9 disabled:opacity-50">
                           <SelectValue placeholder="搜索/选择 SKU" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                        <SelectContent className="bg-white border-slate-200 text-slate-800">
                           {managedSkus.map(s => (
                             <SelectItem key={s.sku} value={s.sku} className="text-xs focus:bg-sky-500/20 focus:text-sky-200">
                               {s.sku} - {s.name}
@@ -318,7 +318,7 @@ export default function SkuAdCleaning() {
                         placeholder="0.00" 
                         value={formData.targetRoas}
                         onChange={handleInputChange}
-                        className="bg-slate-950/50 border-emerald-900/30 text-xs h-9 font-bold text-emerald-400" 
+                        className="bg-emerald-50/50 border-emerald-100 text-xs h-9 font-bold text-emerald-600" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -331,50 +331,50 @@ export default function SkuAdCleaning() {
                         placeholder="0.00"
                         value={formData.budgetUsd}
                         onChange={handleInputChange}
-                        className="bg-slate-950/50 border-sky-900/30 text-xs h-9 font-bold text-sky-400" 
+                        className="bg-sky-50/50 border-sky-100 text-xs h-9 font-bold text-sky-600" 
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-slate-200 font-bold">今日曝光量 (Impressions)</Label>
+                    <Label className="text-[10px] text-slate-500 font-bold uppercase">今日曝光量 (Impressions)</Label>
                     <Input 
                       name="impressions" 
                       type="number"
                       placeholder="0"
                       value={formData.impressions}
                       onChange={handleInputChange}
-                      className="bg-slate-950/50 border-slate-800 text-xs h-9" 
+                      className="v2-input" 
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-200 font-bold">点击数 (Clicks)</Label>
+                      <Label className="text-[10px] text-slate-500 font-bold uppercase">点击数 (Clicks)</Label>
                       <Input 
                         name="clicks" 
                         type="number"
                         placeholder="0"
                         value={formData.clicks}
                         onChange={handleInputChange}
-                        className="bg-slate-950/50 border-slate-800 text-xs h-9" 
+                        className="v2-input" 
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-slate-200 font-bold">广告成交件数</Label>
+                      <Label className="text-[10px] text-slate-500 font-bold uppercase">广告成交件数</Label>
                       <Input 
                         name="adOrders" 
                         type="number"
                         placeholder="0"
                         value={formData.adOrders}
                         onChange={handleInputChange}
-                        className="bg-slate-950/50 border-slate-800 text-xs h-9" 
+                        className="v2-input" 
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-rose-400 font-bold uppercase tracking-widest">广告总消耗 (USD)</Label>
+                    <Label className="text-[10px] text-rose-500 font-bold uppercase tracking-widest">广告总消耗 (USD)</Label>
                     <Input 
                       name="adSpend" 
                       type="number"
@@ -382,7 +382,7 @@ export default function SkuAdCleaning() {
                       placeholder="0.00"
                       value={formData.adSpend}
                       onChange={handleInputChange}
-                      className="bg-slate-950/50 border-rose-900/30 text-xs h-9 font-bold text-rose-400" 
+                      className="bg-rose-50/50 border-rose-100 text-xs h-9 font-bold text-rose-600" 
                     />
                   </div>
                 </div>
@@ -391,19 +391,19 @@ export default function SkuAdCleaning() {
                   <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-100 transition-opacity">
                     <BarChart3 className="w-4 h-4 text-sky-400" />
                   </div>
-                  <h4 className="text-xs text-slate-300 font-black uppercase tracking-wider mb-2">实时预估数据</h4>
+                  <h4 className="text-[10px] text-slate-400 font-black uppercase tracking-wider mb-2">实时预估数据</h4>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-300 font-bold">CPC</span>
-                      <span className="text-sm font-mono font-black text-white">${calculations.cpc}</span>
+                      <span className="text-[9px] text-slate-400 font-bold">CPC</span>
+                      <span className="text-sm font-mono font-black text-slate-800">${calculations.cpc}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-300 font-bold">ROAS</span>
-                      <span className="text-sm font-mono font-black text-emerald-400">{calculations.roas}</span>
+                      <span className="text-[9px] text-slate-400 font-bold">ROAS</span>
+                      <span className="text-sm font-mono font-black text-emerald-600">{calculations.roas}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-300 font-bold">ACOS</span>
-                      <span className="text-sm font-mono font-black text-rose-400">{calculations.acos}%</span>
+                      <span className="text-[9px] text-slate-400 font-bold">ACOS</span>
+                      <span className="text-sm font-mono font-black text-rose-600">{calculations.acos}%</span>
                     </div>
                   </div>
                 </div>
@@ -446,8 +446,8 @@ export default function SkuAdCleaning() {
           </div>
 
           <div className="lg:col-span-8">
-            <Card className="bg-slate-900/40 border-slate-800 backdrop-blur-md overflow-hidden shadow-sm h-full">
-              <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+            <Card className="v2-card shadow-sm h-full">
+              <div className="v2-card-header">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-sky-400" />
                   历史广告数据记录
@@ -459,8 +459,8 @@ export default function SkuAdCleaning() {
                 </div>
               </div>
               <div className="overflow-x-auto max-h-[500px] custom-scrollbar">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-800/40 text-slate-300 text-xs font-black uppercase tracking-widest sticky top-0 z-10 backdrop-blur-xl border-b border-slate-800">
+                <table className="v2-table">
+                  <thead className="v2-table-thead">
                     <tr>
                       <th className="px-4 py-3">日期</th>
                       <th className="px-4 py-3">SKU</th>
@@ -494,43 +494,43 @@ export default function SkuAdCleaning() {
                         const actualAcos = revUsd > 0 ? ((row.adSpend / revUsd) * 100).toFixed(1) : '0.0';
 
                         return (
-                          <tr key={row.id} className="text-[11px] hover:bg-white/5 transition-colors group">
-                            <td className="px-4 py-3 font-mono text-slate-400">{row.date}</td>
-                            <td className="px-4 py-3 font-black text-white">{row.sku}</td>
-                            <td className="px-4 py-3 text-right">
+                          <tr key={row.id} className="v2-table-tr">
+                            <td className="v2-table-td font-mono font-medium">{row.date}</td>
+                            <td className="v2-table-td font-black">{row.sku}</td>
+                            <td className="v2-table-td text-right">
                               <div className="flex flex-col">
-                                <span className="text-emerald-400 font-bold">{row.targetRoas}</span>
+                                <span className="text-emerald-600 font-bold">{row.targetRoas}</span>
                                 <span className="text-[10px] text-slate-400">${row.budgetUsd}</span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-right font-black text-rose-400">${row.adSpend.toFixed(2)}</td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="v2-table-td text-right font-black text-rose-600">${row.adSpend.toFixed(2)}</td>
+                            <td className="v2-table-td text-right">
                               <div className="flex flex-col">
-                                <span className="text-white font-bold">{row.clicks}</span>
+                                <span className="text-slate-800 font-bold">{row.clicks}</span>
                                 <span className="text-[10px] text-slate-400 font-mono">{row.impressions}</span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-right font-black text-sky-400">{row.adOrders}</td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="v2-table-td text-right font-black text-sky-600">{row.adOrders}</td>
+                            <td className="v2-table-td text-right">
                               <div className="flex flex-col">
-                                <span className={`font-black ${Number(actualRoas) >= row.targetRoas ? 'text-emerald-400' : 'text-slate-400'}`}>
+                                <span className={`font-black ${Number(actualRoas) >= row.targetRoas ? 'text-emerald-600' : 'text-slate-400'}`}>
                                   {actualRoas}
                                 </span>
                                 <span className="text-[10px] text-slate-400">{actualAcos}%</span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-right">
+                            <td className="v2-table-td text-right">
                               <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button 
                                   onClick={() => openEdit(row)}
-                                  className="p-1 hover:bg-sky-500/20 text-slate-400 hover:text-sky-400 rounded transition-colors"
+                                  className="p-1 hover:bg-sky-50 text-slate-400 hover:text-sky-600 rounded transition-colors"
                                   title="修改"
                                 >
                                   <Save className="w-3.5 h-3.5" />
                                 </button>
                                 <button 
                                   onClick={() => handleDelete(row.id)}
-                                  className="p-1 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded transition-colors"
+                                  className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition-colors"
                                   title="删除"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -552,8 +552,8 @@ export default function SkuAdCleaning() {
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.1); }
       `}</style>
     </div>
   );

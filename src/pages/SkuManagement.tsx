@@ -655,43 +655,43 @@ export default function SkuManagement() {
                                                 </div>
                                               </div>
 
-                                              <div className="v2-table-wrapper">
-                                                <table className="v2-table">
-                                                  <thead className="bg-slate-50 text-slate-500 tracking-wider sticky top-0 z-10 font-medium text-[10px]">
+                                              <div className="v2-table-wrapper max-h-[420px] overflow-y-auto custom-scrollbar relative border border-slate-100 rounded-lg shadow-inner">
+                                                <table className="v2-table border-separate border-spacing-0">
+                                                  <thead className="bg-slate-50/95 backdrop-blur-sm text-slate-500 tracking-wider sticky top-0 z-30 font-medium text-[10px] shadow-sm">
                                                     <tr>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-left">业务日期</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-center">流量 (访客 / 广点 / 广曝)</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-center">销量拆分 (总 / 广告 / 自然)</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-center">广告数据 (消耗/ROAS)</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-center">转化率 (自然/全店)</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-center">取消/退货 (件)</th>
-                                                      <th className="px-3 py-2 border-b border-slate-100 text-right text-red-500">绝对亏损 (USD)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-left">业务日期</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-center">流量 (访客 / 广点 / 广曝)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-center">销量拆分 (总 / 广告 / 自然)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-center">广告数据 (消耗/ROAS)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-center">转化率 (自然/全店)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-center">取消/退货 (件)</th>
+                                                      <th className="px-3 py-2.5 border-b border-slate-100 text-right text-red-500">绝对亏损 (USD)</th>
                                                     </tr>
                                                   </thead>
-                                                  <tbody className="divide-y divide-slate-100 text-[10px]">
-                                                    {/* 顶部总计汇总行 */}
-                                                    <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
-                                                      <td className="px-3 py-2.5 text-sky-600 text-left text-xs font-bold">全局汇总</td>
+                                                  <tbody className="text-[10px]">
+                                                    {/* 顶部总计汇总行 - Sticky directly below header */}
+                                                    <tr className="sticky top-[31px] z-20 bg-sky-50 shadow-sm font-bold text-center v2-table-tr border-b border-sky-100">
+                                                      <td className="px-3 py-3 text-sky-600 text-left text-xs font-bold">全局汇总数据</td>
                                                       <td className="px-3 py-2.5 text-slate-400 font-mono text-[11px]">
                                                         <span className="text-purple-600">{totalVisits.toLocaleString()}</span>
-                                                        <span className="mx-1 text-slate-100">/</span>
+                                                        <span className="mx-1 text-slate-300">/</span>
                                                         <span className="text-sky-600">{totalClicks.toLocaleString()}</span>
-                                                        <span className="mx-1 text-slate-100">/</span>
-                                                        <span className="text-slate-300">{totalImps.toLocaleString()}</span>
+                                                        <span className="mx-1 text-slate-300">/</span>
+                                                        <span className="text-slate-500">{totalImps.toLocaleString()}</span>
                                                       </td>
-                                                      <td className="px-3 py-2.5 text-emerald-600 text-xs text-center">
+                                                      <td className="px-3 py-2.5 text-emerald-600 text-xs text-center border-l border-sky-100">
                                                         总 {totalUnitsCount} <span className="text-slate-300">/</span> <span className="text-cyan-600">{totalAdUnits}</span> <span className="text-slate-300">/</span> <span className="text-indigo-600">{totalOrganicUnits}</span>
                                                       </td>
-                                                      <td className="px-3 py-2.5 text-rose-600 font-mono text-[11px]">
+                                                      <td className="px-3 py-2.5 text-rose-600 font-mono text-[11px] border-l border-sky-100">
                                                         Spend: ${totalAdSpend.toFixed(2)}
                                                       </td>
-                                                      <td className="px-3 py-2.5 text-yellow-600 font-mono text-[11px]">
+                                                      <td className="px-3 py-2.5 text-yellow-600 font-mono text-[11px] border-l border-sky-100">
                                                         Conv: {((totalUnitsCount / (totalVisits || 1)) * 100).toFixed(2)}%
                                                       </td>
-                                                      <td className="px-3 py-2.5 text-slate-500 text-[11px]">
+                                                      <td className="px-3 py-2.5 text-slate-500 text-[11px] border-l border-sky-100">
                                                         -{totalCancelUnits} / -{totalRefundUnits}
                                                       </td>
-                                                      <td className="px-3 py-2.5 text-right font-mono text-red-500">
+                                                      <td className="px-3 py-2.5 text-right font-mono text-red-500 border-l border-sky-100">
                                                         {totalLossUsd > 0 ? 
                                                           <span className="flex items-center justify-end"><AlertTriangle className="w-3 h-3 mr-1" />- ${totalLossUsd.toFixed(2)}</span> : 
                                                           <span className="text-slate-200">-</span>
@@ -720,60 +720,60 @@ export default function SkuManagement() {
                                                       return (
                                                         <tr 
                                                           key={rIdx} 
-                                                          className="v2-table-tr text-center"
+                                                          className="v2-table-tr text-center group/daily transition-all hover:bg-white hover:shadow-[inset_0_0_0_1px_rgba(14,165,233,0.1),0_4px_12px_-4px_rgba(0,0,0,0.05)]"
                                                         >
-                                                          <td className="px-3 py-2 text-slate-400 text-left text-[10px] font-mono">
+                                                          <td className="px-3 py-3 text-slate-500 text-left text-[10px] font-mono border-b border-slate-50">
                                                             {row.date}
                                                           </td>
-                                                          <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">
-                                                            <span className="text-purple-400" title="自然访客 (独立访问量)">{visits || '-'}</span>
-                                                            <span className="mx-1 text-slate-800">/</span>
-                                                            <span className="text-sky-400" title="广告点击">{clicks || '-'}</span>
-                                                            <span className="mx-1 text-slate-800">/</span>
-                                                            <span className="text-slate-600" title="广告曝光">{imps || '-'}</span>
+                                                          <td className="px-3 py-3 text-slate-500 font-mono text-[10px] border-b border-slate-50 border-l border-slate-50/50">
+                                                            <span className="text-purple-500 font-semibold" title="自然访客 (独立访问量)">{visits || '-'}</span>
+                                                            <span className="mx-1 text-slate-300">/</span>
+                                                            <span className="text-sky-500" title="广告点击">{clicks || '-'}</span>
+                                                            <span className="mx-1 text-slate-300">/</span>
+                                                            <span className="text-slate-400" title="广告曝光">{imps || '-'}</span>
                                                           </td>
-                                                          <td className="px-3 py-2">
-                                                            <div className={`px-2 py-0.5 rounded inline-flex items-center gap-1.5 text-[10px] ${row.salesCount > 0 ? 'bg-slate-800/80 border border-slate-700/50' : 'text-slate-600'}`}>
-                                                              <span className="text-emerald-400 font-bold">{totalUnits}</span>
-                                                              <span className="text-slate-700">|</span>
-                                                              <span className="text-cyan-400">{adUnits}</span>
-                                                              <span className="text-slate-700">|</span>
-                                                              <span className="text-indigo-400">{organicUnits}</span>
+                                                          <td className="px-3 py-3 border-b border-slate-50 border-l border-slate-50/50">
+                                                            <div className={`px-2.5 py-1 rounded-md inline-flex items-center gap-2 text-[10px] ${row.salesCount > 0 ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-50 text-slate-400'}`}>
+                                                              <span className="text-emerald-400 font-black">{totalUnits}</span>
+                                                              <span className="text-slate-700 opacity-50">|</span>
+                                                              <span className="text-cyan-400 font-bold">{adUnits}</span>
+                                                              <span className="text-slate-700 opacity-50">|</span>
+                                                              <span className="text-indigo-400 font-bold">{organicUnits}</span>
                                                             </div>
                                                           </td>
-                                                          <td className="px-3 py-2 font-mono text-[10px]">
+                                                          <td className="px-3 py-3 font-mono text-[10px] border-b border-slate-50 border-l border-slate-50/50">
                                                             {adSpend > 0 ? (
                                                               <div className="flex flex-col items-center">
-                                                                <span className="text-rose-400">${adSpend.toFixed(1)}</span>
-                                                                <span className="text-[9px] text-slate-600">ROAS: {roas}</span>
+                                                                <span className="text-rose-500 font-bold">${adSpend.toFixed(1)}</span>
+                                                                <span className="text-[9px] text-slate-400 font-medium">ROAS: {roas}</span>
                                                               </div>
-                                                            ) : '-'}
+                                                            ) : <span className="text-slate-300">-</span>}
                                                           </td>
-                                                          <td className="px-3 py-2 font-mono text-[10px]">
+                                                          <td className="px-3 py-3 font-mono text-[10px] border-b border-slate-50 border-l border-slate-50/50">
                                                             {visitInfo && visitInfo.uniqueVisits > 0 ? (
                                                               <div className="flex flex-col items-center">
-                                                                <span className={organicCVR >= 3 ? 'text-emerald-400' : 'text-slate-500'}>
-                                                                  Org: {organicCVR}%
+                                                                <span className={`font-bold ${organicCVR >= 3 ? 'text-emerald-500' : 'text-slate-600'}`}>
+                                                                  {organicCVR}%
                                                                 </span>
-                                                                <span className="text-[9px] text-slate-600">All: {totalCVR}%</span>
+                                                                <span className="text-[9px] text-slate-400">Total: {totalCVR}%</span>
                                                               </div>
-                                                            ) : '-'}
+                                                            ) : <span className="text-slate-300">-</span>}
                                                           </td>
-                                                          <td className="px-3 py-2 text-slate-500 text-[10px]">
+                                                          <td className="px-3 py-3 text-slate-500 text-[10px] border-b border-slate-50 border-l border-slate-50/50">
                                                             {row.cancelUnits > 0 || row.refundUnits > 0 ? (
-                                                              <span className={row.refundUnits > 0 ? 'text-orange-400' : ''}>
+                                                              <span className={`font-medium ${row.refundUnits > 0 ? 'text-orange-500' : 'text-slate-600'}`}>
                                                                 -{row.cancelUnits || 0} / -{row.refundUnits || 0}
                                                               </span>
-                                                            ) : '-'}
+                                                            ) : <span className="text-slate-300">-</span>}
                                                           </td>
-                                                          <td className="px-3 py-2 text-right font-mono text-[10px]">
+                                                          <td className="px-3 py-3 text-right font-mono text-[10px] border-b border-slate-50 border-l border-slate-50/50">
                                                             {row.lossUsd > 0 ? (
-                                                              <span className="text-red-400 flex items-center justify-end">
+                                                              <span className="text-red-500 font-bold flex items-center justify-end bg-red-50/50 px-2 py-0.5 rounded">
                                                                 <AlertTriangle className="w-2.5 h-2.5 mr-1" />
                                                                 -${row.lossUsd.toFixed(1)}
                                                               </span>
                                                             ) : (
-                                                              <span className="text-slate-800">-</span>
+                                                              <span className="text-slate-200">-</span>
                                                             )}
                                                           </td>
                                                         </tr>

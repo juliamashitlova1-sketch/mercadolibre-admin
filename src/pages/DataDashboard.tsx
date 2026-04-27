@@ -333,28 +333,28 @@ export default function DataDashboard() {
   return (
     <div className="v2-page-container custom-scrollbar">
       <div className="v2-inner-container">
-        {/* Header */}
-        <header className="v2-header relative overflow-hidden group">
+        {/* Header - Compact version */}
+        <header className="v2-header relative overflow-hidden group py-3">
           <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-sky-500/10 to-transparent pointer-events-none" />
           <div className="flex items-center space-x-3 relative z-10">
-            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-indigo-600">
-               <Zap className="w-5 h-5" />
+            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5">
+               <Zap className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="v2-header-title">MILYFLY 深度运营中心</h1>
-              <p className="v2-header-subtitle">实时聚合全渠道销售、广告与流量资产分析看板</p>
+              <h1 className="v2-header-title text-base">MILYFLY 深度运营中心</h1>
+              <p className="v2-header-subtitle">全渠道业务数据深度聚合看板</p>
             </div>
           </div>
           <div className="flex gap-2 relative z-10">
-            <div className="px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700/50 flex items-center gap-2">
-               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[10px] font-bold text-slate-300">系统连接正常</span>
+             <div className="px-2 py-1 bg-sky-500/10 rounded-md border border-sky-500/20 flex items-center gap-1.5">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+               <span className="text-[9px] font-bold text-sky-400">SYNC LIVE</span>
             </div>
           </div>
         </header>
 
-        {/* 核心指标行 */}
-        <div className="v2-stats-grid">
+        {/* 第一行：精简核心指标 (4个) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard 
             title="总销售额 (MXN)" 
             value={`$${metrics.totalSalesMxn.toLocaleString()}`} 
@@ -363,48 +363,46 @@ export default function DataDashboard() {
             color="sky" 
           />
           <StatCard 
-            title="广告支出" 
-            value={`$${metrics.totalAdSpend.toLocaleString()}`} 
-            subValue={`${metrics.totalVisits.toLocaleString()} 总访问量`} 
-            icon={Target} 
-            color="indigo" 
-          />
-          <StatCard 
-            title="广告 ROAS" 
-            value={metrics.roas.toFixed(2)} 
-            subValue={`点击价格: $${(metrics.totalAdSpend / (metrics.totalVisits || 1)).toFixed(2)}`} 
-            icon={TrendingUp} 
-            color="purple" 
-          />
-          <StatCard 
-            title="预估净利润" 
-            value={`¥${(metrics.totalProfitMxn * 6.8).toLocaleString()}`} 
-            subValue="汇率: 6.8 (估算)" 
-            icon={ShoppingBag} 
-            color="emerald" 
-          />
-          <StatCard 
             title="有效订单" 
             value={metrics.totalOrders} 
-            subValue={`件单价: $${(metrics.totalSalesMxn / (metrics.totalUnits || 1)).toFixed(1)}`} 
+            subValue={`客单价: $${(metrics.totalSalesMxn / (metrics.totalOrders || 1)).toFixed(1)}`} 
             icon={Receipt} 
             color="amber" 
           />
           <StatCard 
-            title="全盘转化率" 
-            value={`${metrics.conversionRate.toFixed(2)}%`} 
-            subValue="单位转化效率" 
-            icon={Users} 
-            color="rose" 
+            title="广告支出" 
+            value={`$${metrics.totalAdSpend.toLocaleString()}`} 
+            subValue={`曝光次数: ${metrics.totalVisits.toLocaleString()}`} 
+            icon={Target} 
+            color="indigo" 
+          />
+          <StatCard 
+            title="预估净利润" 
+            value={`¥${(metrics.totalProfitMxn * 6.8).toLocaleString()}`} 
+            subValue="汇率参考: 6.8" 
+            icon={ShoppingBag} 
+            color="emerald" 
           />
         </div>
 
-        {/* 中间图表行 */}
+        {/* 第二行：主分析视图 (8:4 布局) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 广告趋势 */}
-          <div className="lg:col-span-6 v2-card p-4">
-            <h3 className="v2-card-title mb-4 px-2"><BarChart3 className="w-4 h-4 text-sky-400" /> 广告投放与产出趋势 (30D)</h3>
-            <div className="h-[260px] w-full">
+          {/* 广告/销售混合趋势 */}
+          <div className="lg:col-span-8 v2-card p-4">
+            <div className="flex justify-between items-center mb-4 px-2">
+              <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与投放效率趋势 (30D)</h3>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-sky-500" />
+                  <span className="text-[9px] text-slate-400">销售核心</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                  <span className="text-[9px] text-slate-400">广告支点</span>
+                </div>
+              </div>
+            </div>
+            <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
@@ -413,7 +411,7 @@ export default function DataDashboard() {
                       <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.05}/>
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
@@ -424,176 +422,152 @@ export default function DataDashboard() {
                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px' }}
                     itemStyle={{ fontSize: '11px' }}
                   />
-                  <Legend iconType="circle" />
-                  <Area type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" />
-                  <Area type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" />
+                  <Area type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
+                  <Area type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* 成本结构 */}
-          <div className="lg:col-span-3 v2-card p-4">
-            <h3 className="v2-card-title mb-4 px-2"><PieChart className="w-4 h-4 text-indigo-400" /> 销售额成本结构</h3>
-            <div className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <RePieChart>
-                  <Pie
-                    data={costStructure}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {costStructure.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </RePieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-1.5 mt-2 px-2">
-                 {costStructure.map((item, i) => (
-                   <div key={i} className="flex items-center justify-between">
-                     <div className="flex items-center gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                       <span className="text-[9px] text-slate-400">{item.name}</span>
+          {/* 转化与效率洞察 */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            {/* 成本结构饼图 */}
+            <div className="v2-card p-4 flex-1">
+              <h3 className="v2-card-title mb-2 px-2"><PieChart className="w-4 h-4 text-indigo-400" /> 成本结构</h3>
+              <div className="h-[140px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RePieChart>
+                    <Pie
+                      data={costStructure}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={55}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {costStructure.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-2">
+                   {costStructure.slice(0, 4).map((item, i) => (
+                     <div key={i} className="flex items-center justify-between">
+                       <span className="text-[9px] text-slate-500">{item.name}</span>
+                       <span className="text-[9px] font-mono font-bold text-slate-300">{item.value.toFixed(0)}%</span>
                      </div>
-                     <span className="text-[9px] font-mono font-bold text-slate-200">{item.value.toFixed(1)}%</span>
-                   </div>
-                 ))}
+                   ))}
+              </div>
             </div>
-          </div>
 
-          {/* 业务预警 */}
-          <div className="lg:col-span-3 v2-card p-4">
-            <h3 className="v2-card-title mb-4 px-2"><AlertCircle className="w-4 h-4 text-rose-400" /> 待处理运营预警</h3>
-            <div className="space-y-3 px-2">
-              <div className="p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-lg flex gap-3">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-[10px] font-bold text-amber-400">库存预警: ML-X89</h4>
-                  <p className="text-[9px] text-slate-500 mt-1">当前库存仅剩 12 件，预计消耗 3 天。</p>
-                </div>
-              </div>
-              <div className="p-2.5 bg-rose-500/5 border border-rose-500/20 rounded-lg flex gap-3">
-                <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-[10px] font-bold text-rose-400">广告支出超标</h4>
-                  <p className="text-[9px] text-slate-500 mt-1">今日 ACOS 达到 45%，显著高于平均水平。</p>
-                </div>
-              </div>
-              <div className="p-2.5 bg-sky-500/5 border border-sky-500/20 rounded-lg flex gap-3">
-                <Activity className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-[10px] font-bold text-sky-400">转化率下滑</h4>
-                  <p className="text-[9px] text-slate-500 mt-1">对比昨日，店铺整体转化率下降了 1.2%。</p>
-                </div>
-              </div>
+            {/* 关键效率卡片 (ROAS & Conv) */}
+            <div className="v2-card p-4 bg-gradient-to-br from-sky-500/10 to-indigo-500/10">
+               <div className="flex justify-between gap-4">
+                  <div className="flex-1">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">ROAS</span>
+                    <div className="text-2xl font-black text-white mt-1">{metrics.roas.toFixed(2)}</div>
+                    <div className="text-[9px] text-sky-400 font-medium">广告产出比</div>
+                  </div>
+                  <div className="w-px h-12 bg-white/10 mt-2" />
+                  <div className="flex-1">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">CVR</span>
+                    <div className="text-2xl font-black text-white mt-1">{metrics.conversionRate.toFixed(2)}%</div>
+                    <div className="text-[9px] text-indigo-400 font-medium">全店转化率</div>
+                  </div>
+               </div>
             </div>
           </div>
         </div>
 
-        {/* 下方地图区域 */}
-        <div className="v2-card">
-          <div className="v2-card-header">
-            <h2 className="v2-card-title">
-              <Map className="w-4 h-4 text-sky-400" />
-              墨西哥订单地理分布热力图
-            </h2>
-            <div className="flex items-center gap-4">
-              <span className="text-[10px] text-slate-500">已匹配 {stateOrderCounts.matched} 单</span>
-              <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-sky-500" style={{ width: `${(stateOrderCounts.matched/metrics.totalOrders)*100}%` }} />
+        {/* 第三行：地理与告警 (3:6:3 布局) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* 业务预警 (lg:3) */}
+          <div className="lg:col-span-3 v2-card p-4 flex flex-col">
+            <h3 className="v2-card-title mb-4 px-2"><AlertCircle className="w-4 h-4 text-rose-400" /> 智能预警</h3>
+            <div className="space-y-2 flex-1">
+              <div className="p-2 bg-amber-500/5 border border-amber-500/10 rounded-lg flex gap-2">
+                <AlertCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-slate-400 leading-tight">ML-X89 库存紧急：仅剩 12 件。</p>
+              </div>
+              <div className="p-2 bg-rose-500/5 border border-rose-500/10 rounded-lg flex gap-2">
+                <AlertCircle className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-slate-400 leading-tight">今日广告 ACOS (45%) 偏高。</p>
+              </div>
+              <div className="p-2 bg-sky-500/5 border border-sky-500/10 rounded-lg flex gap-2">
+                <Activity className="w-3 h-3 text-sky-400 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-slate-400 leading-tight">转化率对比昨日下降 1.2%。</p>
               </div>
             </div>
           </div>
-          <div className="flex flex-col lg:flex-row divide-x divide-slate-800">
-            {/* 地图区域 */}
-            <div className="flex-1 p-6 flex items-center justify-center min-h-[450px]">
-                <svg
-                  viewBox="40 0 250 300"
-                  className="w-full max-w-[600px] h-auto"
-                >
-                  <defs>
-                    <radialGradient id="map-glow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.06" />
-                      <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-                    </radialGradient>
-                  </defs>
-                  <rect x="40" y="0" width="250" height="300" fill="url(#map-glow)" rx="8" />
 
-                  {Object.entries(STATE_PATHS).map(([stateName, pathD]) => {
-                    const count = stateOrderCounts.counts[stateName] || 0;
-                    const isHovered = hoveredState === stateName;
-                    const fillColor = getColorForCount(count, maxCount);
-                    const strokeColor = isHovered ? '#38bdf8' : 'rgba(148, 163, 184, 0.15)';
-                    const strokeWidth = isHovered ? 1.5 : 0.5;
-
-                    return (
-                      <g key={stateName}>
+          {/* 墨西哥地理分布 (lg:6) - 精简尺寸版 */}
+          <div className="lg:col-span-6 v2-card overflow-hidden">
+            <div className="v2-card-header !py-2">
+              <h2 className="v2-card-title">
+                <Map className="w-3.5 h-3.5 text-sky-400" />
+                墨西哥订单分布 (Mini Map)
+              </h2>
+              <span className="text-[9px] text-slate-500">已匹配 {stateOrderCounts.matched} 单 / {((stateOrderCounts.matched/metrics.totalOrders)*100).toFixed(0)}%</span>
+            </div>
+            <div className="flex items-center justify-center p-2 bg-slate-900/20">
+                <div className="w-[380px] h-[240px] relative">
+                  <svg viewBox="40 0 250 300" className="w-full h-full">
+                    {Object.entries(STATE_PATHS).map(([stateName, pathD]) => {
+                      const count = stateOrderCounts.counts[stateName] || 0;
+                      const isHovered = hoveredState === stateName;
+                      const fillColor = getColorForCount(count, maxCount);
+                      return (
                         <path
+                          key={stateName}
                           d={pathD}
                           fill={fillColor}
-                          stroke={strokeColor}
-                          strokeWidth={strokeWidth}
+                          stroke={isHovered ? '#38bdf8' : 'rgba(148, 163, 184, 0.1)'}
+                          strokeWidth={isHovered ? 1.5 : 0.5}
                           style={{ transition: 'all 0.2s ease', cursor: 'pointer' }}
                           onMouseEnter={() => setHoveredState(stateName)}
                           onMouseLeave={() => setHoveredState(null)}
                         />
-                        {count > 0 && STATE_CENTERS[stateName] && (
-                          <text
-                            x={STATE_CENTERS[stateName][0]}
-                            y={STATE_CENTERS[stateName][1]}
-                            fill={isHovered ? "white" : "rgba(255,255,255,0.4)"}
-                            fontSize="5"
-                            fontWeight="bold"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            style={{ pointerEvents: 'none' }}
-                          >
-                            {STATE_ABBR[stateName]}
-                          </text>
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-            </div>
-
-            {/* 列表区域 */}
-            <div className="lg:w-[300px] bg-slate-900/30 flex flex-col">
-              <div className="p-3 border-b border-slate-800">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Top 销售区域</span>
-              </div>
-              <div className="flex-1 overflow-y-auto max-h-[450px] custom-scrollbar">
-                {sortedStates.map(([stateName, count]) => (
-                  <div 
-                    key={stateName}
-                    className={`px-4 py-2.5 flex items-center justify-between border-b border-slate-800/30 transition-colors ${hoveredState === stateName ? 'bg-sky-500/10' : ''}`}
-                    onMouseEnter={() => setHoveredState(stateName)}
-                    onMouseLeave={() => setHoveredState(null)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-slate-200">{stateName}</span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                         <div className="h-1 w-16 bg-slate-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-sky-500" style={{ width: `${(count/maxCount)*100}%` }} />
-                         </div>
-                         <span className="text-[8px] text-slate-500">{((count/metrics.totalOrders)*100).toFixed(1)}%</span>
-                      </div>
+                      );
+                    })}
+                  </svg>
+                  {hoveredState && (
+                    <div className="absolute top-2 right-2 px-2 py-1 bg-slate-900/90 border border-slate-700 rounded text-[9px] shadow-xl z-20">
+                      <span className="text-sky-400 font-bold">{hoveredState}</span>: {stateOrderCounts.counts[hoveredState] || 0} 单
                     </div>
-                    <span className="text-xs font-mono font-black text-sky-400">{count}</span>
+                  )}
+                </div>
+            </div>
+          </div>
+
+          {/* Top 销售区域列表 (lg:3) */}
+          <div className="lg:col-span-3 v2-card flex flex-col">
+            <div className="p-3 border-b border-slate-800 flex justify-between items-center">
+              <span className="text-[10px] font-black text-slate-500 uppercase">Top 州排名</span>
+              <span className="text-[8px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">by count</span>
+            </div>
+            <div className="flex-1 overflow-y-auto max-h-[220px] custom-scrollbar scroll-smooth">
+              {sortedStates.slice(0, 8).map(([stateName, count], idx) => (
+                <div 
+                  key={stateName}
+                  className={`px-3 py-2 flex items-center justify-between border-b border-slate-800/30 transition-colors ${hoveredState === stateName ? 'bg-sky-500/10' : ''}`}
+                  onMouseEnter={() => setHoveredState(stateName)}
+                  onMouseLeave={() => setHoveredState(null)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold text-slate-600 w-3">{idx + 1}</span>
+                    <span className="text-[10px] font-bold text-slate-200">{STATE_ABBR[stateName] || stateName.slice(0, 3)}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-xs font-mono font-black text-sky-400">{count}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};

@@ -82,7 +82,8 @@ export default function App() {
 }
 
 function AppContent() {
-  const [uiVersion, setUiVersion] = useState<'v1' | 'v2'>('v2');
+  const uiVersion = 'v2';
+
   const { skuData, allSkuData, refreshSkuData } = useSkuData();
   const { dailyData } = useDailyStats();
   const { claims } = useClaims();
@@ -109,7 +110,7 @@ function AppContent() {
     fakeOrders,
     cargoDamage,
     uiVersion,
-    setUiVersion: () => {}, // Disable UI switching
+
     onOpenDataEntry: () => setIsEntryOpen(true),
     onAddClaim: () => {
       setSelectedClaim(null);
@@ -164,7 +165,6 @@ function AppContent() {
             cargoDamage={cargoDamage}
             operationLogs={operationLogs}
             uiVersion={uiVersion} 
-            onToggleUi={() => {}} 
             onAddSku={() => { setSelectedSku(null); setIsSkuEntryOpen(true); }} 
           />
         }>

@@ -11,6 +11,9 @@ import {
   Search, Bell, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
   CreditCard, PackageX
 } from 'lucide-react';
+import appBg from '../assets/app-bg.png';
+
+
 
 import { getMexicoTimeString } from '../lib/time';
 import DataExporter from '../components/DataExporter';
@@ -135,16 +138,18 @@ interface LayoutProps {
   fakeOrders: any[];
   cargoDamage: any[];
   operationLogs: any[];
-  uiVersion: 'v1' | 'v2';
-  onToggleUi: () => void;
+  uiVersion: 'v2';
   onAddSku: () => void;
 }
 
+
 export default function MainLayout({ 
   skuData, dailyData, fakeOrders, cargoDamage, operationLogs,
-  uiVersion, onToggleUi, onAddSku 
+  uiVersion, onAddSku 
 }: LayoutProps) {
+
   const [currentTime, setCurrentTime] = useState(getMexicoTimeString());
+
   const location = useLocation();
 
   useEffect(() => {
@@ -237,8 +242,42 @@ export default function MainLayout({
   , []);
 
   return (
-    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-[#020617] text-slate-300' : 'bg-transparent'}`}>
+    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-transparent text-slate-300' : 'bg-transparent'}`}>
+      {/* Full App Background Image (V2 Only) with Enhanced Light Feel */}
+      {uiVersion === 'v2' && (
+        <>
+          <div 
+            className="fixed inset-0 pointer-events-none z-0 bg-[#020617]" 
+          />
+          {/* Ambient Glows for "Light Feel" */}
+          <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-sky-500/20 blur-[120px] rounded-full animate-pulse-slow" />
+            <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] bg-indigo-500/20 blur-[100px] rounded-full animate-pulse-slow" style={{ animationDelay: '1s' }} />
+            <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-blue-600/20 blur-[130px] rounded-full animate-pulse-slow" style={{ animationDelay: '2s' }} />
+          </div>
+          
+          <div 
+            className="fixed inset-0 pointer-events-none z-0" 
+            style={{ 
+              backgroundImage: `url(${appBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.7, 
+              mixBlendMode: 'screen',
+              filter: 'brightness(1.3) contrast(1.4) saturate(1.4)'
+            }} 
+          />
+
+
+          {/* Center soft glow to illuminate the content area */}
+          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-sky-500/5 via-transparent to-indigo-500/5" />
+        </>
+      )}
+
+
+
       {/* Floating Sidebar */}
+
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
         <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
           <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-default group">
@@ -310,6 +349,8 @@ export default function MainLayout({
           </nav>
 
           <div className="p-4 mt-auto space-y-4">
+
+
             <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
               <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
                 <span>管理员</span>
@@ -454,280 +495,7 @@ export default function MainLayout({
 
         {/* Content Scroll Area */}
         <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-8 pb-10 custom-scrollbar relative">
-
-          {/* ============================================================ */}
-          
-          {/* ============================================================ */}
-          {/* === LEFT SIDE: 截图100%还原 - 发光3D立方体 + 光束 + 网格 + 粒子 === */}
-          {/* ============================================================ */}
-          <div className="pointer-events-none fixed left-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
-
-            {/* 背景深色渐变底色 */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a0e27] via-[#0d1333] to-[#0a1628]"/>
-
-            {/* 主3D发光立方体（截图核心元素） */}
-            <div className="absolute top-[18%] left-[20px]">
-              <svg width="180" height="200" viewBox="0 0 180 200" fill="none">
-                <defs>
-                  <linearGradient id="cube-edge" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#00e5ff"/>
-                    <stop offset="50%" stopColor="#00b4ff"/>
-                    <stop offset="100%" stopColor="#7c4dff"/>
-                  </linearGradient>
-                  <linearGradient id="cube-face-top" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.12"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0.04"/>
-                  </linearGradient>
-                  <linearGradient id="cube-face-left" x1="100%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#7c4dff" stopOpacity="0.08"/>
-                    <stop offset="100%" stopColor="#00e5ff" stopOpacity="0.02"/>
-                  </linearGradient>
-                  <linearGradient id="cube-face-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#00b4ff" stopOpacity="0.06"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0.02"/>
-                  </linearGradient>
-                  <linearGradient id="beam-grad" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.6"/>
-                    <stop offset="40%" stopColor="#00b4ff" stopOpacity="0.25"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0"/>
-                  </linearGradient>
-                  <filter id="cube-glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="6" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                  <filter id="beam-glow" x="-100%" y="-20%" width="300%" height="140%">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                </defs>
-
-                {/* 立方体本体 (isometric) */}
-                <g filter="url(#cube-glow)">
-                  <polygon points="90,10 160,48 90,86 20,48" stroke="url(#cube-edge)" strokeWidth="2" fill="url(#cube-face-top)"/>
-                  <polygon points="20,48 90,86 90,146 20,108" stroke="url(#cube-edge)" strokeWidth="1.5" fill="url(#cube-face-left)"/>
-                  <polygon points="90,86 160,48 160,108 90,146" stroke="url(#cube-edge)" strokeWidth="1.5" fill="url(#cube-face-right)"/>
-                  <line x1="90" y1="86" x2="90" y2="10" stroke="#00e5ff" strokeWidth="1.5" opacity="0.9"/>
-                  <line x1="90" y1="86" x2="20" y2="48" stroke="#00b4ff" strokeWidth="1.2" opacity="0.6"/>
-                  <line x1="90" y1="86" x2="160" y2="48" stroke="#7c4dff" strokeWidth="1.2" opacity="0.55"/>
-                </g>
-
-                {/* 中心节点发光点 */}
-                <circle cx="90" cy="86" r="5" fill="#ffffff" filter="url(#cube-glow)"/>
-                <circle cx="90" cy="86" r="14" fill="none" stroke="#00e5ff" strokeWidth="1" opacity="0.35" className="animate-ping-slow"/>
-
-                {/* 向下发射的光束 */}
-                <g filter="url(#beam-glow)">
-                  <polygon points="75,145 105,145 115,195 65,195" fill="url(#beam-grad)" opacity="0.7"/>
-                  <polygon points="30,108 45,118 38,170 15,155" fill="url(#beam-grad)" opacity="0.35"/>
-                  <polygon points="150,108 135,118 142,170 165,155" fill="url(#beam-grad)" opacity="0.35"/>
-                </g>
-
-                {/* 底部光斑/网格交汇点发光 */}
-                <ellipse cx="90" cy="192" rx="30" ry="8" fill="#00e5ff" opacity="0.12" filter="url(#cube-glow)"/>
-
-                {/* 顶面顶点高亮 */}
-                <circle cx="90" cy="10" r="3" fill="#00e5ff" opacity="0.9"/>
-                <circle cx="160" cy="48" r="2.5" fill="#7c4dff" opacity="0.8"/>
-                <circle cx="20" cy="48" r="2.5" fill="#00b4ff" opacity="0.85"/>
-              </svg>
-            </div>
-
-            {/* 透视网格地板（光束照射区域） */}
-            <div className="absolute top-[62%] left-[-10px] w-[280px] h-[150px]">
-              <svg width="280" height="150" viewBox="0 0 280 150" fill="none" className="opacity-[0.35]">
-                <defs>
-                  <linearGradient id="grid-floor" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.5"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0.05"/>
-                  </linearGradient>
-                </defs>
-                {[0.08, 0.16, 0.26, 0.38, 0.52, 0.68, 0.88].map((yRatio, i) => (
-                  <line key={'fh'+i} x1={140 - 130 * yRatio} y1={20 + yRatio * 110}
-                    x2={140 + 130 * yRatio} y2={20 + yRatio * 110}
-                    stroke="url(#grid-floor)" strokeWidth={i < 3 ? 1 : 0.6}/>
-                ))}
-                {[-1,-0.6,-0.25,0.05,0.32,0.58,0.82].map((xOff, i) => (
-                  <line key={'fv'+i} x1={140 + xOff * 140} y1="20"
-                    x2={140 + xOff * 80} y2="135"
-                    stroke="url(#grid-floor)" strokeWidth={Math.abs(xOff) < 0.3 ? 1 : 0.5}/>
-                ))}
-              </svg>
-            </div>
-
-            {/* 散布的粒子/星点 */}
-            {[
-              {top:'8%', left:'120px', size:2.5, color:'#00e5ff', delay:'0s'},
-              {top:'15%', left:'250px', size:2, color:'#7c4dff', delay:'1s'},
-              {top:'28%', left:'60px', size:3, color:'#00b4ff', delay:'0.5s'},
-              {top:'42%', left:'290px', size:2, color:'#00e5ff', delay:'2s'},
-              {top:'52%', left:'40px', size:2.5, color:'#c084fc', delay:'1.3s'},
-              {top:'66%', left:'270px', size:2, color:'#00b4ff', delay:'0.8s'},
-              {top:'78%', left:'100px', size:3, color:'#7c4dff', delay:'1.8s'},
-              {top:'88%', left:'240px', size:2, color:'#00e5ff', delay:'0.3s'},
-              {top:'96%', left:'50px', size:2.5, color:'#a78bfa', delay:'2.3s'},
-            ].map((p, i) => (
-              <div key={i} className="rounded-full animate-float-particle"
-                style={{
-                  top: p.top, left: p.left,
-                  width: p.size, height: p.size,
-                  backgroundColor: p.color,
-                  boxShadow: '0 0 '+p.size*4+'px '+p.color,
-                  animationDelay: p.delay,
-                  opacity: 0.65,
-                }}
-              />
-            ))}
-
-            {/* 几何装饰：小六边形 */}
-            <div className="absolute top-[5%] left:[5%]" style={{opacity: 0.4}}>
-              <svg width="36" height="42" viewBox="0 0 36 42" fill="none" className="animate-pulse-slow">
-                <polygon points="18,1 34,11 34,31 18,41 2,31 2,11" stroke="#00e5ff" strokeWidth="1" fill="rgba(0,229,255,0.04)"/>
-                <polygon points="18,10 26,15 26,27 18,32 10,27 10,15" stroke="#7c4dff" strokeWidth="0.6" fill="none" opacity="0.5"/>
-              </svg>
-            </div>
-
-            {/* 垂直光线条装饰 */}
-            <div className="absolute top-[5%] left:[3px] w-[2px] h-[92%] rounded-full overflow-hidden" style={{opacity: 0.3}}>
-              <div className="w-full h-[25%] bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-light-streak"/>
-            </div>
-          </div>
-
-          {/* ============================================================ */}
-          {/* === RIGHT SIDE: 截图100%还原 - 行星/光环/地面能量环/星空/AI智能运营 === */}
-          {/* ============================================================ */}
-          <div className="pointer-events-none fixed right-0 top-0 bottom-0 w-[280px] xl:w-[360px] hidden lg:block z-0" aria-hidden="true">
-
-            {/* 深空背景渐变 */}
-            <div className="absolute inset-0 bg-gradient-to-bl from-[#0d0a2e] via-[#0f1035] via-[#111836] to-[#0a1428]"/>
-
-            {/* 远景：山脉/地平线剪影 */}
-            <div className="absolute bottom-0 right-0 w-full h-[35%]">
-              <svg width="100%" height="100%" viewBox="0 0 360 130" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="mountain-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#1a1040" stopOpacity="0.9"/>
-                    <stop offset="100%" stopColor="#0a0e24" stopOpacity="1"/>
-                  </linearGradient>
-                </defs>
-                <path d="M0,130 L0,95 Q30,70 60,88 T130,78 T190,95 T260,72 T320,90 Q350,80 360,85 L360,130 Z" fill="url(#mountain-grad)"/>
-                <path d="M0,130 L0,105 Q40,88 80,100 T160,93 T230,108 T310,87 L360,98 L360,130 Z" fill="#080c1e" opacity="0.7"/>
-              </svg>
-            </div>
-
-            {/* 星场粒子 */}
-            {[
-              {top:'3%', right:'45px', size:1.5, delay:'0s'}, {top:'7%', right:'180px', size:1, delay:'0.8s'},
-              {top:'12%', right:'90px', size:2, delay:'0.3s'}, {top:'17%', right:'260px', size:1.5, delay:'1.5s'},
-              {top:'24%', right:'35px', size:1, delay:'2s'}, {top:'29%', right:'150px', size:1.8, delay:'0.6s'},
-              {top:'35%', right:'280px', size:1.2, delay:'1.2s'}, {top:'41%', right:'70px', size:1, delay:'0.4s'},
-              {top:'47%', right:'220px', size:1.5, delay:'1.8s'}, {top:'53%', right:'300px', size:1, delay:'0.9s'},
-              {top:'59%', right:'55px', size:1.3, delay:'2.3s'}, {top:'64%', right:'175px', size:1, delay:'0.2s'},
-              {top:'71%', right:'250px', size:1.5, delay:'1.1s'}, {top:'77%', right:'30px', size:1, delay:'1.6s'},
-              {top:'83%', right:'135px', size:1.2, delay:'0.7s'}, {top:'89%', right:'210px', size:1, delay:'2.1s'},
-              {top:'94%', right:'60px', size:1.5, delay:'1.4s'},
-            ].map((s, i) => (
-              <div key={'star-'+i} className="rounded-full animate-twinkle"
-                style={{
-                  top: s.top, right: s.right, width: s.size, height: s.size,
-                  backgroundColor: '#e0f4ff',
-                  boxShadow: '0 0 '+s.size*3+'px rgba(200,230,255,0.5)',
-                  opacity: i % 3 === 0 ? 0.9 : 0.5,
-                  animationDelay: s.delay,
-                }}
-              />
-            ))}
-
-            {/* 核心元素：行星（带环） */}
-            <div className="absolute top-[2%] right-[10px]">
-              <svg width="220" height="220" viewBox="0 0 220 220" fill="none">
-                <defs>
-                  <radialGradient id="planet-surface" cx="35%" cy="35%" r="60%">
-                    <stop offset="0%" stopColor="#4facfe" stopOpacity="1"/>
-                    <stop offset="40%" stopColor="#1a3a8f" stopOpacity="0.95"/>
-                    <stop offset="75%" stopColor="#0d1b54" stopOpacity="1"/>
-                    <stop offset="100%" stopColor="#050a20" stopOpacity="1"/>
-                  </radialGradient>
-                  <radialGradient id="planet-glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="60%" stopColor="#4facfe" stopOpacity="0.15"/>
-                    <stop offset="100%" stopColor="#4facfe" stopOpacity="0"/>
-                  </radialGradient>
-                  <linearGradient id="ring-main" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#7c4dff" stopOpacity="0"/>
-                    <stop offset="20%" stopColor="#b388ff" stopOpacity="0.6"/>
-                    <stop offset="50%" stopColor="#d4a5ff" stopOpacity="0.8"/>
-                    <stop offset="80%" stopColor="#b388ff" stopOpacity="0.6"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0"/>
-                  </linearGradient>
-                  <filter id="planet-blur"><feGaussianBlur stdDeviation="4"/></filter>
-                </defs>
-                <circle cx="110" cy="110" r="95" fill="url(#planet-glow)"/>
-                <ellipse cx="110" cy="110" rx="105" ry="28" stroke="url(#ring-main)" strokeWidth="3" fill="none" transform="rotate(-18 110 110)" opacity="0.5"/>
-                <circle cx="110" cy="110" r="68" fill="url(#planet-surface)"/>
-                <path d="M55,85 Q80,75 105,82 T155,88" stroke="#4facfe" strokeWidth="0.8" fill="none" opacity="0.25"/>
-                <path d="M60,110 Q90,100 120,108 T165,112" stroke="#4facfe" strokeWidth="0.6" fill="none" opacity="0.18"/>
-                <path d="M70,138 Q100,128 130,136" stroke="#4facfe" strokeWidth="0.5" fill="none" opacity="0.15"/>
-                <path d="M12,102 A105,28 0 0,0 208,118" stroke="url(#ring-main)" strokeWidth="4" fill="none" transform="rotate(-18 110 110)" opacity="0.7" strokeLinecap="round"/>
-                <circle cx="110" cy="110" r="68" fill="none" stroke="#4facfe" strokeWidth="0.5" opacity="0.3"/>
-              </svg>
-            </div>
-
-            {/* "8.2%" 文字标签 */}
-            <div className="absolute top-[33%] right-[55px]">
-              <span className="text-2xl font-mono font-bold tracking-tight" style={{color: '#00e5ff', textShadow: '0 0 12px rgba(0,229,255,0.5), 0 0 30px rgba(0,229,255,0.2)'}}>8.2%</span>
-            </div>
-
-            {/* 地面同心圆能量环（截图右下角核心特征） */}
-            <div className="absolute bottom-[8%] right-[20px]">
-              <svg width="260" height="200" viewBox="0 0 260 200" fill="none">
-                <defs>
-                  <radialGradient id="ground-ring-glow" cx="50%" cy="70%" r="50%">
-                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.15"/>
-                    <stop offset="60%" stopColor="#7c4dff" stopOpacity="0.06"/>
-                    <stop offset="100%" stopColor="#7c4dff" stopOpacity="0"/>
-                  </radialGradient>
-                  <linearGradient id="ring-stroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.2"/>
-                    <stop offset="50%" stopColor="#7c4dff" stopOpacity="0.6"/>
-                    <stop offset="100%" stopColor="#00e5ff" stopOpacity="0.2"/>
-                  </linearGradient>
-                  <filter id="ring-glow-filter"><feGaussianBlur stdDeviation="1.5"/></filter>
-                </defs>
-                <ellipse cx="130" cy="145" rx="120" ry="50" fill="url(#ground-ring-glow)"/>
-                <ellipse cx="130" cy="148" rx="115" ry="44" stroke="#7c4dff" strokeWidth="0.8" fill="none" opacity="0.3" strokeDasharray="4 6"/>
-                <ellipse cx="130" cy="149" rx="95" ry="36" stroke="url(#ring-stroke)" strokeWidth="1" fill="none" opacity="0.45" filter="url(#ring-glow-filter)"/>
-                <ellipse cx="130" cy="150" rx="75" ry="28" stroke="#00e5ff" strokeWidth="1.2" fill="none" opacity="0.55" filter="url(#ring-glow-filter)"/>
-                <ellipse cx="130" cy="151" rx="55" ry="20" stroke="#7c4dff" strokeWidth="1.2" fill="none" opacity="0.6" strokeDasharray="8 4"/>
-                <ellipse cx="130" cy="152" rx="37" ry="13" stroke="#00e5ff" strokeWidth="1.5" fill="none" opacity="0.7" filter="url(#ring-glow-filter)"/>
-                <ellipse cx="130" cy="153" rx="20" ry="7" stroke="#ffffff" strokeWidth="1" fill="none" opacity="0.5"/>
-                <circle cx="130" cy="153" r="4" fill="#00e5ff" opacity="0.8" filter="url(#ring-glow-filter)"/>
-                <circle cx="130" cy="153" r="10" fill="none" stroke="#00e5ff" strokeWidth="0.6" opacity="0.3" className="animate-ping-slow"/>
-              </svg>
-            </div>
-
-            {/* "AI 智能运营" 文字标签 */}
-            <div className="absolute bottom-[14%] right-[80px]">
-              <span className="text-[11px] font-medium tracking-wider" style={{color: '#7c4dff', opacity: 0.7, letterSpacing: '2px'}}>AI 智能运营</span>
-            </div>
-
-            {/* 右上角三角形装饰 */}
-            <div className="absolute top-[1%] right-[5%]" style={{opacity: 0.4}}>
-              <svg width="40" height="46" viewBox="0 0 40 46" fill="none" className="animate-pulse-slow">
-                <polygon points="20,2 38,44 2,44" stroke="#7c4dff" strokeWidth="1" fill="rgba(124,77,255,0.06)"/>
-                <polygon points="20,14 30,36 10,36" stroke="#00e5ff" strokeWidth="0.6" fill="rgba(0,229,255,0.03)" opacity="0.6"/>
-              </svg>
-            </div>
-
-            {/* 右侧垂直光条 */}
-            <div className="absolute top-[8%] right:[3px] w-[2px] h-[90%] rounded-full overflow-hidden" style={{opacity: 0.25}}>
-              <div className="w-full h-[22%] bg-gradient-to-b from-transparent via-purple-500 to-transparent animate-light-streak" style={{animationDelay: '1.5s'}}/>
-            </div>
-          </div>
-
-          {/* === CENTER: Ambient glow === */}
-          <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block" aria-hidden="true">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px]"
-                 style={{background: 'radial-gradient(ellipse at center, rgba(56,189,248,0.06) 0%, rgba(99,102,241,0.03) 40%, transparent 65%)', filter: 'blur(50px)'}}/>
-          </div>{/* Actual content (above decorations in stacking context) */}
+{/* Actual content (above decorations in stacking context) */}
           <div className="relative z-10 max-w-7xl mx-auto min-h-full animate-slide-in-right">
             <Outlet />
           </div>

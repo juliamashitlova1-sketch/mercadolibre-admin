@@ -278,6 +278,7 @@ export default function Pricing() {
       unitHeight: rec.unit_height || 5,
       productWeight: rec.product_weight || 0,
       logisticsProvider: rec.logistics_provider || '',
+      logisticsMode: rec.logistics_mode || '海运',
       seaFreightUnitPrice: rec.sea_freight_unit_price || 3100,
       airFreightUnitPrice: rec.air_freight_unit_price || 95,
       auditor: rec.auditor || ''

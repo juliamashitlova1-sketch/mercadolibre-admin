@@ -30,7 +30,7 @@
 /* --- V2 Theme Global Overrides --- */
 .theme-v2 {
   --v2-bg: #020617;
-  --v2-glass: rgba(15, 23, 42, 0.8);
+  --v2-glass: rgba(15, 23, 42, 0.95);
   --v2-border: rgba(51, 65, 85, 0.5);
   --v2-accent: #0ea5e9;
   --v2-accent-glow: rgba(14, 165, 233, 0.3);
@@ -40,16 +40,17 @@
 }
 
 .theme-v2 .glass-panel {
-  @apply bg-[#0f172a]/80 backdrop-blur-2xl border-slate-700/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  @apply bg-[#0f172a]/95 backdrop-blur-3xl border-slate-700/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
 }
 
 .theme-v2 .glass-card {
-  @apply bg-[#1e293b]/40 backdrop-blur-xl border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:border-sky-500/50 hover:shadow-[0_0_20px_rgba(14,165,233,0.15)] transition-all duration-500;
+  @apply bg-[#111827]/90 backdrop-blur-2xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-sky-500/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.2)] transition-all duration-500;
 }
 
 .theme-v2 .stat-card {
-  @apply bg-[#1e293b]/40 backdrop-blur-xl border border-white/5 shadow-2xl hover:border-sky-400/30 transition-all duration-500;
+  @apply bg-[#111827]/90 backdrop-blur-2xl border border-white/5 shadow-2xl hover:border-sky-400/30 transition-all duration-500;
 }
+
 
 .theme-v2 .stat-value {
   @apply text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)];

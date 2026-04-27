@@ -517,6 +517,8 @@ export default function SkuManagement() {
                                         const organicUnits = Math.max(0, totalUnits - adUnits);
                                         const adSpend = ads ? (parseFloat(ads.adSpend) || 0) : 0;
                                         const visits = visitInfo ? visitInfo.uniqueVisits : 0;
+                                        const clicks = ads ? (parseInt(ads.clicks, 10) || 0) : 0;
+                                        const impressions = ads ? (parseInt(ads.impressions, 10) || 0) : 0;
                                         
                                         return {
                                           ...row,
@@ -524,6 +526,8 @@ export default function SkuManagement() {
                                           organicUnits,
                                           adSpend,
                                           visits,
+                                          clicks,
+                                          impressions,
                                           dateShort: row.date.slice(5) // MM-DD
                                         };
                                       });

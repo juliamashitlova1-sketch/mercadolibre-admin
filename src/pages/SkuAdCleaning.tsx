@@ -256,57 +256,6 @@ export default function SkuAdCleaning() {
           </div>
         </header>
 
-        {/* Aggregated Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-slate-300 uppercase font-bold tracking-wider">今日总消耗 (USD)</p>
-                <p className="text-2xl font-black text-white">${summary.totalSpend.toFixed(2)}</p>
-              </div>
-              <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
-                <Wallet className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-slate-300 uppercase font-bold tracking-wider">今日总转化 (件)</p>
-                <p className="text-2xl font-black text-sky-400 font-mono">{summary.totalOrders}</p>
-              </div>
-              <div className="p-2 bg-sky-500/10 rounded-lg text-sky-500">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-slate-300 uppercase font-bold tracking-wider">总曝光 / 总点击</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-lg font-black text-white">{summary.totalImps}</p>
-                  <span className="text-slate-600">/</span>
-                  <p className="text-lg font-black text-slate-300">{summary.totalClicks}</p>
-                </div>
-              </div>
-              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
-                <MousePointer2 className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900/40 border-slate-800 backdrop-blur shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-xs text-slate-300 uppercase font-bold tracking-wider">全店平均 CPC (USD)</p>
-                <p className="text-2xl font-black text-orange-400 font-mono">${summary.avgCpc.toFixed(2)}</p>
-              </div>
-              <div className="p-2 bg-orange-500/10 rounded-lg text-orange-500">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Input Form Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

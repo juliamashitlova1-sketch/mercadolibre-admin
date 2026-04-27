@@ -595,7 +595,7 @@ export default function SkuManagement() {
                                               <thead className="bg-slate-800/80 text-slate-500 tracking-wider sticky top-0 z-10 font-medium text-[10px]">
                                                 <tr>
                                                   <th className="px-3 py-2 border-b border-slate-700/50 text-left">业务日期</th>
-                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">曝光 / 点击</th>
+                                                  <th className="px-3 py-2 border-b border-slate-700/50 text-center">流量 (访客 / 广点 / 广曝)</th>
                                                   <th className="px-3 py-2 border-b border-slate-700/50 text-center">销量拆分 (总 / 广告 / 自然)</th>
                                                   <th className="px-3 py-2 border-b border-slate-700/50 text-center">广告数据 (消耗/ROAS)</th>
                                                   <th className="px-3 py-2 border-b border-slate-700/50 text-center">转化率 (自然/全店)</th>
@@ -656,7 +656,11 @@ export default function SkuManagement() {
                                                         {row.date}
                                                       </td>
                                                       <td className="px-3 py-2 text-slate-500 font-mono text-[10px]">
-                                                        {imps ? imps : '-'} / {clicks ? clicks : '-'}
+                                                        <span className="text-purple-400" title="自然访客 (独立访问量)">{visits || '-'}</span>
+                                                        <span className="mx-1 text-slate-800">/</span>
+                                                        <span className="text-sky-400" title="广告点击">{clicks || '-'}</span>
+                                                        <span className="mx-1 text-slate-800">/</span>
+                                                        <span className="text-slate-600" title="广告曝光">{imps || '-'}</span>
                                                       </td>
                                                       <td className="px-3 py-2">
                                                         <div className={`px-2 py-0.5 rounded inline-flex items-center gap-1.5 text-[10px] ${row.salesCount > 0 ? 'bg-slate-800/80 border border-slate-700/50' : 'text-slate-600'}`}>

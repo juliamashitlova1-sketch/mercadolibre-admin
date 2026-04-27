@@ -497,20 +497,15 @@ export default function DataDashboard() {
                   const replenishInv = parseInt(sku.replenish_inventory, 10) || 0;
                   
                   // 2. Fetch sales for this SKU
-                  const skuValidSales = data.filter(d => d.sku === sku.sku && d.status === 'valid');
-                  const skuRefunds = data.filter(d => d.sku === sku.sku && d.status === 'refund');
-                  const skuCancels = data.filter(d => d.sku === sku.sku && d.status === 'cancel');
-
-                  const validUnits = skuValidSales.reduce((acc, curr) => acc + (curr.units || 1), 0);
-                  const refundUnits = skuRefunds.reduce((acc, curr) => acc + (curr.units || 1), 0);
-                  const cancelUnits = skuCancels.reduce((acc, curr) => acc + (curr.units || 1), 0);
+                  const skuSales = data.filter(d => d.sku === sku.sku && d.status === 'valid');
+                  const totalUnits = skuSales.reduce((acc, curr) => acc + (curr.units || 1), 0);
                   
-                  const currentStock = listedInv - validUnits + refundUnits - cancelUnits;
+                  const currentStock = listedInv - totalUnits;
                   
                   // 3. Calculate Daily Sales Velocity
                   const listedDate = sku.listed_date ? new Date(sku.listed_date) : new Date();
                   const daysSinceListing = Math.max(1, Math.ceil((now.getTime() - listedDate.getTime()) / (1000 * 60 * 60 * 24)));
-                  const avgDailySales = validUnits / daysSinceListing;
+                  const avgDailySales = totalUnits / daysSinceListing;
                   
                   // 4. Calculate Sales Duration
                   const daysRemaining = avgDailySales > 0 ? Math.floor(currentStock / avgDailySales) : 999;

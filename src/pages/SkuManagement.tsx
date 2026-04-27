@@ -4,7 +4,6 @@ import { OperationLog } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon, ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Activity, Eye, Loader2, PackageX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { USD_TO_MXN } from '../constants';
 
 export default function SkuManagement() {
 
@@ -134,24 +133,14 @@ export default function SkuManagement() {
 
   // Precompute overall metrics per SKU for inventory calculations
   const globalSkuMetrics = useMemo(() => {
-    const metrics: Record<string, { totalUnits: number, totalRefunds: number, totalCancels: number }> = {};
-    if (!mlData) return metrics;
-
-    const sumUnits = (entries: any[], key: 'totalUnits' | 'totalRefunds' | 'totalCancels') => {
-      if (!entries) return;
-      entries.forEach(entry => {
-        const sku = entry._sku;
-        if (!sku) return;
-        if (!metrics[sku]) metrics[sku] = { totalUnits: 0, totalRefunds: 0, totalCancels: 0 };
-        const u = parseInt(entry._units, 10) || 1;
-        metrics[sku][key] += u;
-      });
-    };
-
-    sumUnits(mlData.validSales, 'totalUnits');
-    sumUnits(mlData.refunds, 'totalRefunds');
-    sumUnits(mlData.cancellations, 'totalCancels');
-
+    const metrics = {};
+    if (!mlData?.validSales) return metrics;
+    mlData.validSales.forEach(entry => {
+      const sku = entry._sku;
+      if (!sku) return;
+      if (!metrics[sku]) metrics[sku] = { totalUnits: 0 };
+      metrics[sku].totalUnits += parseInt(entry._units, 10) || 1;
+    });
     return metrics;
   }, [mlData]);
 
@@ -384,8 +373,8 @@ export default function SkuManagement() {
                     const isExpanded = expandedIndex === index;
                     const listedInv = parseInt(item.inventory, 10) || 0;
                     const replenishInv = parseInt(item.replenishInventory, 10) || 0;
-                    const metrics = globalSkuMetrics[item.sku] || { totalUnits: 0, totalRefunds: 0, totalCancels: 0 };
-                    const currentInv = listedInv - metrics.totalUnits + metrics.totalRefunds - metrics.totalCancels;
+                    const totalSales = globalSkuMetrics[item.sku]?.totalUnits || 0;
+                    const currentInv = listedInv - totalSales;
                     
                     return (
                     <React.Fragment key={index}>
@@ -471,8 +460,7 @@ export default function SkuManagement() {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className="p-5 space-y-4">
-                                  {/* Original Card 1: Sales Engine Table */}
+                                <div className="p-5">
                                   <div className="v2-card bg-slate-800/30 p-4 border-slate-800">
                                     <div className="flex items-center justify-between mb-3">
                                       <h4 className="text-xs font-bold text-slate-300 flex items-center">
@@ -485,10 +473,16 @@ export default function SkuManagement() {
                                     {(() => {
                                       const analytics = getSkuDailyAnalytics(item.sku) as any[];
                                       if (!analytics || analytics.length === 0) {
-                                        return <div className="text-center py-6 text-sm text-gray-500">无法从清洗引擎中找到该 SKU 的流水</div>;
+                                        return <div className="text-center py-6 text-sm text-gray-500">无法从清洗引擎中找到该 SKU 的流水 (可能暂未在引擎中导入相关报表)</div>;
                                       }
 
+                                      const totalSalesCount = analytics.reduce((acc, curr) => acc + curr.salesCount, 0);
                                       const totalUnitsCount = analytics.reduce((acc, curr) => acc + (curr.unitsCount || 0), 0);
+                                      const totalSalesMxn = analytics.reduce((acc, curr) => acc + curr.salesMxn, 0);
+                                      const totalCancelCount = analytics.reduce((acc, curr) => acc + curr.cancelCount, 0);
+                                      const totalCancelUnits = analytics.reduce((acc, curr) => acc + (curr.cancelUnits || 0), 0);
+                                      const totalRefundCount = analytics.reduce((acc, curr) => acc + curr.refundCount, 0);
+                                      const totalRefundUnits = analytics.reduce((acc, curr) => acc + (curr.refundUnits || 0), 0);
                                       const totalLossUsd = analytics.reduce((acc, curr) => acc + curr.lossUsd, 0);
 
                                       const totalVisits = analytics.reduce((acc: number, curr: any) => {
@@ -504,6 +498,7 @@ export default function SkuManagement() {
                                       const totalOrganicUnits = Math.max(0, totalUnitsCount - totalAdUnits);
                                       const overallOrganicRate = totalVisits > 0 ? ((totalOrganicUnits / totalVisits) * 100).toFixed(2) : '0';
 
+
                                       return (
                                         <div className="v2-table-wrapper">
                                           <table className="v2-table">
@@ -511,44 +506,86 @@ export default function SkuManagement() {
                                               <tr>
                                                 <th className="px-3 py-2 border-b border-slate-700/50 text-left">业务日期</th>
                                                 <th className="px-3 py-2 border-b border-slate-700/50 text-center">独立访问量</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">销量拆分 (总/广告/自然)</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">自然转化</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">退/取 (单/件)</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">销量拆分 (总件数 / 广告单 / 自然单)</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">自然转化率</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">取消量 (单/件)</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 text-center">退货量 (单/件)</th>
                                                 <th className="px-3 py-2 border-b border-slate-700/50 text-right text-red-400">绝对亏损 (USD)</th>
                                               </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-800/50">
+                                              {/* 顶部总计汇总行 */}
                                               <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
-                                                <td className="px-3 py-2 text-sky-300 text-left text-xs">全局汇总</td>
-                                                <td className="px-3 py-2 text-purple-400 font-mono">{totalVisits.toLocaleString()}</td>
-                                                <td className="px-3 py-2 text-emerald-400">
-                                                  {totalUnitsCount} 件 ({totalAdUnits} / {totalOrganicUnits})
+                                                <td className="px-3 py-2.5 text-sky-300 text-left text-xs font-bold">全局汇总</td>
+                                                <td className="px-3 py-2.5 text-purple-400 font-mono">
+                                                  {(totalVisits as any) > 0 ? (totalVisits as any).toLocaleString() : '-'}
                                                 </td>
-                                                <td className="px-3 py-2 text-yellow-400">{overallOrganicRate}%</td>
-                                                <td className="px-3 py-2 text-slate-500">{analytics.reduce((a,c)=>a+c.refundUnits,0)} / {analytics.reduce((a,c)=>a+c.cancelUnits,0)}</td>
-                                                <td className="px-3 py-2 text-right text-red-400">${totalLossUsd.toFixed(2)}</td>
+                                                <td className="px-3 py-2.5 text-emerald-400">
+                                                  总 {totalUnitsCount} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {totalAdUnits} / 自然单 {totalOrganicUnits})</span>
+                                                </td>
+                                                <td className="px-3 py-2.5 text-yellow-400 font-mono">
+                                                  {(totalVisits as any) > 0 ? `${overallOrganicRate}%` : '-'}
+                                                </td>
+                                                <td className="px-3 py-2.5 text-slate-500">{(totalCancelCount as any) > 0 ? `${totalCancelCount}单 / ${totalCancelUnits}件` : '-'}</td>
+                                                <td className="px-3 py-2.5 text-orange-400">{(totalRefundCount as any) > 0 ? `${totalRefundCount}单 / ${totalRefundUnits}件` : '-'}</td>
+                                                <td className="px-3 py-2.5 text-right font-mono text-red-400">
+                                                  {(totalLossUsd as any) > 0 ? 
+                                                    <span className="flex items-center justify-end"><AlertTriangle className="w-3 h-3 mr-1" />- ${(totalLossUsd as any).toFixed(2)}</span> : 
+                                                    <span className="text-slate-700">-</span>
+                                                  }
+                                                </td>
                                               </tr>
+
+                                              
+                                              {/* 逐日明细行 */}
                                               {analytics.map((row: any, rIdx: number) => {
                                                 const adsD = getSkuAdsForDate(item.sku, row.date);
                                                 const adUnits = adsD ? (parseInt(adsD.adOrders, 10) || 0) : 0;
                                                 const totalUnits = row.unitsCount || 0;
                                                 const organicUnits = Math.max(0, totalUnits - adUnits);
+                                                
                                                 const visitInfo = getSkuVisitForDate(item.sku, row.date);
-                                                const organicRate = visitInfo && visitInfo.uniqueVisits > 0 ? ((organicUnits / visitInfo.uniqueVisits) * 100).toFixed(2) : '0';
+                                                const organicRate = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((organicUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
                                                 
                                                 return (
-                                                  <tr key={rIdx} className="v2-table-tr text-center">
-                                                    <td className="px-3 py-2 text-slate-400 text-left text-xs">{row.date}</td>
-                                                    <td className="px-3 py-2 text-purple-400">{visitInfo ? visitInfo.uniqueVisits : '-'}</td>
-                                                    <td className="px-3 py-2">
-                                                      {totalUnits} ({adUnits} / {organicUnits})
+                                                  <tr 
+                                                    key={rIdx} 
+                                                    className="v2-table-tr text-center"
+                                                  >
+                                                    <td className="px-3 py-2 text-slate-400 text-left text-xs">
+                                                      {row.date}
                                                     </td>
-                                                    <td className="px-3 py-2 text-yellow-500">{organicRate}%</td>
-                                                    <td className="px-3 py-2 text-slate-500">{row.refundUnits || 0} / {row.cancelUnits || 0}</td>
-                                                    <td className="px-3 py-2 text-right text-red-400">${(row.lossUsd || 0).toFixed(2)}</td>
+                                                    <td className="px-3 py-2 font-bold text-purple-400 font-mono">
+                                                      {visitInfo ? visitInfo.uniqueVisits.toLocaleString() : '-'}
+                                                    </td>
+                                                    <td className="px-3 py-2">
+                                                      <div className={`px-2 py-0.5 rounded inline-block text-xs ${row.salesCount > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-600'}`}>
+                                                        总 {totalUnits} 件 <span className="text-cyan-400 text-[11px] ml-1">(广告单 {adUnits} / 自然单 {organicUnits})</span>
+                                                      </div>
+                                                    </td>
+                                                    <td className="px-3 py-2 font-bold font-mono">
+                                                      {visitInfo && visitInfo.uniqueVisits > 0 ? (
+                                                        <span className={organicRate >= 5 ? 'text-emerald-400' : organicRate >= 3 ? 'text-yellow-400' : 'text-red-400'}>
+                                                          {organicRate}%
+                                                        </span>
+                                                      ) : '-'}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-slate-500">{row.cancelCount > 0 ? `${row.cancelCount}单 / ${row.cancelUnits || 0}件` : '-'}</td>
+                                                    <td className="px-3 py-2 text-orange-400">{row.refundCount > 0 ? `${row.refundCount}单 / ${row.refundUnits || 0}件` : '-'}</td>
+                                                    <td className="px-3 py-2 text-right font-mono">
+                                                      {row.lossUsd > 0 ? (
+                                                        <span className="text-red-400 flex items-center justify-end">
+                                                          <AlertTriangle className="w-3 h-3 mr-1" />
+                                                          - ${row.lossUsd.toFixed(2)}
+                                                        </span>
+                                                      ) : (
+                                                        <span className="text-slate-700">-</span>
+                                                      )}
+                                                    </td>
                                                   </tr>
                                                 );
                                               })}
+
                                             </tbody>
                                           </table>
                                         </div>
@@ -556,39 +593,65 @@ export default function SkuManagement() {
                                     })()}
                                   </div>
 
-                                  {/* Original Card 2: Operation Logs */}
-                                  <div className="v2-card bg-slate-800/30 p-4 border-slate-800">
+
+                                  
+                                  {/* Operation Actions Nested Panel */}
+                                  <div className="v2-card bg-slate-800/30 p-4 mt-4 border-slate-800">
                                     <div className="flex items-center justify-between mb-3">
                                       <h4 className="text-xs font-bold text-slate-300 flex items-center">
                                         <Activity className="w-3.5 h-3.5 mr-1.5 text-orange-400" /> 
                                         运营动作与策略跟踪
+                                        <span className="ml-2 text-[11px] font-normal text-slate-600 px-1.5 py-0.5 rounded bg-slate-800/50">全局【运营动作】同步</span>
                                       </h4>
                                     </div>
                                     {(() => {
                                       const skuOps = (operationLogs || []).filter((op: any) => op.sku === item.sku);
-                                      if (skuOps.length === 0) return <div className="text-center py-4 text-xs text-gray-500">无记录</div>;
+                                      if (skuOps.length === 0) {
+                                        return <div className="text-center py-4 text-sm text-gray-500">该 SKU 暂无相关的运营打卡记录</div>;
+                                      }
+
+                                      const getCategoryColor = (cat) => {
+                                        switch(cat) {
+                                          case '广告': return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+                                          case '调价': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                                          case '改图': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+                                          case '标题': return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+                                          case '库存': return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+                                          default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+                                        }
+                                      };
+
                                       return (
-                                        <div className="v2-table-wrapper max-h-[250px] overflow-y-auto custom-scrollbar">
+                                        <div className="v2-table-wrapper">
                                           <table className="v2-table">
                                             <thead className="bg-slate-800/80 text-slate-500 tracking-wider sticky top-0 z-10 font-medium text-[10px]">
                                               <tr>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 w-28">日期</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50 w-24">动作</th>
-                                                <th className="px-3 py-2 border-b border-slate-700/50">详情</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 w-28">业务日期</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50 w-20">操作类型</th>
+                                                <th className="px-3 py-2 border-b border-slate-700/50">调整详情</th>
                                               </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-800/50">
-                                              {skuOps.map((op: any, oIdx: number) => (
-                                                <tr key={oIdx} className="v2-table-tr">
-                                                  <td className="px-3 py-2 text-slate-400 text-xs">{op.date}</td>
-                                                  <td className="px-3 py-2">
-                                                    <span className="px-1.5 py-0.5 rounded border border-orange-500/30 bg-orange-500/10 text-orange-300 text-[10px]">
-                                                      {op.actionType || '常规'}
-                                                    </span>
-                                                  </td>
-                                                  <td className="px-3 py-2 text-slate-500 text-xs">{op.description || op.action}</td>
-                                                </tr>
-                                              ))}
+                                              {skuOps.map((op: any, oIdx: number) => {
+                                                const displayType = op.actionType === 'Price' ? '调价' : 
+                                                                  op.actionType === 'Image' ? '改图' : 
+                                                                  op.actionType === 'Ads' ? '广告' : 
+                                                                  op.actionType === 'Title' ? '标题' : 
+                                                                  op.actionType === 'Stock' ? '库存' : '其他';
+                                                return (
+                                                  <tr key={oIdx} className="v2-table-tr">
+                                                    <td className="px-3 py-2 text-slate-400 text-xs">{op.date}</td>
+                                                    <td className="px-3 py-2">
+                                                      <span className={`px-1.5 py-0.5 rounded border text-[11px] font-bold ${getCategoryColor(displayType)}`}>
+                                                        {displayType}
+                                                      </span>
+                                                    </td>
+                                                    <td className="px-3 py-2 text-slate-500 whitespace-normal min-w-[280px] text-xs">
+                                                      {op.description || op.action}
+                                                    </td>
+                                                  </tr>
+                                                );
+                                              })}
                                             </tbody>
                                           </table>
                                         </div>

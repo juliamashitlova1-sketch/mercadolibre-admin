@@ -639,6 +639,7 @@ export default function SkuManagement() {
                                                   const organicUnits = Math.max(0, totalUnits - adUnits);
                                                   
                                                   const visitInfo = getSkuVisitForDate(item.sku, row.date);
+                                                  const visits = visitInfo ? visitInfo.uniqueVisits : 0;
                                                   const totalCVR = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((totalUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
                                                   const organicCVR = visitInfo && visitInfo.uniqueVisits > 0 ? parseFloat(((organicUnits / visitInfo.uniqueVisits) * 100).toFixed(2)) : 0;
                                                   

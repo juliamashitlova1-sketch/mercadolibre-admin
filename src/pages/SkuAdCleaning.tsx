@@ -79,22 +79,22 @@ export default function SkuAdCleaning() {
   };
 
   const currentSkuInfo = useMemo(() => {
-    return skuData.find(s => s.sku === selectedSku);
-  }, [selectedSku, skuData]);
+    return managedSkus.find(s => s.sku === selectedSku);
+  }, [selectedSku, managedSkus]);
 
   const calculations = useMemo(() => {
     const spend = parseFloat(formData.adSpend) || 0;
     const clicks = parseFloat(formData.clicks) || 0;
     const orders = parseFloat(formData.adOrders) || 0;
-    const price = currentSkuInfo?.sellingPrice || 0;
+    const price = currentSkuInfo?.priceMXN || 0;
     const revenue = orders * price;
     // Assuming MXN for selling price, need to convert or clarify currency
     // For now, let's assume ROAS and ACOS calculations use direct inputs if revenue is in USD or convert
     // Usually ad_spend is USD, revenue might be MXN. Let's use a standard 20:1 rate for display ROAs if needed, 
     // but better to keep it simple or use USD revenue if available.
     // Based on SKUEntry.tsx: adSalesUsd = (watchedAdOrders * watchedPrice) / USD_TO_MXN;
-    const USD_TO_MXN = 20; // Constant fallback
-    const revenueUsd = revenue / USD_TO_MXN;
+    const USD_TO_MXN_VAL = USD_TO_MXN || 17.31; // Use constant from imports
+    const revenueUsd = revenue / USD_TO_MXN_VAL;
 
     const cpc = clicks > 0 ? spend / clicks : 0;
     const roas = spend > 0 ? revenueUsd / spend : 0;
@@ -468,9 +468,8 @@ export default function SkuAdCleaning() {
                       </tr>
                     ) : (
                       adData.map((row) => {
-                        // Calculate real-time metrics for table display
-                        const skuInfo = allSkuData.find(s => s.sku === row.sku);
-                        const revUsd = (row.adOrders * (skuInfo?.sellingPrice || 0)) / USD_TO_MXN;
+                        const skuInfo = managedSkus.find(s => s.sku === row.sku);
+                        const revUsd = (row.adOrders * (skuInfo?.priceMXN || 0)) / USD_TO_MXN;
                         const actualRoas = row.adSpend > 0 ? (revUsd / row.adSpend).toFixed(2) : '0.00';
                         const actualAcos = revUsd > 0 ? ((row.adSpend / revUsd) * 100).toFixed(1) : '0.0';
 

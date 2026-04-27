@@ -500,7 +500,7 @@ export default function DataDashboard() {
                   const skuSales = data.filter(d => d.sku === sku.sku && d.status === 'valid');
                   const totalUnits = skuSales.reduce((acc, curr) => acc + (curr.units || 1), 0);
                   
-                  const currentStock = (listedInv - totalUnits) + replenishInv;
+                  const currentStock = listedInv - totalUnits;
                   
                   // 3. Calculate Daily Sales Velocity
                   const listedDate = sku.listed_date ? new Date(sku.listed_date) : new Date();

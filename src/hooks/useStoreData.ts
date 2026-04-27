@@ -143,7 +143,8 @@ export function useSkuData() {
       setManagedSkus(managedSkusData.map(s => ({
         sku: s.sku,
         name: s.product_name || s.name,
-        imageUrl: s.image_url
+        imageUrl: s.image_url,
+        priceMXN: Number(s.price_mxn) || 0
       })));
     }
 

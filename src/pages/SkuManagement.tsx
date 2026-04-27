@@ -374,7 +374,7 @@ export default function SkuManagement() {
                     const listedInv = parseInt(item.inventory, 10) || 0;
                     const replenishInv = parseInt(item.replenishInventory, 10) || 0;
                     const totalSales = globalSkuMetrics[item.sku]?.totalUnits || 0;
-                    const currentInv = listedInv + replenishInv - totalSales;
+                    const currentInv = listedInv - totalSales;
                     
                     return (
                     <React.Fragment key={index}>

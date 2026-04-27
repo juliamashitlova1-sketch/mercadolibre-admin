@@ -538,6 +538,8 @@ export default function SkuManagement() {
                                       const totalLossUsd = analytics.reduce((acc, curr) => acc + curr.lossUsd, 0);
 
                                       const totalVisits = enrichedAnalytics.reduce((acc, curr) => acc + curr.visits, 0);
+                                      const totalClicks = enrichedAnalytics.reduce((acc, curr) => acc + curr.clicks, 0);
+                                      const totalImps = enrichedAnalytics.reduce((acc, curr) => acc + curr.impressions, 0);
                                       const totalAdUnits = enrichedAnalytics.reduce((acc, curr) => acc + curr.adUnits, 0);
                                       const totalAdSpend = enrichedAnalytics.reduce((acc, curr) => acc + curr.adSpend, 0);
                                       const totalOrganicUnits = Math.max(0, totalUnitsCount - totalAdUnits);
@@ -608,7 +610,11 @@ export default function SkuManagement() {
                                                 <tr className="bg-sky-500/5 font-bold border-b border-slate-700/50 text-center v2-table-tr">
                                                   <td className="px-3 py-2.5 text-sky-300 text-left text-xs font-bold">全局汇总</td>
                                                   <td className="px-3 py-2.5 text-slate-400 font-mono text-[11px]">
-                                                    {totalVisits > 0 ? totalVisits.toLocaleString() : '-'} 访客
+                                                    <span className="text-purple-400">{totalVisits.toLocaleString()}</span>
+                                                    <span className="mx-1 text-slate-800">/</span>
+                                                    <span className="text-sky-400">{totalClicks.toLocaleString()}</span>
+                                                    <span className="mx-1 text-slate-800">/</span>
+                                                    <span className="text-slate-600">{totalImps.toLocaleString()}</span>
                                                   </td>
                                                   <td className="px-3 py-2.5 text-emerald-400 text-xs text-center">
                                                     总 {totalUnitsCount} <span className="text-slate-500">/</span> <span className="text-cyan-400">{totalAdUnits}</span> <span className="text-slate-500">/</span> <span className="text-indigo-400">{totalOrganicUnits}</span>

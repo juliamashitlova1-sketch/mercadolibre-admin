@@ -42,6 +42,9 @@ export default function SkuAdCleaning() {
     adOrders: '',
     adSpend: ''
   });
+  const [editingRecord, setEditingRecord] = useState<SkuAdStats | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAdData();
@@ -150,12 +153,60 @@ export default function SkuAdCleaning() {
         adOrders: '',
         adSpend: ''
       }));
+      setEditingRecord(null);
     } catch (err: any) {
       console.error('Save error:', err);
       setSyncStatus({ type: 'error', message: '保存失败: ' + err.message });
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDelete = async (id: string | number) => {
+    if (!window.confirm('确定要删除这条广告记录吗？')) return;
+    
+    setSyncStatus({ type: null, message: '正在删除...' });
+    try {
+      const { error } = await supabase
+        .from('sku_ads')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSyncStatus({ type: 'success', message: '数据已删除' });
+      fetchAdData();
+    } catch (err: any) {
+      setSyncStatus({ type: 'error', message: '删除失败: ' + err.message });
+    }
+  };
+
+  const openEdit = (record: SkuAdStats) => {
+    setEditingRecord(record);
+    setSelectedSku(record.sku);
+    setSelectedDate(record.date);
+    setFormData({
+      targetRoas: String(record.targetRoas),
+      budgetUsd: String(record.budgetUsd),
+      impressions: String(record.impressions),
+      clicks: String(record.clicks),
+      adOrders: String(record.adOrders),
+      adSpend: String(record.adSpend)
+    });
+    // Scroll to top or ensure form is visible
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingRecord(null);
+    setFormData({
+      targetRoas: '',
+      budgetUsd: '',
+      impressions: '',
+      clicks: '',
+      adOrders: '',
+      adSpend: ''
+    });
   };
 
   const summary = useMemo(() => {
@@ -263,9 +314,16 @@ export default function SkuAdCleaning() {
             <Card className="bg-slate-900/60 border-slate-800 overflow-hidden shadow-2xl relative">
               <div className="absolute top-0 left-0 w-1 h-full bg-sky-500" />
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <PlusCircle className="w-4 h-4 text-sky-400" />
-                  手动录入每日数据
+                <CardTitle className="text-sm font-bold flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-sky-400" />
+                    {editingRecord ? '编辑广告数据' : '手动录入每日数据'}
+                  </div>
+                  {editingRecord && (
+                    <Badge variant="secondary" className="bg-orange-500/10 text-orange-400 border-orange-500/20 text-[10px]">
+                      编辑模式
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 pt-2">
@@ -277,13 +335,14 @@ export default function SkuAdCleaning() {
                         type="date" 
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="bg-slate-950/50 border-slate-800 text-xs h-9 [color-scheme:dark]"
+                        disabled={!!editingRecord}
+                        className="bg-slate-950/50 border-slate-800 text-xs h-9 [color-scheme:dark] disabled:opacity-50"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs text-slate-200 uppercase font-bold">选择 SKU</Label>
-                      <Select value={selectedSku} onValueChange={setSelectedSku}>
-                        <SelectTrigger className="bg-slate-950/50 border-slate-800 text-xs h-9">
+                      <Select value={selectedSku} onValueChange={setSelectedSku} disabled={!!editingRecord}>
+                        <SelectTrigger className="bg-slate-950/50 border-slate-800 text-xs h-9 disabled:opacity-50">
                           <SelectValue placeholder="搜索/选择 SKU" />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-800 text-white">
@@ -400,14 +459,25 @@ export default function SkuAdCleaning() {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={handleSave} 
-                  disabled={isSaving || !selectedSku}
-                  className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold h-10 mt-2 shadow-lg shadow-sky-900/30 transition-all active:scale-95"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                  保存当日广告数据
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={isSaving || !selectedSku}
+                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white font-bold h-10 mt-2 shadow-lg shadow-sky-900/30 transition-all active:scale-95"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    {editingRecord ? '更新数据' : '保存当日广告数据'}
+                  </Button>
+                  {editingRecord && (
+                    <Button 
+                      variant="outline"
+                      onClick={cancelEdit}
+                      className="mt-2 border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 h-10"
+                    >
+                      取消
+                    </Button>
+                  )}
+                </div>
 
                 {syncStatus.message && (
                   <motion.div 
@@ -450,6 +520,7 @@ export default function SkuAdCleaning() {
                       <th className="px-4 py-3 text-right">点击 / 曝光</th>
                       <th className="px-4 py-3 text-right">订单</th>
                       <th className="px-4 py-3 text-right">实际 ROAS / ACOS</th>
+                      <th className="px-4 py-3 text-right">操作</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50">
@@ -497,6 +568,24 @@ export default function SkuAdCleaning() {
                                   {actualRoas}
                                 </span>
                                 <span className="text-[10px] text-slate-400">{actualAcos}%</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={() => openEdit(row)}
+                                  className="p-1 hover:bg-sky-500/20 text-slate-400 hover:text-sky-400 rounded transition-colors"
+                                  title="修改"
+                                >
+                                  <Save className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDelete(row.id)}
+                                  className="p-1 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded transition-colors"
+                                  title="删除"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </td>
                           </tr>

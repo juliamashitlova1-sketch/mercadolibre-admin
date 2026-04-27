@@ -11,6 +11,13 @@ export default function SkuManagement() {
   useEffect(() => {
     fetchCloudData();
     fetchAuxiliaryData();
+
+    // 实时监听 operation_logs 变更，自动同步运营动作
+    const opsChannel = supabase.channel('sku-mgmt-ops-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'operation_logs' }, () => fetchAuxiliaryData())
+      .subscribe();
+
+    return () => { supabase.removeChannel(opsChannel); };
   }, []);
 
   const fetchCloudData = async () => {

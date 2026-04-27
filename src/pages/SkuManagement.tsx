@@ -504,11 +504,7 @@ export default function SkuManagement() {
                         <td className="v2-table-td text-sky-600 font-mono">${item.priceMXN}</td>
                         <td className="v2-table-td text-slate-600 font-mono">{listedInv}</td>
                         <td className="v2-table-td text-purple-600 font-mono">{replenishInv > 0 ? `+${replenishInv}` : '-'}</td>
-                        <td className="v2-table-td">
-                          <div className="font-bold text-emerald-600 bg-emerald-50 rounded px-2.5 py-1 inline-flex items-center justify-center min-w-[40px] text-xs">
-                            {currentInv}
-                          </div>
-                        </td>
+                        <td className="v2-table-td text-slate-400 font-mono">{currentInv}</td>
                         <td className="v2-table-td text-slate-500">{item.listedDate}</td>
                         <td className="v2-table-td">
                            <select 

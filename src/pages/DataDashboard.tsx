@@ -487,20 +487,78 @@ export default function DataDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* 业务预警 (lg:3) */}
           <div className="lg:col-span-3 v2-card p-4 flex flex-col">
-            <h3 className="v2-card-title mb-4 px-2"><AlertCircle className="w-4 h-4 text-rose-400" /> 智能预警</h3>
-            <div className="space-y-2 flex-1">
-              <div className="p-2 bg-amber-500/5 border border-amber-500/10 rounded-lg flex gap-2">
-                <AlertCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-slate-400 leading-tight">ML-X89 库存紧急：仅剩 12 件。</p>
-              </div>
-              <div className="p-2 bg-rose-500/5 border border-rose-500/10 rounded-lg flex gap-2">
-                <AlertCircle className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-slate-400 leading-tight">今日广告 ACOS (45%) 偏高。</p>
-              </div>
-              <div className="p-2 bg-sky-500/5 border border-sky-500/10 rounded-lg flex gap-2">
-                <Activity className="w-3 h-3 text-sky-400 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-slate-400 leading-tight">转化率对比昨日下降 1.2%。</p>
-              </div>
+            <h3 className="v2-card-title mb-4 px-2"><AlertCircle className="w-4 h-4 text-rose-400" /> 库存预警</h3>
+            <div className="space-y-2 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
+              {(() => {
+                const now = new Date();
+                const skuWarnings = skus.map(sku => {
+                  // 1. Calculate Total Stock
+                  const listedInv = parseInt(sku.inventory, 10) || 0;
+                  const replenishInv = parseInt(sku.replenish_inventory, 10) || 0;
+                  
+                  // 2. Fetch sales for this SKU
+                  const skuSales = data.filter(d => d.sku === sku.sku && d.status === 'valid');
+                  const totalUnits = skuSales.reduce((acc, curr) => acc + (curr.units || 1), 0);
+                  
+                  const currentStock = (listedInv - totalUnits) + replenishInv;
+                  
+                  // 3. Calculate Daily Sales Velocity
+                  const listedDate = sku.listed_date ? new Date(sku.listed_date) : new Date();
+                  const daysSinceListing = Math.max(1, Math.ceil((now.getTime() - listedDate.getTime()) / (1000 * 60 * 60 * 24)));
+                  const avgDailySales = totalUnits / daysSinceListing;
+                  
+                  // 4. Calculate Sales Duration
+                  const daysRemaining = avgDailySales > 0 ? Math.floor(currentStock / avgDailySales) : 999;
+                  
+                  return {
+                    sku: sku.sku,
+                    name: sku.product_name,
+                    stock: currentStock,
+                    daysRemaining,
+                    velocity: avgDailySales.toFixed(2)
+                  };
+                }).sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+                if (skuWarnings.length === 0) {
+                  return <p className="text-[11px] text-slate-500 text-center py-4 italic">暂无 SKU 数据</p>;
+                }
+
+                return skuWarnings.map((warn, i) => {
+                  const isCritical = warn.daysRemaining < 10;
+                  const isWarning = warn.daysRemaining < 30;
+                  
+                  return (
+                    <div 
+                      key={i} 
+                      className={`p-2 rounded-lg flex flex-col gap-1 border transition-colors ${
+                        isCritical ? 'bg-rose-500/10 border-rose-500/20' : 
+                        isWarning ? 'bg-amber-500/10 border-amber-500/20' : 
+                        'bg-emerald-500/5 border-emerald-500/10'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="text-[10px] font-bold text-slate-200 truncate max-w-[120px]" title={warn.name}>
+                          {warn.sku}
+                        </span>
+                        <span className={`text-[10px] font-mono font-black ${
+                          isCritical ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          {warn.daysRemaining >= 999 ? '∞' : `${warn.daysRemaining} 天`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[9px]">
+                        <span className="text-slate-500">余: {warn.stock} 件</span>
+                        <span className="text-slate-500 text-[8px]">日均: {warn.velocity}</span>
+                      </div>
+                      {isCritical && (
+                        <div className="flex items-center gap-1 text-[8px] text-rose-500 font-bold mt-0.5">
+                          <AlertCircle className="w-2.5 h-2.5" /> 建议立即补货
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 

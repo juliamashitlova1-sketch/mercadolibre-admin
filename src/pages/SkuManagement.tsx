@@ -17,6 +17,7 @@ import html2canvas from 'html2canvas';
 import SkuAiAnalysis from '../components/SkuAiAnalysis';
 
 import { supabase } from '../lib/supabase';
+import { USD_TO_MXN } from '../constants';
 
 export default function SkuManagement() {
 
@@ -550,7 +551,7 @@ export default function SkuManagement() {
                                         return <div className="v2-card bg-white p-8 text-center text-slate-400 text-xs italic shadow-sm border border-slate-100">无法从清洗引擎中找到该 SKU 的流水数据</div>;
                                       }
 
-                                      // Process analytics
+// Process analytics
                                       const enrichedAnalytics = [...analytics].reverse().map(row => {
                                         const ads = getSkuAdsForDate(item.sku, row.date);
                                         const visitInfo = getSkuVisitForDate(item.sku, row.date);
@@ -560,17 +561,30 @@ export default function SkuManagement() {
                                         const clicks = ads ? (parseInt(ads.clicks, 10) || 0) : 0;
                                         const impressions = ads ? (parseInt(ads.impressions, 10) || 0) : 0;
                                         const price = parseFloat(item.priceMXN) || 0;
-                                        const roas = adSpend > 0 ? (adUnits * price / 17.3 / adSpend) : 0;
+                                        const adRevenue = adUnits * price / USD_TO_MXN;
+                                        const roas = adSpend > 0 ? (adRevenue / adSpend) : 0;
+                                        const cpc = clicks > 0 ? adSpend / clicks : 0;
+                                        const acos = adRevenue > 0 ? (adSpend / adRevenue) * 100 : 0;
+                                        const naturalVisits = Math.max(0, visits - clicks);
+                                        const naturalUnits = Math.max(0, (row.unitsCount || 0) - adUnits);
+                                        const naturalCV = naturalVisits > 0 ? (naturalUnits / naturalVisits) * 100 : 0;
+                                        const adCV = clicks > 0 ? (adUnits / clicks) * 100 : 0;
                                         
                                         return {
                                           ...row,
                                           adUnits,
-                                          organicUnits: Math.max(0, (row.unitsCount || 0) - adUnits),
+                                          organicUnits: naturalUnits,
                                           adSpend,
                                           visits,
                                           clicks,
                                           impressions,
                                           roas,
+                                          cpc,
+                                          acos,
+                                          naturalVisits,
+                                          naturalUnits,
+                                          naturalCV,
+                                          adCV,
                                           dateShort: row.date.slice(5)
                                         };
                                       });
@@ -582,43 +596,49 @@ export default function SkuManagement() {
                                       const totalImps = enrichedAnalytics.reduce((acc, curr) => acc + curr.impressions, 0);
                                       const totalAdUnits = enrichedAnalytics.reduce((acc, curr) => acc + curr.adUnits, 0);
 
-                                      return (
-                                        <div className="space-y-6">
-                                          {/* 1. Summary Header */}
-                                          <div className="flex items-center justify-between px-1">
-                                            <div className="flex items-center gap-3">
-                                              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                                                <TrendingUp className="w-4 h-4 text-white" />
-                                              </div>
-                                              <div>
-                                                <h4 className="text-sm font-black text-slate-800 tracking-tight">SKU 深度经营分析看板</h4>
-                                                <p className="text-[10px] text-slate-400 font-medium">Auto-synced from MILYFLY Cleaning Engine</p>
-                                              </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                              <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-8 px-4 bg-slate-900 text-white rounded-lg flex items-center gap-2 text-[10px] font-bold hover:bg-slate-800 transition-all shadow-md">
-                                                <Download className="w-3 h-3" /> 导出报告
-                                              </button>
-                                            </div>
-                                          </div>
+                                          const totalNaturalUnits = Math.max(0, totalUnitsCount - totalAdUnits);
+                                          const totalNaturalVisits = Math.max(0, totalVisits - totalClicks);
+                                          const totalNaturalCV = totalNaturalVisits > 0 ? (totalNaturalUnits / totalNaturalVisits) * 100 : 0;
+                                          const totalAdCV = totalClicks > 0 ? (totalAdUnits / totalClicks) * 100 : 0;
 
-                                          {/* 2. Summary Cards */}
-                                          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4" id={`sku-dashboard-${item.sku}`}>
-                                            {[
-                                              { label: '广告曝光', val: totalImps.toLocaleString(), color: 'text-slate-600' },
-                                              { label: '广告点击', val: totalClicks.toLocaleString(), color: 'text-sky-600' },
-                                              { label: '进店访客', val: totalVisits.toLocaleString(), color: 'text-purple-600' },
-                                              { label: '广告消耗', val: `$${totalAdSpend.toFixed(1)}`, color: 'text-rose-500' },
-                                              { label: '成交总件', val: totalUnitsCount, color: 'text-emerald-600' },
-                                              { label: '广告订单', val: totalAdUnits, color: 'text-cyan-600' },
-                                              { label: '转化率', val: `${((totalUnitsCount / (totalVisits || 1)) * 100).toFixed(2)}%`, color: 'text-amber-500' }
-                                            ].map((card, cid) => (
-                                              <div key={cid} className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center">
-                                                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{card.label}</div>
-                                                <div className={`text-sm font-black ${card.color}`}>{card.val}</div>
+                                          return (
+                                            <div className="space-y-6">
+                                              {/* 1. Summary Header */}
+                                              <div className="flex items-center justify-between px-1">
+                                                <div className="flex items-center gap-3">
+                                                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                                    <TrendingUp className="w-4 h-4 text-white" />
+                                                  </div>
+                                                  <div>
+                                                    <h4 className="text-sm font-black text-slate-800 tracking-tight">SKU 深度经营分析看板</h4>
+                                                    <p className="text-[10px] text-slate-400 font-medium">Auto-synced from MILYFLY Cleaning Engine</p>
+                                                  </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                  <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-8 px-4 bg-slate-900 text-white rounded-lg flex items-center gap-2 text-[10px] font-bold hover:bg-slate-800 transition-all shadow-md">
+                                                    <Download className="w-3 h-3" /> 导出报告
+                                                  </button>
+                                                </div>
                                               </div>
-                                            ))}
-                                          </div>
+
+                                              {/* 2. Summary Cards */}
+                                              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id={`sku-dashboard-${item.sku}`}>
+                                                {[
+                                                  { label: '广告曝光', val: totalImps.toLocaleString(), color: 'text-slate-600' },
+                                                  { label: '广告点击', val: totalClicks.toLocaleString(), color: 'text-sky-600' },
+                                                  { label: '进店访客', val: totalVisits.toLocaleString(), color: 'text-purple-600' },
+                                                  { label: '广告消耗', val: `$${totalAdSpend.toFixed(1)}`, color: 'text-rose-500' },
+                                                  { label: '成交总件', val: totalUnitsCount, color: 'text-emerald-600' },
+                                                  { label: '广告订单', val: totalAdUnits, color: 'text-cyan-600' },
+                                                  { label: '自然转化', val: `${totalNaturalCV.toFixed(2)}%`, color: 'text-emerald-500' },
+                                                  { label: '广告转化', val: `${totalAdCV.toFixed(2)}%`, color: 'text-amber-500' }
+                                                ].map((card, cid) => (
+                                                  <div key={cid} className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center">
+                                                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{card.label}</div>
+                                                    <div className={`text-sm font-black ${card.color}`}>{card.val}</div>
+                                                  </div>
+                                                ))}
+                                              </div>
 
                                           {/* 3. Charts & AI Side-by-Side */}
                                           <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
@@ -661,9 +681,9 @@ export default function SkuManagement() {
                                                     <MousePointer2 className="w-4 h-4 text-rose-500" /> 广告表现 (Ads Insight)
                                                   </div>
                                                   <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> 消耗</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> 点击</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ROAS</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> ROAS</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ACOS</div>
                                                   </div>
                                                 </div>
                                                 <div className="h-[180px]">
@@ -674,9 +694,9 @@ export default function SkuManagement() {
                                                       <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
                                                       <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
                                                       <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                                                      <Line yAxisId="left" type="monotone" dataKey="adSpend" stroke="#ef4444" strokeWidth={3} dot={false} />
-                                                      <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="#0ea5e9" strokeWidth={2} dot={false} />
-                                                      <Line yAxisId="right" type="monotone" dataKey="roas" stroke="#10b981" strokeWidth={2} dot={false} />
+                                                      <Line yAxisId="left" type="monotone" dataKey="cpc" stroke="#ef4444" strokeWidth={3} dot={false} />
+                                                      <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                                                      <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#10b981" strokeWidth={2} dot={false} />
                                                     </LineChart>
                                                   </ResponsiveContainer>
                                                 </div>
@@ -705,7 +725,7 @@ export default function SkuManagement() {
                                                     <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
                                                     <th className="px-3 py-2.5 text-center border-b border-slate-100">流量 (访/点/曝)</th>
                                                     <th className="px-3 py-2.5 text-center border-b border-slate-100">销量 (总/广/自)</th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">广告 (耗/ROAS)</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">广告 (CPC/ROAS/ACOS)</th>
                                                     <th className="px-3 py-2.5 text-right border-b border-slate-100">净损益 (USD)</th>
                                                   </tr>
                                                 </thead>
@@ -724,9 +744,11 @@ export default function SkuManagement() {
                                                           <span className="text-amber-500 font-bold">{rowE?.organicUnits}</span>
                                                         </td>
                                                         <td className="px-3 py-2.5">
-                                                          <span className="text-rose-500 font-bold">${rowE?.adSpend.toFixed(1)}</span>
+                                                          <span className="text-rose-500 font-bold">${rowE?.cpc.toFixed(1)}</span>
                                                           <span className="mx-1 text-slate-200">|</span>
-                                                          <span className="text-emerald-600 font-bold">{rowE?.roas.toFixed(2)}</span>
+                                                          <span className="text-sky-600 font-bold">{rowE?.roas.toFixed(2)}</span>
+                                                          <span className="mx-1 text-slate-200">|</span>
+                                                          <span className="text-emerald-600 font-bold">{rowE?.acos.toFixed(1)}%</span>
                                                         </td>
                                                         <td className="px-3 py-2.5 text-right font-black text-rose-600">
                                                           {row.lossUsd > 0 ? `-$${row.lossUsd.toFixed(1)}` : '-'}

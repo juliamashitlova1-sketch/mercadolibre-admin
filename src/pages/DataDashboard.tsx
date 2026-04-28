@@ -31,6 +31,7 @@ export default function DataDashboard() {
   const [cargoDamageData, setCargoDamageData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredState, setHoveredState] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('all');
 
   useEffect(() => {
     fetchAllData();
@@ -284,6 +285,31 @@ export default function DataDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
 
+  const availableDates = useMemo(() => {
+    const datesSet = new Set<string>();
+    skuDailyProfits.forEach(item => datesSet.add(item.date));
+    return Array.from(datesSet).sort((a, b) => b.localeCompare(a));
+  }, [skuDailyProfits]);
+
+  const displayProfits = useMemo(() => {
+    if (selectedDate === 'all') {
+      const skuTotals: Record<string, any> = {};
+      skuDailyProfits.forEach(item => {
+        if (!skuTotals[item.sku]) {
+          skuTotals[item.sku] = { sku: item.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
+        }
+        skuTotals[item.sku].units += item.units;
+        skuTotals[item.sku].grossProfit += item.grossProfit;
+        skuTotals[item.sku].adSpend += item.adSpend;
+        skuTotals[item.sku].fakeOrderCost += item.fakeOrderCost;
+        skuTotals[item.sku].cargoDamageCost += item.cargoDamageCost;
+        skuTotals[item.sku].netProfit += item.netProfit;
+      });
+      return Object.values(skuTotals).sort((a, b) => b.netProfit - a.netProfit);
+    }
+    return skuDailyProfits.filter(item => item.date === selectedDate);
+  }, [skuDailyProfits, selectedDate]);
+
   const totalOrders = data.filter(d => d.status === 'valid').length;
 
   if (isLoading) {
@@ -531,14 +557,27 @@ export default function DataDashboard() {
 
           {/* 各 SKU 每日盈利汇总 (lg:9) */}
           <div className="lg:col-span-9 v2-card flex flex-col">
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/20">
+            <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/20">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-emerald-500/10 rounded-lg">
                   <Layers className="w-4 h-4 text-emerald-400" />
                 </div>
-                <h3 className="v2-card-title !mb-0">SKU 每日盈利数据汇总</h3>
+                <h3 className="v2-card-title !mb-0">SKU 盈利数据核算</h3>
+                <div className="ml-4 flex items-center bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1">
+                  <span className="text-[10px] text-slate-500 font-bold mr-2 uppercase tracking-tighter">日期筛选:</span>
+                  <select 
+                    value={selectedDate} 
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="bg-transparent text-[11px] font-bold text-sky-400 outline-none cursor-pointer hover:text-sky-300 transition-colors"
+                  >
+                    <option value="all" className="bg-slate-900 text-slate-300 font-bold">🔘 全部时期汇总</option>
+                    {availableDates.map(date => (
+                      <option key={date} value={date} className="bg-slate-900 text-slate-300 font-bold">📅 {date}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500">
+              <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 w-full md:w-auto justify-end">
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-400" /> 最终净利</span>
                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-400" /> 亏损项</span>
               </div>
@@ -558,13 +597,17 @@ export default function DataDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/30">
-                  {skuDailyProfits.length === 0 ? (
+                  {displayProfits.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-4 py-10 text-center text-slate-500 italic text-xs">暂无盈利核算数据</td>
                     </tr>
-                  ) : skuDailyProfits.slice(0, 30).map((item, idx) => (
+                  ) : displayProfits.slice(0, 50).map((item, idx) => (
                     <tr key={idx} className="hover:bg-slate-800/20 transition-colors group">
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-slate-400">{item.date}</td>
+                      <td className="px-4 py-2.5 text-[11px] font-mono text-slate-400">
+                        {selectedDate === 'all' ? (
+                          <span className="text-[9px] bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/30 text-slate-500">全部汇总</span>
+                        ) : item.date}
+                      </td>
                       <td className="px-4 py-2.5 text-[11px] font-bold text-sky-400">{item.sku}</td>
                       <td className="px-4 py-2.5 text-[11px] font-mono text-center text-slate-300">{item.units}</td>
                       <td className="px-4 py-2.5 text-[11px] font-mono text-right text-emerald-400">¥{item.grossProfit.toFixed(1)}</td>
@@ -578,9 +621,9 @@ export default function DataDashboard() {
                   ))}
                 </tbody>
               </table>
-              {skuDailyProfits.length > 30 && (
+              {displayProfits.length > 50 && (
                 <div className="p-3 text-center border-t border-slate-800/30">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">仅展示最近 30 条记录</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">仅展示最近 50 条记录</span>
                 </div>
               )}
             </div>

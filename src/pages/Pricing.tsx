@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, Save, History, Box, Truck, BarChart3, AlertCircle, Trash2, ExternalLink, CheckCircle, Inbox, PlusCircle, Filter, Ruler, Scale, DollarSign, Wallet, Package, Search, Plane, ArrowLeftCircle, Info, X } from 'lucide-react';
+import { Calculator, Save, History, Box, Truck, BarChart3, AlertCircle, Trash2, ExternalLink, CheckCircle, Inbox, PlusCircle, Filter, Ruler, Scale, DollarSign, Wallet, Package, Search, Plane, ArrowLeftCircle, Info, X, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Pricing() {
@@ -49,6 +49,9 @@ export default function Pricing() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', order: 'desc' });
+  const [allSkus, setAllSkus] = useState<any[]>([]);
+  const [selectedSyncSku, setSelectedSyncSku] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
   const operationStatuses = ['待采购', '已采购', '已转运', '已上架'];
 
   // 深度对齐 Excel 的计算逻辑
@@ -148,7 +151,15 @@ export default function Pricing() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchRecords(); }, [path]);
+  const fetchAllSkus = async () => {
+    const { data } = await supabase.from('skus').select('sku, product_name').order('sku');
+    if (data) setAllSkus(data);
+  };
+
+  useEffect(() => { 
+    fetchRecords(); 
+    fetchAllSkus();
+  }, [path]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -200,6 +211,57 @@ export default function Pricing() {
       alert('核价结果已成功保存！'); 
     }
     setSaving(false);
+  };
+
+  const handleSyncToCostManagement = async () => {
+    if (!selectedSyncSku) {
+      alert('请先选择要同步的目标 SKU');
+      return;
+    }
+    
+    setIsSyncing(true);
+    try {
+      const syncData = {
+        sku: selectedSyncSku.toUpperCase(),
+        purchase_price_cny: form.purchasePriceCny,
+        replenishment_qty: form.replenishmentQty,
+        selling_price_mxn: form.sellingPriceMxn,
+        exchange_rate: form.exchangeRate,
+        commission_rate: form.commissionRate,
+        ad_rate: form.adRate,
+        return_rate: form.returnRate,
+        tax_rate: form.taxRate,
+        box_length: form.boxLength,
+        box_width: form.boxWidth,
+        box_height: form.boxHeight,
+        pack_count: form.packCount,
+        box_weight: form.boxWeight,
+        unit_length: form.unitLength,
+        unit_width: form.unitWidth,
+        unit_height: form.unitHeight,
+        product_weight: form.productWeight,
+        logistics_mode: form.logisticsMode,
+        sea_freight_unit_price: form.seaFreightUnitPrice,
+        air_freight_unit_price: form.airFreightUnitPrice,
+        fixed_fee: form.fixedFee,
+        last_mile_fee: form.lastMileFee,
+        margin: (form.logisticsMode === '空运' ? metrics.marginAir : metrics.marginSea) * 100,
+        roi: form.logisticsMode === '空运' ? metrics.roiAir : metrics.roiSea,
+        status: 'priced'
+      };
+
+      const { error } = await supabase
+        .from('sku_pricing')
+        .upsert(syncData, { onConflict: 'sku' });
+
+      if (error) throw error;
+      alert(`已成功将当前核定参数覆盖同步到 SKU成本管理 中的 ${selectedSyncSku}`);
+    } catch (err: any) {
+      console.error(err);
+      alert('同步失败: ' + err.message);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // 自动化费用计算 (对齐图片逻辑)
@@ -605,6 +667,43 @@ export default function Pricing() {
                 </div>
                 {!saving && <span className="text-xs opacity-70">结果将保存至“已核价清单”供后续审阅</span>}
               </button>
+
+              {/* 同步到 SKU成本管理 区域 */}
+              <div className="mt-8 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl shadow-inner group">
+                 <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-xs shadow-sm shadow-indigo-500/10">SYNC</div>
+                    <h4 className="text-xs font-black text-indigo-300 uppercase tracking-widest leading-none">同步到 SKU成本管理</h4>
+                 </div>
+                 
+                 <div className="space-y-4">
+                    <div>
+                       <label className={labelCls}>选择目标 SKU 位置</label>
+                       <select 
+                         value={selectedSyncSku} 
+                         onChange={e => setSelectedSyncSku(e.target.value)}
+                         className={`${inputCls} h-12 bg-slate-900 border-slate-700 text-sm font-bold focus:border-indigo-500/50 shadow-inner transition-all`}
+                       >
+                         <option value="">-- 请选择现有 SKU 档案 --</option>
+                         {allSkus.map(s => (
+                           <option key={s.sku} value={s.sku}>{s.sku} | {s.product_name}</option>
+                         ))}
+                       </select>
+                    </div>
+
+                    <button 
+                      onClick={handleSyncToCostManagement}
+                      disabled={isSyncing || !selectedSyncSku}
+                      className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:grayscale text-white rounded-xl font-black text-sm flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+                    >
+                      <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+                      {isSyncing ? '同步处理中...' : '快速覆盖同步核价'}
+                    </button>
+                    
+                    <p className="text-[10px] text-indigo-400/50 font-bold italic text-center">
+                      * 同步将立即更新“SKU成本管理”侧边栏中该 SKU 的所有成本细节
+                    </p>
+                 </div>
+              </div>
               
               {errorMessage && (
                 <div className="v2-card bg-rose-500/5 border-rose-500/20 p-4 flex gap-3 items-start">

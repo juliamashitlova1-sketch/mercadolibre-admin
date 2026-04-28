@@ -401,14 +401,12 @@ export default function DataDashboard() {
                 </span>
               </div>
             }
-            subValue={`总件数: ${metrics.totalUnits}`} 
             icon={DollarSign} 
             color="sky" 
           />
           <StatCard 
             title="有效订单" 
             value={metrics.totalOrders} 
-            subValue={`客单价: $${(metrics.totalSalesMxn / (metrics.totalOrders || 1)).toFixed(1)}`} 
             icon={Receipt} 
             color="amber" 
           />
@@ -428,10 +426,10 @@ export default function DataDashboard() {
           />
         </div>
 
-        {/* 第二行：主分析视图 (8:4 布局) */}
+        {/* 第二行：主分析视图 (9:3 布局) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* 广告/销售混合趋势 */}
-          <div className="lg:col-span-8 v2-card p-4">
+          <div className="lg:col-span-9 v2-card p-4">
             <div className="flex justify-between items-center mb-4 px-2">
               <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与投放效率趋势 (30D)</h3>
             </div>
@@ -462,7 +460,7 @@ export default function DataDashboard() {
                   />
                   <Legend verticalAlign="top" height={36}/>
                   <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                  <Area yAxisId="left" type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
+                  <Area yAxisId="right" type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
                   <Area yAxisId="right" type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -470,19 +468,19 @@ export default function DataDashboard() {
           </div>
 
           {/* 转化与效率洞察 */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          <div className="lg:col-span-3 flex flex-col gap-4">
             {/* 成本结构饼图 */}
-            <div className="v2-card p-4 flex-1">
+            <div className="v2-card p-4 h-full flex flex-col">
               <h3 className="v2-card-title mb-2 px-2"><PieChart className="w-4 h-4 text-indigo-400" /> 成本结构</h3>
-              <div className="h-[140px] w-full">
+              <div className="h-[180px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RePieChart>
                     <Pie
                       data={costStructure}
                       cx="50%"
                       cy="50%"
-                      innerRadius={40}
-                      outerRadius={55}
+                      innerRadius={50}
+                      outerRadius={70}
                       paddingAngle={4}
                       dataKey="value"
                     >
@@ -494,31 +492,17 @@ export default function DataDashboard() {
                   </RePieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-2">
-                   {costStructure.slice(0, 4).map((item, i) => (
+              <div className="grid grid-cols-1 gap-y-2 px-2 mt-4">
+                   {costStructure.map((item, i) => (
                      <div key={i} className="flex items-center justify-between">
-                       <span className="text-[11px] text-slate-500">{item.name}</span>
+                       <div className="flex items-center gap-2">
+                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                         <span className="text-[11px] text-slate-500">{item.name}</span>
+                       </div>
                        <span className="text-[11px] font-mono font-bold text-slate-300">{item.value.toFixed(0)}%</span>
                      </div>
                    ))}
               </div>
-            </div>
-
-            {/* 关键效率卡片 (ROAS & Conv) */}
-            <div className="v2-card p-4 bg-gradient-to-br from-sky-50 to-indigo-50 border-sky-100 shadow-sm">
-               <div className="flex justify-between gap-4">
-                  <div className="flex-1">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ROAS</span>
-                    <div className="text-2xl font-black text-slate-900 mt-1">{metrics.roas.toFixed(2)}</div>
-                    <div className="text-[10px] text-sky-600 font-bold uppercase tracking-tight">广告产出比</div>
-                  </div>
-                  <div className="w-px h-12 bg-slate-200 mt-2" />
-                  <div className="flex-1 text-right">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">CVR</span>
-                    <div className="text-2xl font-black text-slate-900 mt-1">{metrics.conversionRate.toFixed(2)}%</div>
-                    <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">全店转化率</div>
-                  </div>
-               </div>
             </div>
           </div>
         </div>

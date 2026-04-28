@@ -91,9 +91,7 @@ export default function DataDashboard() {
       }
     });
     
-    const filteredValidOrders = validOrders.filter(d => d.sku && d.sku.toUpperCase() !== 'A15');
-
-    const totalSalesMxn = filteredValidOrders.reduce((acc, curr) => {
+    const totalSalesMxn = validOrders.reduce((acc, curr) => {
       const price = skuPriceMap[curr.sku?.toUpperCase()] || 0;
       return acc + (price * (curr.units || 1));
     }, 0);
@@ -115,8 +113,8 @@ export default function DataDashboard() {
     // 但用户要求“真实总额”，所以我们应该在 skuDailyProfits 之后再汇总 header 里的利润
     
     return {
-      totalOrders: filteredValidOrders.length,
-      totalUnits: filteredValidOrders.reduce((acc, curr) => acc + (curr.units || 1), 0),
+      totalOrders: totalOrders,
+      totalUnits: totalUnitsCount,
       totalSalesMxn,
       totalAdSpend,
       roas,
@@ -274,8 +272,8 @@ export default function DataDashboard() {
   const skuDailyProfits = useMemo(() => {
     const dailyMap: Record<string, any> = {};
 
-    // 1. 处理订单与毛利 (过滤 A15 和 空 SKU)
-    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15').forEach(d => {
+    // 1. 处理订单与毛利 (过滤 A15, A06, N/A 和 空 SKU)
+    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15' && d.sku.toUpperCase() !== 'A06' && d.sku.toUpperCase() !== 'N/A').forEach(d => {
       const key = `${d.order_date}_${d.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku: d.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       
@@ -286,24 +284,24 @@ export default function DataDashboard() {
       dailyMap[key].grossProfit += (unitProfit * (d.units || 1));
     });
 
-    // 2. 处理广告支出 (过滤 A15 和 空 SKU)
-    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15').forEach(a => {
+    // 2. 处理广告支出 (过滤 A15, A06, N/A 和 空 SKU)
+    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15' && a.sku.toUpperCase() !== 'A06' && a.sku.toUpperCase() !== 'N/A').forEach(a => {
       const key = `${a.date}_${a.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku: a.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       // 广告费自动换算 RMB (用户确认：adsData.ad_spend 是 USD)
       dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
-    // 3. 处理刷单支出 (过滤 A15 和 空 SKU)
-    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15').forEach(f => {
+    // 3. 处理刷单支出 (过滤 A15, A06, N/A 和 空 SKU)
+    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15' && f.sku.toUpperCase() !== 'A06' && f.sku.toUpperCase() !== 'N/A').forEach(f => {
       const key = `${f.date}_${f.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: f.date, sku: f.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const actualCost = Number(f.review_fee_cny || 0) - (Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY);
       dailyMap[key].fakeOrderCost += actualCost;
     });
 
-    // 4. 处理货损支出 (过滤 A15 和 空 SKU)
-    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15').forEach(c => {
+    // 4. 处理货损支出 (过滤 A15, A06, N/A 和 空 SKU)
+    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15' && c.sku.toUpperCase() !== 'A06' && c.sku.toUpperCase() !== 'N/A').forEach(c => {
       const key = `${c.date}_${c.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: c.date, sku: c.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const damageCost = Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
@@ -530,7 +528,7 @@ export default function DataDashboard() {
               {(() => {
                 const now = new Date();
                 const skuWarnings = skus
-                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15')
+                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15' && sku.sku.toUpperCase() !== 'A06' && sku.sku.toUpperCase() !== 'N/A')
                   .map(sku => {
                   // 1. Calculate Total Stock
                   const listedInv = parseInt(sku.inventory, 10) || 0;

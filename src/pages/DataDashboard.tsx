@@ -1,3 +1,4 @@
+// Sync Trigger: 2026-04-28 15:58
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 

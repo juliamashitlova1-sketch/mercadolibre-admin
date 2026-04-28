@@ -79,11 +79,6 @@ export default function DataDashboard() {
     const totalOrders = validOrders.length;
     const totalUnitsCount = validOrders.reduce((acc, curr) => acc + (curr.units || 1), 0);
     
-    const totalAdSpend = adsData.reduce((acc, curr) => acc + (parseFloat(curr.ad_spend) || 0), 0);
-    const totalAdOrders = adsData.reduce((acc, curr) => acc + (parseInt(curr.ad_orders) || 0), 0);
-    
-    const totalVisits = visitsData.reduce((acc, curr) => acc + (parseInt(curr.unique_visits) || 0), 0);
-    
     // 建立 SKU -> Price 映射 (优先使用 sku_pricing 中的售价)
     const skuPriceMap: Record<string, number> = {};
     pricing.forEach(p => { 

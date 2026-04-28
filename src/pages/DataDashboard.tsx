@@ -84,33 +84,51 @@ export default function DataDashboard() {
     
     const totalVisits = visitsData.reduce((acc, curr) => acc + (parseInt(curr.unique_visits) || 0), 0);
     
-    // 估算销售额 (假设平均售价, 实际应根据 SKU 匹配)
-    // 建立 SKU -> Price 映射
+    // 建立 SKU -> Price 映射 (优先使用 sku_pricing 中的售价)
     const skuPriceMap: Record<string, number> = {};
-    skus.forEach(s => { skuPriceMap[s.sku] = parseFloat(s.price_mxn) || 0; });
+    pricing.forEach(p => { 
+      if (p.sku) skuPriceMap[p.sku.toUpperCase()] = parseFloat(p.selling_price_mxn) || 0; 
+    });
+    // 如果 pricing 中没有，则尝试从 skus 表中获取
+    skus.forEach(s => { 
+      if (s.sku && !skuPriceMap[s.sku.toUpperCase()]) {
+        skuPriceMap[s.sku.toUpperCase()] = parseFloat(s.price_mxn) || 0; 
+      }
+    });
     
-    const totalSalesMxn = validOrders.reduce((acc, curr) => {
-      const price = skuPriceMap[curr.sku] || 0;
+    const filteredValidOrders = validOrders.filter(d => d.sku && d.sku.toUpperCase() !== 'A15');
+
+    const totalSalesMxn = filteredValidOrders.reduce((acc, curr) => {
+      const price = skuPriceMap[curr.sku?.toUpperCase()] || 0;
       return acc + (price * (curr.units || 1));
     }, 0);
+
+    const totalAdSpend = adsData
+      .filter(a => a.sku && a.sku.toUpperCase() !== 'A15')
+      .reduce((acc, curr) => acc + (parseFloat(curr.ad_spend) || 0), 0);
+    
+    const totalVisits = visitsData
+      .filter(v => v.sku && v.sku.toUpperCase() !== 'A15')
+      .reduce((acc, curr) => acc + (parseInt(curr.unique_visits) || 0), 0);
 
     const roas = totalAdSpend > 0 ? (totalSalesMxn / totalAdSpend) : 0;
     const conversionRate = totalVisits > 0 ? ((totalUnitsCount / totalVisits) * 100) : 0;
     
-    // 估算利润 (粗略: 假设平均利润率 22%)
-    const totalProfitMxn = totalSalesMxn * 0.22;
-
+    // 利润计算：稍后由 skuDailyProfits 汇总得到精确值
+    // 这里先占位，或者直接从逻辑中移除（如果 header 之后会更新）
+    // 为了保持 metrics 对象的完整性，我们暂时设为 0，或者计算一个基础值
+    // 但用户要求“真实总额”，所以我们应该在 skuDailyProfits 之后再汇总 header 里的利润
+    
     return {
-      totalOrders,
-      totalUnits: totalUnitsCount,
+      totalOrders: filteredValidOrders.length,
+      totalUnits: filteredValidOrders.reduce((acc, curr) => acc + (curr.units || 1), 0),
       totalSalesMxn,
       totalAdSpend,
       roas,
       conversionRate,
-      totalProfitMxn,
       totalVisits
     };
-  }, [data, adsData, visitsData, skus]);
+  }, [data, adsData, visitsData, skus, pricing]);
 
   // 趋势数据 (最后30天)
   const chartData = useMemo(() => {
@@ -137,24 +155,43 @@ export default function DataDashboard() {
       .slice(-30);
   }, [data, adsData, skus]);
 
-  // 成本结构数据 (取 sku_pricing 平均值)
+  // 成本结构数据 (根据 sku_pricing 细则精确汇总)
   const costStructure = useMemo(() => {
-    if (pricing.length === 0) return [
-      { name: '平台利润', value: 17.5, color: '#0ea5e9' },
+    const activePricing = pricing.filter(p => p.sku && p.sku.toUpperCase() !== 'A15');
+    if (activePricing.length === 0) return [
+      { name: '平台费用', value: 17.5, color: '#0ea5e9' },
       { name: '物流成本', value: 25, color: '#6366f1' },
       { name: '广告投入', value: 8, color: '#f59e0b' },
-      { name: '税费/退货', value: 11, color: '#ef4444' },
+      { name: '税费/退单', value: 11, color: '#ef4444' },
       { name: '净利润', value: 38.5, color: '#10b981' },
     ];
     
-    const avg = (field: string) => pricing.reduce((acc, curr) => acc + (parseFloat(curr[field]) || 0), 0) / pricing.length;
+    // 加权平均或简单平均？鉴于这是一个宏观看板，使用受控 SKU 的平均设置
+    const avg = (field: string) => activePricing.reduce((acc, curr) => acc + (parseFloat(curr[field]) || 0), 0) / activePricing.length;
     
+    // 计算各项占比 (以平均售价为基准)
+    const avgPrice = avg('selling_price_mxn') || 100;
+    const commission = avg('commission_rate') * 100;
+    const ad = (avg('ad_rate') || 0.08) * 100;
+    const tax = (avg('tax_rate') || 0.0905) * 100;
+    const returns = (avg('return_rate') || 0.02) * 100;
+    
+    // 物流分摊比例 (Fixed + LastMile + Freight) / Price
+    const avgFixed = avg('fixed_fee') || 0;
+    const avgLastMile = avg('last_mile_fee') || 0;
+    const exchange = avg('exchange_rate') || MXN_TO_CNY;
+    
+    // 估算物流比例 (MXN 计)
+    const logisticsRatio = ((avgFixed + avgLastMile) / avgPrice) * 100 + 5; // 补 5% 跨境运费
+    
+    const margin = avg('margin') || 20;
+
     return [
-      { name: '平台费用', value: avg('commission_rate') * 100, color: '#0ea5e9' },
-      { name: '物流/其他', value: 25, color: '#6366f1' }, 
-      { name: '广告投入', value: avg('ad_rate') * 100, color: '#f59e0b' },
-      { name: '税费/退单', value: (avg('tax_rate') + avg('return_rate')) * 100, color: '#ef4444' },
-      { name: '预估毛利', value: avg('margin'), color: '#10b981' },
+      { name: '平台费用', value: commission, color: '#0ea5e9' },
+      { name: '物流/其他', value: logisticsRatio, color: '#6366f1' }, 
+      { name: '广告投入', value: ad, color: '#f59e0b' },
+      { name: '税费/退单', value: tax + returns, color: '#ef4444' },
+      { name: '预估毛利', value: margin, color: '#10b981' },
     ];
   }, [pricing]);
 
@@ -242,8 +279,8 @@ export default function DataDashboard() {
   const skuDailyProfits = useMemo(() => {
     const dailyMap: Record<string, any> = {};
 
-    // 1. 处理订单与毛利
-    data.filter(d => d.status === 'valid').forEach(d => {
+    // 1. 处理订单与毛利 (过滤 A15 和 空 SKU)
+    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15').forEach(d => {
       const key = `${d.order_date}_${d.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku: d.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       
@@ -254,24 +291,24 @@ export default function DataDashboard() {
       dailyMap[key].grossProfit += (unitProfit * (d.units || 1));
     });
 
-    // 2. 处理广告支出
-    adsData.forEach(a => {
+    // 2. 处理广告支出 (过滤 A15 和 空 SKU)
+    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15').forEach(a => {
       const key = `${a.date}_${a.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku: a.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       // 广告费自动换算 RMB (用户确认：adsData.ad_spend 是 USD)
       dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
-    // 3. 处理刷单支出
-    fakeOrdersData.forEach(f => {
+    // 3. 处理刷单支出 (过滤 A15 和 空 SKU)
+    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15').forEach(f => {
       const key = `${f.date}_${f.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: f.date, sku: f.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const actualCost = Number(f.review_fee_cny || 0) - (Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY);
       dailyMap[key].fakeOrderCost += actualCost;
     });
 
-    // 4. 处理货损支出
-    cargoDamageData.forEach(c => {
+    // 4. 处理货损支出 (过滤 A15 和 空 SKU)
+    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15').forEach(c => {
       const key = `${c.date}_${c.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: c.date, sku: c.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const damageCost = Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
@@ -285,6 +322,11 @@ export default function DataDashboard() {
       }))
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
+
+  // 新增：精确汇总利润
+  const totalNetProfitRmb = useMemo(() => {
+    return skuDailyProfits.reduce((acc, curr) => acc + curr.netProfit, 0);
+  }, [skuDailyProfits]);
 
   const availableDates = useMemo(() => {
     const datesSet = new Set<string>();
@@ -351,7 +393,14 @@ export default function DataDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard 
             title="总销售额 (MXN)" 
-            value={`$${metrics.totalSalesMxn.toLocaleString()}`} 
+            value={
+              <div className="flex flex-col">
+                <span>${metrics.totalSalesMxn.toLocaleString()}</span>
+                <span className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  US$ {(metrics.totalSalesMxn / USD_TO_MXN).toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                </span>
+              </div>
+            }
             subValue={`总件数: ${metrics.totalUnits}`} 
             icon={DollarSign} 
             color="sky" 
@@ -371,9 +420,9 @@ export default function DataDashboard() {
             color="indigo" 
           />
           <StatCard 
-            title="预估净利润" 
-            value={`¥${(metrics.totalProfitMxn * 6.8).toLocaleString()}`} 
-            subValue="汇率参考: 6.8" 
+            title="盈利总额 (RMB)" 
+            value={`¥${totalNetProfitRmb.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`} 
+            subValue="全维度净利润汇总" 
             icon={ShoppingBag} 
             color="emerald" 
           />
@@ -485,7 +534,9 @@ export default function DataDashboard() {
             <div className="space-y-2 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
               {(() => {
                 const now = new Date();
-                const skuWarnings = skus.map(sku => {
+                const skuWarnings = skus
+                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15')
+                  .map(sku => {
                   // 1. Calculate Total Stock
                   const listedInv = parseInt(sku.inventory, 10) || 0;
                   const replenishInv = parseInt(sku.replenish_inventory, 10) || 0;

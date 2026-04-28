@@ -172,6 +172,7 @@ export default function MainLayout({
       ]
     },
     { id: '/sku-management', label: 'SKU管理', icon: Package },
+    { id: '/sku-cost-management', label: 'SKU成本管理', icon: DollarSign, color: 'text-amber-500' },
     { id: '/fake-orders', label: '刷单支出', icon: CreditCard },
     { id: '/cargo-damage', label: '货损支出', icon: PackageX },
     { id: '/health', label: '账号健康', icon: AlertTriangle },

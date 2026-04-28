@@ -494,13 +494,13 @@ export default function SkuManagement() {
                             </div>
                           )}
                         </td>
-                        <td className="v2-table-td font-semibold text-slate-800">
+                        <td className="v2-table-td">
                           <div className="flex items-center space-x-2">
-                            <span>{item.sku}</span>
-                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-sky-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-600" />}
+                            <span className="text-sm font-black text-indigo-950 bg-indigo-50/70 px-2.5 py-1 rounded-md border border-indigo-200/50 shadow-sm tracking-tight">{item.sku}</span>
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-sky-500" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </div>
                         </td>
-                        <td className="v2-table-td max-w-[180px] truncate text-slate-400" title={item.productName}>{item.productName}</td>
+                        <td className="v2-table-td max-w-[200px] truncate text-slate-700 font-bold" title={item.productName}>{item.productName}</td>
                         <td className="v2-table-td text-emerald-600 font-mono">¥{item.costRMB}</td>
                         <td className="v2-table-td text-sky-600 font-mono">${item.priceMXN}</td>
                         <td className="v2-table-td text-slate-600 font-mono">{listedInv}</td>

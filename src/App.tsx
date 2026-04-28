@@ -15,6 +15,7 @@ import DataCleaning from './pages/DataCleaning';
 import SkuVisitCleaning from './pages/SkuVisitCleaning';
 import SkuAdCleaning from './pages/SkuAdCleaning';
 import SkuManagement from './pages/SkuManagement';
+import SkuCostManagement from './pages/SkuCostManagement';
 
 import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
@@ -178,6 +179,7 @@ function AppContent() {
             <Route path="/data-cleaning/visits" element={<SkuVisitCleaning />} />
             <Route path="/data-cleaning/ads" element={<SkuAdCleaning />} />
             <Route path="/sku-management" element={<SkuManagement />} />
+            <Route path="/sku-cost-management" element={<SkuCostManagement />} />
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/fake-orders" element={<FakeOrders />} />

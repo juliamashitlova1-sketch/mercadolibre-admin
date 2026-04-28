@@ -207,9 +207,12 @@ export default function SkuCostManagement() {
         status: 'priced'
       };
 
+      // 先尝试删除旧记录，确保“覆盖”效果，避开 upsert 对 UNIQUE 约束的依赖
+      await supabase.from('sku_pricing').delete().eq('sku', skuKey);
+      
       const { error } = await supabase
         .from('sku_pricing')
-        .upsert(saveData, { onConflict: 'sku' });
+        .insert([saveData]);
 
       if (error) throw error;
       alert(`SKU ${sku} 数据同步成功`);

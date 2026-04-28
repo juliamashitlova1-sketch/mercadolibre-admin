@@ -250,9 +250,12 @@ export default function Pricing() {
         status: 'priced'
       };
 
+      // 避开 upsert 对 UNIQUE 约束的依赖，改用先删后增
+      await supabase.from('sku_pricing').delete().eq('sku', syncData.sku);
+
       const { error } = await supabase
         .from('sku_pricing')
-        .upsert(syncData, { onConflict: 'sku' });
+        .insert([syncData]);
 
       if (error) throw error;
       alert(`已成功将当前核定参数覆盖同步到 SKU成本管理 中的 ${selectedSyncSku}`);

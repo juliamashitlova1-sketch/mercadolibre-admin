@@ -703,7 +703,40 @@ export default function SkuManagement() {
                                               </div>
                                             </div>
 
-                                            <div className="xl:col-span-2">
+                                            <div className="xl:col-span-1">
+                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md h-full">
+                                                <div className="flex items-center justify-between mb-6">
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                    <Activity className="w-4 h-4 text-purple-500" /> 流量曝光对比
+                                                  </div>
+                                                </div>
+                                                <div className="h-[250px]">
+                                                  <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={enrichedAnalytics.slice(-30)}>
+                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                      <XAxis dataKey="dateShort" hide />
+                                                      <YAxis yAxisId="left" hide />
+                                                      <YAxis yAxisId="right" orientation="right" hide />
+                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                                                      <Line yAxisId="left" type="monotone" dataKey="naturalVisits" stroke="#a855f7" strokeWidth={3} dot={false} />
+                                                      <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="#94a3b8" strokeWidth={2} dot={false} />
+                                                    </LineChart>
+                                                  </ResponsiveContainer>
+                                                </div>
+                                                <div className="mt-4 space-y-2">
+                                                  <div className="flex items-center justify-between text-[10px] font-bold">
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500" /> 自然访客</div>
+                                                    <span className="text-slate-600">{enrichedAnalytics[enrichedAnalytics.length-1]?.naturalVisits}</span>
+                                                  </div>
+                                                  <div className="flex items-center justify-between text-[10px] font-bold">
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-400" /> 广告曝光</div>
+                                                    <span className="text-slate-600">{enrichedAnalytics[enrichedAnalytics.length-1]?.impressions}</span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            <div className="xl:col-span-1">
                                               <SkuAiAnalysis 
                                                 sku={item.sku} 
                                                 skuName={item.productName} 
@@ -744,11 +777,11 @@ export default function SkuManagement() {
                                                           <span className="text-amber-500 font-bold">{rowE?.organicUnits}</span>
                                                         </td>
                                                         <td className="px-3 py-2.5">
-                                                          <span className="text-rose-500 font-bold">${rowE?.cpc.toFixed(1)}</span>
+                                                          <span className="text-rose-500 font-bold">${rowE?.cpc.toFixed(2)}</span>
                                                           <span className="mx-1 text-slate-200">|</span>
                                                           <span className="text-sky-600 font-bold">{rowE?.roas.toFixed(2)}</span>
                                                           <span className="mx-1 text-slate-200">|</span>
-                                                          <span className="text-emerald-600 font-bold">{rowE?.acos.toFixed(1)}%</span>
+                                                          <span className="text-emerald-600 font-bold">{rowE?.acos.toFixed(2)}%</span>
                                                         </td>
                                                         <td className="px-3 py-2.5 text-right font-black text-rose-600">
                                                           {row.lossUsd > 0 ? `-$${row.lossUsd.toFixed(1)}` : '-'}

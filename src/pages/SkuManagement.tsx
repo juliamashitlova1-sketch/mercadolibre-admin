@@ -6,7 +6,7 @@ import {
   Plus, Edit2, Trash2, X, Save, Image as ImageIcon, 
   ChevronDown, ChevronUp, TrendingUp, AlertTriangle, 
   Activity, Eye, Loader2, PackageX, MousePointer2, 
-  BarChart3, RefreshCw, Download
+  BarChart3, RefreshCw, Download, History
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -734,6 +734,58 @@ export default function SkuManagement() {
                                                       </tr>
                                                     );
                                                   })}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+
+                                          {/* 5. Historical Operations Log */}
+                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                              <History className="w-4 h-4 text-indigo-500" /> SKU 历史运营记录
+                                            </div>
+                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              <table className="v2-table border-separate border-spacing-0">
+                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                  <tr>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">动作类型</th>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">详情描述</th>
+                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">记录时间</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="text-[10px] divide-y divide-slate-50">
+                                                  {(() => {
+                                                    const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
+                                                    if (skuLogs.length === 0) {
+                                                      return (
+                                                        <tr>
+                                                          <td colSpan={4} className="px-3 py-8 text-center text-slate-400 italic">
+                                                            暂无历史运营记录
+                                                          </td>
+                                                        </tr>
+                                                      );
+                                                    }
+                                                    return skuLogs.map((log: any, lid: number) => (
+                                                      <tr key={lid} className="v2-table-tr hover:bg-slate-50/80 transition-colors">
+                                                        <td className="px-3 py-2.5 text-slate-600 font-bold whitespace-nowrap">{log.date}</td>
+                                                        <td className="px-3 py-2.5 text-center">
+                                                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${
+                                                            log.actionType === 'Price' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                            log.actionType === 'Stock' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                            log.actionType === 'Ads' ? 'bg-sky-50 text-sky-600 border border-sky-100' :
+                                                            'bg-slate-50 text-slate-600 border border-slate-100'
+                                                          }`}>
+                                                            {log.actionType}
+                                                          </span>
+                                                        </td>
+                                                        <td className="px-3 py-2.5 text-slate-500 leading-relaxed font-medium">{log.description}</td>
+                                                        <td className="px-3 py-2.5 text-right text-slate-300 tabular-nums">
+                                                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </td>
+                                                      </tr>
+                                                    ));
+                                                  })()}
                                                 </tbody>
                                               </table>
                                             </div>

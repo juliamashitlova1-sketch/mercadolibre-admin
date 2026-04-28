@@ -6,7 +6,6 @@ import { supabase } from './lib/supabase';
 import Competitors from './pages/Competitors';
 import Health from './pages/Health';
 import Operations from './pages/Operations';
-import AiBrain from './pages/AiBrain';
 import Pricing from './pages/Pricing';
 import FakeOrders from './pages/FakeOrders';
 import CargoDamage from './pages/CargoDamage';
@@ -184,7 +183,6 @@ function AppContent() {
             <Route path="/operations" element={<Operations />} />
             <Route path="/fake-orders" element={<FakeOrders />} />
             <Route path="/cargo-damage" element={<CargoDamage />} />
-            <Route path="/ai-brain" element={<AiBrain />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/pricing/new" element={<Pricing />} />
             <Route path="/pricing/list" element={<Pricing />} />

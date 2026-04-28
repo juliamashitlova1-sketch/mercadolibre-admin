@@ -177,7 +177,6 @@ export default function MainLayout({
     { id: '/cargo-damage', label: '货损支出', icon: PackageX },
     { id: '/health', label: '账号健康', icon: AlertTriangle },
     { id: '/operations', label: '运营动作', icon: Activity },
-    { id: '/ai-brain', label: 'AI 智能大脑', icon: Brain, color: 'text-purple-500' },
     { 
       id: '/pricing', 
       label: '新品核价', 

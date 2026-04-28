@@ -123,31 +123,6 @@ export default function DataDashboard() {
     };
   }, [data, adsData, visitsData, skus, pricing]);
 
-  // 趋势数据 (最后30天)
-  const chartData = useMemo(() => {
-    const dailyMap: Record<string, any> = {};
-    
-    // 处理订单
-    data.filter(d => d.status === 'valid').forEach(d => {
-      const date = d.order_date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0 };
-      const price = skus.find(s => s.sku === d.sku)?.price_mxn || 0;
-      dailyMap[date].sales += (price * (d.units || 1));
-      dailyMap[date].units += (d.units || 1);
-    });
-
-    // 处理广告
-    adsData.forEach(a => {
-      const date = a.date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0 };
-      dailyMap[date].spend += (parseFloat(a.ad_spend) || 0);
-    });
-
-    return Object.values(dailyMap)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(-30);
-  }, [data, adsData, skus]);
-
   // 成本结构数据 (根据 sku_pricing 细则精确汇总)
   const costStructure = useMemo(() => {
     const activePricing = pricing.filter(p => p.sku && p.sku.toUpperCase() !== 'A15');
@@ -316,6 +291,38 @@ export default function DataDashboard() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
 
+  // 趋势数据 (最后30天)
+  const chartData = useMemo(() => {
+    const dailyMap: Record<string, any> = {};
+    
+    // 处理订单
+    data.filter(d => d.status === 'valid').forEach(d => {
+      const date = d.order_date;
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
+      const price = skus.find(s => s.sku === d.sku)?.price_mxn || 0;
+      dailyMap[date].sales += (price * (d.units || 1));
+      dailyMap[date].units += (d.units || 1);
+    });
+
+    // 处理广告
+    adsData.forEach(a => {
+      const date = a.date;
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
+      dailyMap[date].spend += (parseFloat(a.ad_spend) || 0);
+    });
+
+    // 处理利润 (从 skuDailyProfits 聚合)
+    skuDailyProfits.forEach(item => {
+      const date = item.date;
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
+      dailyMap[date].profit += item.netProfit;
+    });
+
+    return Object.values(dailyMap)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(-30);
+  }, [data, adsData, skus, skuDailyProfits]);
+
   // 新增：精确汇总利润
   const totalNetProfitRmb = useMemo(() => {
     return skuDailyProfits.reduce((acc, curr) => acc + curr.netProfit, 0);
@@ -427,16 +434,6 @@ export default function DataDashboard() {
           <div className="lg:col-span-8 v2-card p-4">
             <div className="flex justify-between items-center mb-4 px-2">
               <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与投放效率趋势 (30D)</h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-sky-500" />
-                  <span className="text-[11px] text-slate-400">销售核心</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                  <span className="text-[11px] text-slate-400">广告支点</span>
-                </div>
-              </div>
             </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -450,16 +447,23 @@ export default function DataDashboard() {
                       <stop offset="5%" stopColor="#6366f1" stopOpacity={0.05}/>
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
+                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                   <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickFormatter={(str) => str.slice(5)} />
-                  <YAxis stroke="#94a3b8" fontSize={10} />
+                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={10} />
+                  <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={10} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                     itemStyle={{ fontSize: '11px' }}
                   />
-                  <Area type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                  <Area type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
+                  <Area yAxisId="left" type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
+                  <Area yAxisId="right" type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

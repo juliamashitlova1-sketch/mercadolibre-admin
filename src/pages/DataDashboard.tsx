@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
-  ArrowDownRight, Zap, Target, Users, Receipt, RefreshCw, Layers
+  ArrowDownRight, Zap, Target, Users, Receipt, RefreshCw, Layers,
+  DollarSign, ShoppingBag
 } from 'lucide-react';
 import { MXN_TO_CNY, USD_TO_MXN } from '../constants';
 import { 

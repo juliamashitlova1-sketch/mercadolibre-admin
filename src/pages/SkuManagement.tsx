@@ -360,7 +360,7 @@ export default function SkuManagement() {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const canvas = await html2canvas(element, {
-        backgroundColor: '#0f172a',
+        backgroundColor: '#ffffff',
         scale: 1.5, // Reduced slightly for memory safety on mobile/large screens
         logging: true, // Enable logging for easier debugging if it fails again
         useCORS: true,

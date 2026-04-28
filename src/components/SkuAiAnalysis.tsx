@@ -61,8 +61,8 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
             <Brain className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-slate-200">AI 智能辅助分析</h4>
-            <p className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">Powered by DeepSeek-V4-Pro</p>
+            <h4 className="text-xs font-bold text-slate-900">AI 智能辅助分析</h4>
+            <p className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Powered by DeepSeek-V4-Pro</p>
           </div>
         </div>
         {result && !analyzing && (
@@ -75,7 +75,7 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
         )}
       </div>
 
-      <div className="flex-1 min-h-[300px] bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-[300px] bg-slate-50/50 border border-slate-100 rounded-xl overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           {!result && !analyzing && !error && (
             <motion.div 
@@ -88,14 +88,14 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
               <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 border border-purple-500/20">
                 <Sparkles className="w-6 h-6 text-purple-400" />
               </div>
-              <h5 className="text-xs font-bold text-slate-300 mb-4">准备好开启深度洞察了吗？</h5>
+              <h5 className="text-xs font-bold text-slate-700 mb-4">准备好开启深度洞察了吗？</h5>
               
               <div className="w-full space-y-2 mb-4">
                  {quickPrompts.map(prompt => (
                     <button
                       key={prompt}
                       onClick={() => handleAnalyze(prompt)}
-                      className="w-full px-4 py-2.5 text-[10px] font-bold text-left bg-slate-800/50 border border-slate-700/50 rounded-lg hover:border-purple-500/30 hover:bg-purple-500/5 transition-all text-slate-400 flex items-center justify-between group"
+                      className="w-full px-4 py-2.5 text-[10px] font-bold text-left bg-white border border-slate-100 rounded-lg hover:border-purple-500/30 hover:bg-purple-50 transition-all text-slate-500 flex items-center justify-between group"
                     >
                       <span className="truncate">{prompt}</span>
                       <MessageSquare className="w-3 h-3 text-purple-500 shrink-0 ml-2" />
@@ -109,7 +109,7 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
                   placeholder="或在此输入特定分析需求..."
                   value={extraPrompt}
                   onChange={e => setExtraPrompt(e.target.value)}
-                  className="w-full h-9 bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-10 text-[10px] text-slate-300 focus:border-purple-500/50 outline-none"
+                  className="w-full h-9 bg-white border border-slate-200 rounded-lg pl-3 pr-10 text-[10px] text-slate-900 focus:border-purple-500/50 outline-none"
                   onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
                 />
                 <button 
@@ -133,7 +133,7 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
                 <div className="w-12 h-12 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
                 <Brain className="w-5 h-5 text-purple-500 absolute top-3.5 left-3.5" />
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">正在深度分析数据流水...</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">正在深度分析数据流水...</p>
             </motion.div>
           )}
 
@@ -162,7 +162,7 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
               animate={{ opacity: 1 }}
               className="flex-1 flex flex-col"
             >
-              <div className="flex items-center justify-between p-3 border-b border-slate-800 bg-slate-800/30">
+              <div className="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-100/30">
                 <span className="text-[9px] font-black text-purple-400 uppercase tracking-[0.2em]">智能诊断报告</span>
                 <button 
                   onClick={() => {
@@ -179,7 +179,7 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                <div className="v2-markdown-body prose prose-invert prose-xs max-w-none">
+                <div className="v2-markdown-body prose prose-slate prose-xs max-w-none">
                   <ReactMarkdown>{result}</ReactMarkdown>
                 </div>
               </div>

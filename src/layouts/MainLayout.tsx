@@ -197,16 +197,17 @@ export default function MainLayout({
   , []);
 
   return (
-    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-transparent text-slate-300' : 'bg-transparent'}`}>
+    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-white text-slate-900' : 'bg-transparent'}`}>
       {/* Full App Background Image (V2 Only) with Enhanced Light Feel */}
       {uiVersion === 'v2' && (
         <>
           <div 
-            className="fixed inset-0 pointer-events-none z-0 bg-[#020617]" 
+            className="fixed inset-0 pointer-events-none z-0 bg-white" 
           />
           {/* Subtle Ambient Glow */}
           <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute -top-[5%] left-[25%] w-[50%] h-[40%] bg-sky-500/[0.07] blur-[120px] rounded-full animate-pulse-slow" />
+            <div className="absolute -top-[10%] left-[20%] w-[60%] h-[50%] bg-sky-400/[0.08] blur-[140px] rounded-full animate-pulse-slow" />
+            <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-indigo-400/[0.05] blur-[120px] rounded-full" />
           </div>
           
           <div 
@@ -215,18 +216,18 @@ export default function MainLayout({
               backgroundImage: `url(${appBg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: 0.12, 
-              mixBlendMode: 'screen',
-              filter: 'grayscale(1) brightness(0.7) contrast(1.1)'
+              opacity: 0.18, 
+              mixBlendMode: 'multiply',
+              filter: 'grayscale(1) brightness(1.2) contrast(0.9)'
             }} 
           />
 
           {/* Minimalist Grid Texture Overlay */}
-          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" 
-               style={{ backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]" 
+               style={{ backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
           {/* Bottom vignette for focus */}
-          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent opacity-80" />
+          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-slate-50/50 via-transparent to-transparent opacity-80" />
         </>
       )}
 
@@ -240,7 +241,7 @@ export default function MainLayout({
             <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
               <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
-            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
+            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
               MILYFLY
             </div>
           </div>
@@ -259,10 +260,10 @@ export default function MainLayout({
                       w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 group
                       ${isActive 
                         ? (uiVersion === 'v2' 
-                            ? 'bg-sky-500/10 text-white border border-sky-500/30' 
+                            ? 'bg-sky-500/10 text-sky-600 border border-sky-500/20 shadow-sm' 
                             : 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm') 
                         : (uiVersion === 'v2'
-                            ? 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
+                            ? 'text-slate-500 hover:text-sky-600 hover:bg-slate-50 border border-transparent'
                             : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent')}
                     `}
                   >
@@ -288,8 +289,8 @@ export default function MainLayout({
                             className={() => `
                               flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
                               ${isChildActive 
-                                ? (uiVersion === 'v2' ? 'text-sky-400 bg-sky-500/10' : 'text-sky-600 bg-sky-50/50') 
-                                : (uiVersion === 'v2' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
+                                ? (uiVersion === 'v2' ? 'text-sky-600 bg-sky-500/5' : 'text-sky-600 bg-sky-50/50') 
+                                : (uiVersion === 'v2' ? 'text-slate-400 hover:text-sky-600 hover:bg-slate-50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
                             `}
                           >
                             <ChildIcon className="w-3.5 h-3.5" />
@@ -317,7 +318,7 @@ export default function MainLayout({
                   JC
                 </div>
                 <div>
-                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>Juan Carlos</div>
+                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>Juan Carlos</div>
                   <div className="text-xs text-slate-500 font-mono mt-1">v1.0.6</div>
                 </div>
               </div>
@@ -333,7 +334,7 @@ export default function MainLayout({
           <div className={`flex items-center gap-2 font-medium text-sm ${uiVersion === 'v2' ? 'text-slate-400' : 'text-slate-500'}`}>
             <span className="hidden sm:inline">MILYFLY 控制台</span>
             <span className="text-slate-300 hidden sm:inline">/</span>
-            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-white' : 'text-slate-800'}`}>
+            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
               {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace(/-/g, ' ')}
             </span>
             <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.5</span>
@@ -401,11 +402,11 @@ export default function MainLayout({
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-[320px] bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-3 w-[320px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden"
                     >
-                      <div className="p-4 border-b border-slate-800 bg-slate-800/50">
+                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                             <History className="w-4 h-4 text-sky-400" />
                             应用更新日志
                           </h3>

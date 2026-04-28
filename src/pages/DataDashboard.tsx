@@ -590,22 +590,22 @@ export default function DataDashboard() {
 
           {/* 各 SKU 每日盈利汇总 (lg:9) */}
           <div className="lg:col-span-9 v2-card flex flex-col">
-            <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/20">
+            <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/30">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-emerald-500/10 rounded-lg">
-                  <Layers className="w-4 h-4 text-emerald-400" />
+                  <Layers className="w-4 h-4 text-emerald-600" />
                 </div>
                 <h3 className="v2-card-title !mb-0">SKU 盈利数据核算</h3>
-                <div className="ml-4 flex items-center bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1">
+                <div className="ml-4 flex items-center bg-slate-100 border border-slate-200 rounded-lg px-2 py-1">
                   <span className="text-[10px] text-slate-500 font-bold mr-2 uppercase tracking-tighter">日期筛选:</span>
                   <select 
                     value={selectedDate} 
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="bg-transparent text-[11px] font-bold text-sky-400 outline-none cursor-pointer hover:text-sky-300 transition-colors"
+                    className="bg-transparent text-[11px] font-bold text-sky-600 outline-none cursor-pointer hover:text-sky-500 transition-colors"
                   >
-                    <option value="all" className="bg-slate-900 text-slate-300 font-bold">🔘 全部时期汇总</option>
+                    <option value="all" className="bg-white text-slate-700 font-bold">🔘 全部时期汇总</option>
                     {availableDates.map(date => (
-                      <option key={date} value={date} className="bg-slate-900 text-slate-300 font-bold">📅 {date}</option>
+                      <option key={date} value={date} className="bg-white text-slate-700 font-bold">📅 {date}</option>
                     ))}
                   </select>
                 </div>
@@ -618,7 +618,7 @@ export default function DataDashboard() {
             <div className="flex-1 overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-900/40 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                  <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-wider">
                     <th className="px-4 py-3">日期</th>
                     <th className="px-4 py-3">SKU</th>
                     <th className="px-4 py-3 text-center">销量</th>
@@ -629,20 +629,20 @@ export default function DataDashboard() {
                     <th className="px-4 py-3 text-right bg-emerald-500/5">最终净利</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/30">
+                <tbody className="divide-y divide-slate-100">
                   {displayProfits.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-4 py-10 text-center text-slate-500 italic text-xs">暂无盈利核算数据</td>
                     </tr>
                   ) : displayProfits.slice(0, 50).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/20 transition-colors group">
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-slate-400">
+                    <tr key={idx} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-4 py-2.5 text-[11px] font-mono text-slate-500">
                         {selectedDate === 'all' ? (
-                          <span className="text-[9px] bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/30 text-slate-500">全部汇总</span>
+                          <span className="text-[9px] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-slate-400">全部汇总</span>
                         ) : item.date}
                       </td>
-                      <td className="px-4 py-2.5 text-[11px] font-bold text-sky-400">{item.sku}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-center text-slate-300">{item.units}</td>
+                      <td className="px-4 py-2.5 text-[11px] font-bold text-sky-600">{item.sku}</td>
+                      <td className="px-4 py-2.5 text-[11px] font-mono text-center text-slate-600">{item.units}</td>
                       <td className="px-4 py-2.5 text-[11px] font-mono text-right text-emerald-400">¥{item.grossProfit.toFixed(1)}</td>
                       <td className="px-4 py-2.5 text-[11px] font-mono text-right text-rose-400/80">¥{item.fakeOrderCost.toFixed(1)}</td>
                       <td className="px-4 py-2.5 text-[11px] font-mono text-right text-rose-400/80">¥{item.cargoDamageCost.toFixed(1)}</td>
@@ -655,8 +655,8 @@ export default function DataDashboard() {
                 </tbody>
               </table>
               {displayProfits.length > 50 && (
-                <div className="p-3 text-center border-t border-slate-800/30">
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">仅展示最近 50 条记录</span>
+                <div className="p-3 text-center border-t border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">仅展示最近 50 条记录</span>
                 </div>
               )}
             </div>

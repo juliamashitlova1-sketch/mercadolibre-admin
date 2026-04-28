@@ -558,7 +558,7 @@ export default function SkuManagement() {
                                         const adSpend = ads ? (parseFloat(ads.adSpend) || 0) : 0;
                                         const visits = visitInfo ? visitInfo.uniqueVisits : 0;
                                         const clicks = ads ? (parseInt(ads.clicks, 10) || 0) : 0;
-                                        const imps = ads ? (parseInt(ads.impressions, 10) || 0) : 0;
+                                        const impressions = ads ? (parseInt(ads.impressions, 10) || 0) : 0;
                                         const price = parseFloat(item.priceMXN) || 0;
                                         const roas = adSpend > 0 ? (adUnits * price / 17.3 / adSpend) : 0;
                                         

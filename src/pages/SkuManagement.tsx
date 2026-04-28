@@ -6,7 +6,7 @@ import {
   Plus, Edit2, Trash2, X, Save, Image as ImageIcon, 
   ChevronDown, ChevronUp, TrendingUp, AlertTriangle, 
   Activity, Eye, Loader2, PackageX, MousePointer2, 
-  BarChart3, RefreshCw, Download, History
+  BarChart3, RefreshCw, Download, History, Users, Calendar
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -591,261 +591,251 @@ export default function SkuManagement() {
 
                                       const totalUnitsCount = analytics.reduce((acc, curr) => acc + (curr.unitsCount || 0), 0);
                                       const totalAdSpend = enrichedAnalytics.reduce((acc, curr) => acc + curr.adSpend, 0);
-                                      const totalVisits = enrichedAnalytics.reduce((acc, curr) => acc + curr.visits, 0);
-                                      const totalClicks = enrichedAnalytics.reduce((acc, curr) => acc + curr.clicks, 0);
-                                      const totalImps = enrichedAnalytics.reduce((acc, curr) => acc + curr.impressions, 0);
-                                      const totalAdUnits = enrichedAnalytics.reduce((acc, curr) => acc + curr.adUnits, 0);
+                                      return (
+                                        <div className="space-y-6">
+                                          {/* 1. Header with Stats Summary */}
+                                          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                                            <div className="flex items-center gap-3">
+                                              <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600">
+                                                <Activity className="w-6 h-6" />
+                                              </div>
+                                              <div>
+                                                <h4 className="text-sm font-black text-slate-800">{item.productName}</h4>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                  <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider">{item.sku}</span>
+                                                  <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+                                                    <Calendar className="w-3 h-3" /> 数据统计周期: 过去 30 天
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                              <button className="v2-btn-secondary py-1.5 px-3 text-[10px] font-bold h-auto border-slate-200">刷新数据包</button>
+                                              <button className="v2-btn-primary py-1.5 px-3 text-[10px] font-bold h-auto bg-sky-600 shadow-sky-100">导出详细报告</button>
+                                            </div>
+                                          </div>
 
-                                          const totalNaturalUnits = Math.max(0, totalUnitsCount - totalAdUnits);
-                                          const totalNaturalVisits = Math.max(0, totalVisits - totalClicks);
-                                          const totalNaturalCV = totalNaturalVisits > 0 ? (totalNaturalUnits / totalNaturalVisits) * 100 : 0;
-                                          const totalAdCV = totalClicks > 0 ? (totalAdUnits / totalClicks) * 100 : 0;
-
-                                          return (
-                                            <div className="space-y-6">
-                                              {/* 1. Summary Header */}
-                                              <div className="flex items-center justify-between px-1">
+                                          {/* 2. Key Metrics Summary Grid */}
+                                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                            {[
+                                              { label: '自然访客', val: enrichedAnalytics.reduce((acc, curr) => acc + (curr.visits || 0), 0), icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                                              { label: '广告曝光', val: enrichedAnalytics.reduce((acc, curr) => acc + (curr.impressions || 0), 0), icon: Activity, color: 'text-sky-600', bg: 'bg-sky-50' },
+                                              { label: '自然销量', val: enrichedAnalytics.reduce((acc, curr) => acc + (curr.organicUnits || 0), 0), icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50' },
+                                              { label: '平均 ROAS', val: (enrichedAnalytics.reduce((acc, curr) => acc + (curr.roas || 0), 0) / enrichedAnalytics.length).toFixed(2), icon: MousePointer2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                                            ].map((card, cid) => (
+                                              <div key={cid} className="bg-white p-4 rounded-xl border border-slate-50 shadow-sm transition-all hover:shadow-md">
                                                 <div className="flex items-center gap-3">
-                                                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                                                    <TrendingUp className="w-4 h-4 text-white" />
+                                                  <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center ${card.color}`}>
+                                                    <card.icon className="w-4 h-4" />
                                                   </div>
-                                                  <div>
-                                                    <h4 className="text-sm font-black text-slate-800 tracking-tight">SKU 深度经营分析看板</h4>
-                                                    <p className="text-[10px] text-slate-400 font-medium">Auto-synced from MILYFLY Cleaning Engine</p>
-                                                  </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                  <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-8 px-4 bg-slate-900 text-white rounded-lg flex items-center gap-2 text-[10px] font-bold hover:bg-slate-800 transition-all shadow-md">
-                                                    <Download className="w-3 h-3" /> 导出报告
-                                                  </button>
-                                                </div>
-                                              </div>
+                                                   <div>
+                                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{card.label}</div>
+                                                     <div className="text-base font-black text-slate-700">{card.val}</div>
+                                                   </div>
+                                                 </div>
+                                               </div>
+                                             ))}
+                                           </div>
 
-                                              {/* 2. Summary Cards */}
-                                              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id={`sku-dashboard-${item.sku}`}>
-                                                {[
-                                                  { label: '广告曝光', val: totalImps.toLocaleString(), color: 'text-slate-600' },
-                                                  { label: '广告点击', val: totalClicks.toLocaleString(), color: 'text-sky-600' },
-                                                  { label: '进店访客', val: totalVisits.toLocaleString(), color: 'text-purple-600' },
-                                                  { label: '广告消耗', val: `$${totalAdSpend.toFixed(1)}`, color: 'text-rose-500' },
-                                                  { label: '成交总件', val: totalUnitsCount, color: 'text-emerald-600' },
-                                                  { label: '广告订单', val: totalAdUnits, color: 'text-cyan-600' },
-                                                  { label: '自然转化', val: `${totalNaturalCV.toFixed(2)}%`, color: 'text-emerald-500' },
-                                                  { label: '广告转化', val: `${totalAdCV.toFixed(2)}%`, color: 'text-amber-500' }
-                                                ].map((card, cid) => (
-                                                  <div key={cid} className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center">
-                                                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{card.label}</div>
-                                                    <div className={`text-sm font-black ${card.color}`}>{card.val}</div>
-                                                  </div>
-                                                ))}
-                                              </div>
+                                           {/* 3. Charts & AI Re-layout (2x2 Grid) */}
+                                           <div className="space-y-6">
+                                             {/* Row 1: Core Trends */}
+                                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                               {/* 销售趋势 */}
+                                               <div className="v2-card bg-white p-5 border-slate-100 shadow-md transition-all hover:shadow-lg">
+                                                 <div className="flex items-center justify-between mb-6">
+                                                   <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                     <BarChart3 className="w-4 h-4 text-sky-600" /> 销售趋势 (Pieces)
+                                                   </div>
+                                                   <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> 总数</div>
+                                                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 广告</div>
+                                                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 自然</div>
+                                                   </div>
+                                                 </div>
+                                                 <div className="h-[220px]">
+                                                   <ResponsiveContainer width="100%" height="100%">
+                                                     <AreaChart data={enrichedAnalytics.slice(-30)}>
+                                                       <defs>
+                                                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                                           <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                                           <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                                         </linearGradient>
+                                                       </defs>
+                                                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                       <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
+                                                       <YAxis fontSize={9} axisLine={false} tickLine={false} />
+                                                       <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }} />
+                                                       <Area type="monotone" dataKey="unitsCount" stroke="#ef4444" fill="url(#colorTotal)" strokeWidth={3} />
+                                                       <Area type="monotone" dataKey="adUnits" stroke="#10b981" fill="transparent" strokeWidth={2} />
+                                                       <Area type="monotone" dataKey="organicUnits" stroke="#f59e0b" fill="transparent" strokeWidth={1} strokeDasharray="4 4" />
+                                                     </AreaChart>
+                                                   </ResponsiveContainer>
+                                                 </div>
+                                               </div>
 
-                                          {/* 3. Charts & AI Side-by-Side */}
-                                          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-                                            <div className="xl:col-span-3 space-y-6">
-                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                                <div className="flex items-center justify-between mb-6">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                    <BarChart3 className="w-4 h-4 text-sky-600" /> 销售趋势 (Pieces)
-                                                  </div>
-                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> 总数</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 广告</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 自然</div>
-                                                  </div>
-                                                </div>
-                                                <div className="h-[180px]">
-                                                  <ResponsiveContainer width="100%" height="100%">
-                                                    <AreaChart data={enrichedAnalytics.slice(-30)}>
-                                                      <defs>
-                                                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
-                                                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                                                        </linearGradient>
-                                                      </defs>
-                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                      <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <YAxis fontSize={9} axisLine={false} tickLine={false} />
-                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }} />
-                                                      <Area type="monotone" dataKey="unitsCount" stroke="#ef4444" fill="url(#colorTotal)" strokeWidth={3} />
-                                                      <Area type="monotone" dataKey="adUnits" stroke="#10b981" fill="transparent" strokeWidth={2} />
-                                                      <Area type="monotone" dataKey="organicUnits" stroke="#f59e0b" fill="transparent" strokeWidth={1} strokeDasharray="4 4" />
-                                                    </AreaChart>
-                                                  </ResponsiveContainer>
-                                                </div>
-                                              </div>
+                                               {/* 流量曝光对比 */}
+                                               <div className="v2-card bg-white p-5 border-slate-100 shadow-md transition-all hover:shadow-lg">
+                                                 <div className="flex items-center justify-between mb-6">
+                                                   <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                     <Activity className="w-4 h-4 text-purple-500" /> 流量曝光对比 (Visits vs Imps)
+                                                   </div>
+                                                   <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500" /> 自然访客</div>
+                                                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-400" /> 广告曝光</div>
+                                                   </div>
+                                                 </div>
+                                                 <div className="h-[220px]">
+                                                   <ResponsiveContainer width="100%" height="100%">
+                                                     <LineChart data={enrichedAnalytics.slice(-30)}>
+                                                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                       <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
+                                                       <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
+                                                       <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
+                                                       <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                                                       <Line yAxisId="left" type="monotone" dataKey="naturalVisits" stroke="#a855f7" strokeWidth={3} dot={false} />
+                                                       <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="#94a3b8" strokeWidth={2} dot={false} />
+                                                     </LineChart>
+                                                   </ResponsiveContainer>
+                                                 </div>
+                                               </div>
+                                             </div>
 
-                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                                <div className="flex items-center justify-between mb-6">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                    <MousePointer2 className="w-4 h-4 text-rose-500" /> 广告表现 (Ads Insight)
-                                                  </div>
-                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> ROAS</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ACOS</div>
-                                                  </div>
-                                                </div>
-                                                <div className="h-[180px]">
-                                                  <ResponsiveContainer width="100%" height="100%">
-                                                    <LineChart data={enrichedAnalytics.slice(-30)}>
-                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                      <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                                                      <Line yAxisId="left" type="monotone" dataKey="cpc" stroke="#ef4444" strokeWidth={3} dot={false} />
-                                                      <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#0ea5e9" strokeWidth={2} dot={false} />
-                                                      <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#10b981" strokeWidth={2} dot={false} />
-                                                    </LineChart>
-                                                  </ResponsiveContainer>
-                                                </div>
-                                              </div>
-                                            </div>
+                                             {/* Row 2: Deep Insight (3:2 Grid Layout) */}
+                                             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                                               <div className="xl:col-span-3">
+                                                 <div className="v2-card bg-white p-5 border-slate-100 shadow-md h-full transition-all hover:shadow-lg">
+                                                   <div className="flex items-center justify-between mb-6">
+                                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                       <MousePointer2 className="w-4 h-4 text-rose-500" /> 广告表现 (Ads Insight)
+                                                     </div>
+                                                     <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                       <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
+                                                       <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> ROAS</div>
+                                                       <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ACOS</div>
+                                                     </div>
+                                                   </div>
+                                                   <div className="h-[220px]">
+                                                     <ResponsiveContainer width="100%" height="100%">
+                                                       <LineChart data={enrichedAnalytics.slice(-30)}>
+                                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                         <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
+                                                         <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
+                                                         <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
+                                                         <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                                                         <Line yAxisId="left" type="monotone" dataKey="cpc" stroke="#ef4444" strokeWidth={3} dot={false} />
+                                                         <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                                                         <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#10b981" strokeWidth={2} dot={false} />
+                                                       </LineChart>
+                                                     </ResponsiveContainer>
+                                                   </div>
+                                                 </div>
+                                               </div>
 
-                                            <div className="xl:col-span-2 space-y-6">
-                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                                <div className="flex items-center justify-between mb-6">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                    <Activity className="w-4 h-4 text-purple-500" /> 流量曝光对比 (Visits vs Imps)
-                                                  </div>
-                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-500" /> 自然访客</div>
-                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-400" /> 广告曝光</div>
-                                                  </div>
-                                                </div>
-                                                <div className="h-[200px]">
-                                                  <ResponsiveContainer width="100%" height="100%">
-                                                    <LineChart data={enrichedAnalytics.slice(-30)}>
-                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                                      <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
-                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                                                      <Line yAxisId="left" type="monotone" dataKey="naturalVisits" stroke="#a855f7" strokeWidth={3} dot={false} />
-                                                      <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="#94a3b8" strokeWidth={2} dot={false} />
-                                                    </LineChart>
-                                                  </ResponsiveContainer>
-                                                </div>
-                                              </div>
+                                               <div className="xl:col-span-2">
+                                                 <SkuAiAnalysis 
+                                                   sku={item.sku} 
+                                                   skuName={item.productName} 
+                                                   skuStats={analytics}
+                                                   operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
+                                                 />
+                                               </div>
+                                             </div>
 
-                                              <SkuAiAnalysis 
-                                                sku={item.sku} 
-                                                skuName={item.productName} 
-                                                skuStats={analytics}
-                                                operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
-                                              />
-                                            </div>
-                                          </div>
+                                             {/* 4. Bottom Table (Scrollable Details) */}
+                                             <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                               <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                                 <Activity className="w-4 h-4 text-orange-500" /> 每日经营明细表 (30天内)
+                                               </div>
+                                               <div className="v2-table-wrapper max-h-[350px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                                 <table className="v2-table border-separate border-spacing-0">
+                                                   <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                     <tr>
+                                                       <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
+                                                       <th className="px-3 py-2.5 text-center border-b border-slate-100">流量 (访/点/曝)</th>
+                                                       <th className="px-3 py-2.5 text-center border-b border-slate-100">销量 (总/广/自)</th>
+                                                       <th className="px-3 py-2.5 text-center border-b border-slate-100">广告指标 (2位精度)</th>
+                                                       <th className="px-3 py-2.5 text-right border-b border-slate-100">净损益 (USD)</th>
+                                                     </tr>
+                                                   </thead>
+                                                   <tbody className="text-[10px] font-mono divide-y divide-slate-50">
+                                                     {enrichedAnalytics.map((rowE, rid) => (
+                                                       <tr key={rid} className="v2-table-tr hover:bg-slate-50/80 text-center transition-colors">
+                                                         <td className="px-3 py-2.5 text-left text-slate-500 font-bold">{rowE.date}</td>
+                                                         <td className="px-3 py-2.5 text-slate-400 font-medium">{rowE.visits} / {rowE.clicks} / {rowE.impressions}</td>
+                                                         <td className="px-3 py-2.5">
+                                                           <span className="text-rose-600 font-black">{rowE.unitsCount}</span>
+                                                           <span className="mx-1 text-slate-200">/</span>
+                                                           <span className="text-emerald-600 font-bold">{rowE.adUnits}</span>
+                                                           <span className="mx-1 text-slate-200">/</span>
+                                                           <span className="text-amber-500 font-bold">{rowE.organicUnits}</span>
+                                                         </td>
+                                                         <td className="px-3 py-2.5">
+                                                           <span className="text-rose-500 font-bold">${rowE.cpc.toFixed(2)}</span>
+                                                           <span className="mx-1 text-slate-200">|</span>
+                                                           <span className="text-sky-600 font-bold">{rowE.roas.toFixed(2)}</span>
+                                                           <span className="mx-1 text-slate-200">|</span>
+                                                           <span className="text-emerald-600 font-bold">{rowE.acos.toFixed(2)}%</span>
+                                                         </td>
+                                                         <td className="px-3 py-2.5 text-right font-black text-rose-600">
+                                                           {rowE.lossUsd > 0 ? `-$${rowE.lossUsd.toFixed(1)}` : '-'}
+                                                         </td>
+                                                       </tr>
+                                                     ))}
+                                                   </tbody>
+                                                 </table>
+                                               </div>
+                                             </div>
 
-                                          {/* 4. Bottom Table */}
-                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
-                                              <Activity className="w-4 h-4 text-orange-500" /> 每日经营明细表
-                                            </div>
-                                            <div className="v2-table-wrapper max-h-[350px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
-                                              <table className="v2-table border-separate border-spacing-0">
-                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
-                                                  <tr>
-                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">流量 (访/点/曝)</th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">销量 (总/广/自)</th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">广告 (CPC/ROAS/ACOS)</th>
-                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">净损益 (USD)</th>
-                                                  </tr>
-                                                </thead>
-                                                <tbody className="text-[10px] font-mono divide-y divide-slate-50">
-                                                  {analytics.map((row, rid) => {
-                                                    const rowE = enrichedAnalytics.find(e => e.date === row.date);
-                                                    return (
-                                                      <tr key={rid} className="v2-table-tr hover:bg-slate-50/80 text-center transition-colors">
-                                                        <td className="px-3 py-2.5 text-left text-slate-500 font-bold">{row.date}</td>
-                                                        <td className="px-3 py-2.5 text-slate-400 font-medium">{rowE?.visits} / {rowE?.clicks} / {rowE?.impressions}</td>
-                                                        <td className="px-3 py-2.5">
-                                                          <span className="text-rose-600 font-black">{row.unitsCount}</span>
-                                                          <span className="mx-1 text-slate-200">/</span>
-                                                          <span className="text-emerald-600 font-bold">{rowE?.adUnits}</span>
-                                                          <span className="mx-1 text-slate-200">/</span>
-                                                          <span className="text-amber-500 font-bold">{rowE?.organicUnits}</span>
-                                                        </td>
-                                                        <td className="px-3 py-2.5">
-                                                          <span className="text-rose-500 font-bold">${rowE?.cpc.toFixed(2)}</span>
-                                                          <span className="mx-1 text-slate-200">|</span>
-                                                          <span className="text-sky-600 font-bold">{rowE?.roas.toFixed(2)}</span>
-                                                          <span className="mx-1 text-slate-200">|</span>
-                                                          <span className="text-emerald-600 font-bold">{rowE?.acos.toFixed(2)}%</span>
-                                                        </td>
-                                                        <td className="px-3 py-2.5 text-right font-black text-rose-600">
-                                                          {row.lossUsd > 0 ? `-$${row.lossUsd.toFixed(1)}` : '-'}
-                                                        </td>
-                                                      </tr>
-                                                    );
-                                                  })}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          </div>
-
-                                          {/* 5. Historical Operations Log */}
-                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
-                                              <History className="w-4 h-4 text-indigo-500" /> SKU 历史运营记录
-                                            </div>
-                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
-                                              <table className="v2-table border-separate border-spacing-0">
-                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
-                                                  <tr>
-                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">动作类型</th>
-                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">详情描述</th>
-                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">记录时间</th>
-                                                  </tr>
-                                                </thead>
-                                                <tbody className="text-[10px] divide-y divide-slate-50">
-                                                  {(() => {
-                                                    const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
-                                                    if (skuLogs.length === 0) {
-                                                      return (
-                                                        <tr>
-                                                          <td colSpan={4} className="px-3 py-8 text-center text-slate-400 italic">
-                                                            暂无历史运营记录
-                                                          </td>
-                                                        </tr>
-                                                      );
-                                                    }
-                                                    return skuLogs.map((log: any, lid: number) => (
-                                                      <tr key={lid} className="v2-table-tr hover:bg-slate-50/80 transition-colors">
-                                                        <td className="px-3 py-2.5 text-slate-600 font-bold whitespace-nowrap">{log.date}</td>
-                                                        <td className="px-3 py-2.5 text-center">
-                                                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${
-                                                            log.actionType === 'Price' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
-                                                            log.actionType === 'Stock' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                                            log.actionType === 'Ads' ? 'bg-sky-50 text-sky-600 border border-sky-100' :
-                                                            'bg-slate-50 text-slate-600 border border-slate-100'
-                                                          }`}>
-                                                            {log.actionType}
-                                                          </span>
-                                                        </td>
-                                                        <td className="px-3 py-2.5 text-slate-500 leading-relaxed font-medium">{log.description}</td>
-                                                        <td className="px-3 py-2.5 text-right text-slate-300 tabular-nums">
-                                                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </td>
-                                                      </tr>
-                                                    ));
-                                                  })()}
-                                                </tbody>
-                                              </table>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                </motion.div>
-                              </td>
-                            </tr>
-                          )}
-                        </AnimatePresence>
+                                             {/* 5. Operations Log */}
+                                             <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                               <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                                 <History className="w-4 h-4 text-indigo-500" /> SKU 历史运营日志
+                                               </div>
+                                               <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                                 <table className="v2-table border-separate border-spacing-0">
+                                                   <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                     <tr>
+                                                       <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
+                                                       <th className="px-3 py-2.5 text-center border-b border-slate-100">动作类型</th>
+                                                       <th className="px-3 py-2.5 text-left border-b border-slate-100">描述详情</th>
+                                                       <th className="px-3 py-2.5 text-right border-b border-slate-100">记录时间</th>
+                                                     </tr>
+                                                   </thead>
+                                                   <tbody className="text-[10px] divide-y divide-slate-50">
+                                                     {(() => {
+                                                       const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
+                                                       if (skuLogs.length === 0) return <tr><td colSpan={4} className="px-3 py-8 text-center text-slate-400 italic">暂无历史记录</td></tr>;
+                                                       return skuLogs.map((log: any, lid: number) => (
+                                                         <tr key={lid} className="v2-table-tr hover:bg-slate-50/80 transition-colors">
+                                                           <td className="px-3 py-2.5 text-slate-600 font-bold whitespace-nowrap">{log.date}</td>
+                                                           <td className="px-3 py-2.5 text-center">
+                                                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${
+                                                               log.actionType === 'Price' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                               log.actionType === 'Stock' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                               log.actionType === 'Ads' ? 'bg-sky-50 text-sky-600 border border-sky-100' : 'bg-slate-50 text-slate-600'
+                                                             }`}>{log.actionType}</span>
+                                                           </td>
+                                                           <td className="px-3 py-2.5 text-slate-500 font-medium">{log.description}</td>
+                                                           <td className="px-3 py-2.5 text-right text-slate-300 tabular-nums">
+                                                             {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                           </td>
+                                                         </tr>
+                                                       ));
+                                                     })()}
+                                                   </tbody>
+                                                 </table>
+                                               </div>
+                                             </div>
+                                           </div>
+                                         );
+                                       })()}
+                                     </div>
+                                   </motion.div>
+                                 </td>
+                               </tr>
+                             )}
+                           </AnimatePresence>
                     </React.Fragment>
                     );
                   })

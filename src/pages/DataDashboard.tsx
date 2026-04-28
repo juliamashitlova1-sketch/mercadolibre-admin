@@ -257,8 +257,8 @@ export default function DataDashboard() {
     adsData.forEach(a => {
       const key = `${a.date}_${a.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku: a.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      // 广告费自动换算 RMB (假设 adsData.ad_spend 是 MXN)
-      dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * MXN_TO_CNY;
+      // 广告费自动换算 RMB (用户确认：adsData.ad_spend 是 USD)
+      dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
     // 3. 处理刷单支出

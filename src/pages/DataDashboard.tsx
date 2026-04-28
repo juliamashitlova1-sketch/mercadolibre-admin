@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
+  Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
   ArrowDownRight, Zap, Target, Users, Receipt, RefreshCw, Layers
 } from 'lucide-react';
 import { MXN_TO_CNY, USD_TO_MXN } from '../constants';

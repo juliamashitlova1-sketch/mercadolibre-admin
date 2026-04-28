@@ -46,26 +46,26 @@ export default function SkuCostManagement() {
       skuData.forEach(s => {
         const p = priceMap[s.sku.toUpperCase()];
         initialEdited[s.sku.toUpperCase()] = {
-          purchasePriceCny: parseFloat(s.cost_rmb) || p?.purchase_price_cny || 45,
-          replenishmentQty: p?.replenishment_qty || 100,
-          sellingPriceMxn: parseFloat(s.price_mxn) || p?.selling_price_mxn || 450,
+          purchasePriceCny: p?.purchase_price_cny || parseFloat(s.cost_rmb) || 0,
+          replenishmentQty: p?.replenishment_qty || 0,
+          sellingPriceMxn: p?.selling_price_mxn || parseFloat(s.price_mxn) || 0,
           exchangeRate: p?.exchange_rate || 0.3891,
           commissionRate: p?.commission_rate !== undefined ? p.commission_rate : 0.175,
           adRate: p?.ad_rate !== undefined ? p.ad_rate : 0.08,
           returnRate: p?.return_rate !== undefined ? p.return_rate : 0.02,
           taxRate: p?.tax_rate !== undefined ? p.tax_rate : 0.0905,
-          boxLength: p?.box_length || 40,
-          boxWidth: p?.box_width || 30,
-          boxHeight: p?.box_height || 30,
-          packCount: p?.pack_count || 100,
-          boxWeight: p?.box_weight || 15,
-          unitLength: p?.unit_length || 10,
-          unitWidth: p?.unit_width || 5,
-          unitHeight: p?.unit_height || 5,
-          productWeight: p?.product_weight || 0.15,
+          boxLength: p?.box_length || 0,
+          boxWidth: p?.box_width || 0,
+          boxHeight: p?.box_height || 0,
+          packCount: p?.pack_count || 0,
+          boxWeight: p?.box_weight || 0,
+          unitLength: p?.unit_length || 0,
+          unitWidth: p?.unit_width || 0,
+          unitHeight: p?.unit_height || 0,
+          productWeight: p?.product_weight || 0,
           logisticsMode: p?.logistics_mode || '海运',
-          seaFreightUnitPrice: p?.sea_freight_unit_price || 3100,
-          airFreightUnitPrice: p?.air_freight_unit_price || 95
+          seaFreightUnitPrice: p?.sea_freight_unit_price || 0,
+          airFreightUnitPrice: p?.air_freight_unit_price || 0
         };
       });
       setEditedData(initialEdited);
@@ -153,14 +153,19 @@ export default function SkuCostManagement() {
     const totalGrossProfitRmb = unitProfitCny * f.replenishmentQty;
     const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;
 
+    const commissionCny = commissionMxn * f.exchangeRate;
+    const taxCny = taxMxn * f.exchangeRate;
+
     return {
       fixedFee: calculatedFixed,
       lastMileFee: calculatedLastMile,
       singleUnitVolumetricWeight,
       ar59Weight,
       commissionMxn,
+      commissionCny,
       adFeeMxn,
       taxMxn,
+      taxCny,
       totalFeesMxn,
       payoutCny,
       freightPerUnit: currentFreightPerUnit,
@@ -267,6 +272,10 @@ export default function SkuCostManagement() {
             <thead className="v2-table-thead">
               <tr>
                 <th className="v2-table-th">产品详情 (图片 / SKU代码 / 名称)</th>
+                <th className="v2-table-th text-center">采购成本</th>
+                <th className="v2-table-th text-center">物流分摊</th>
+                <th className="v2-table-th text-center">佣金成本</th>
+                <th className="v2-table-th text-center">税率成本</th>
                 <th className="v2-table-th text-right">管理操作</th>
               </tr>
             </thead>
@@ -300,6 +309,18 @@ export default function SkuCostManagement() {
                             </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="v2-table-td text-center">
+                        <div className="text-[11px] font-mono font-bold text-slate-300">¥{f.purchasePriceCny.toFixed(2)}</div>
+                      </td>
+                      <td className="v2-table-td text-center">
+                        <div className="text-[11px] font-mono font-bold text-sky-400">¥{m.freightPerUnit.toFixed(2)}</div>
+                      </td>
+                      <td className="v2-table-td text-center">
+                        <div className="text-[11px] font-mono font-bold text-rose-400">¥{m.commissionCny.toFixed(2)}</div>
+                      </td>
+                      <td className="v2-table-td text-center">
+                        <div className="text-[11px] font-mono font-bold text-amber-400">¥{m.taxCny.toFixed(2)}</div>
                       </td>
                       <td className="v2-table-td text-right">
                         <div className="flex items-center justify-end gap-4">

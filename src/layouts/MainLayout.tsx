@@ -331,10 +331,9 @@ export default function MainLayout({
                 {hasNewUpdate && (
                   <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-bounce" />
                 )}
+
               </button>
-            </div>
-          </div>
-        </header>
+            
 
               <AnimatePresence>
                 {isNotificationOpen && (

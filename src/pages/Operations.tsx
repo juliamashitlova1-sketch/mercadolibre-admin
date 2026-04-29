@@ -100,13 +100,13 @@ export default function Operations() {
                 <span className="v2-stat-label text-slate-400 font-bold">累计操作</span>
                 <div className="v2-stat-value text-slate-900">{operationLogs.length}</div>
              </div>
-             <div className="v2-stat-card bg-sky-500/5 border-sky-500/20 shadow-lg">
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
                 <span className="v2-stat-label text-sky-600 font-bold">本月活跃记录</span>
                 <div className="v2-stat-value text-sky-600">
                   {operationLogs.filter(l => l.date.startsWith(new Date().toISOString().substring(0, 7))).length}
                 </div>
              </div>
-             <div className="v2-stat-card bg-indigo-500/5 border-indigo-500/20 shadow-lg">
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
                 <span className="v2-stat-label text-indigo-600 font-bold">广告优化次数</span>
                 <div className="v2-stat-value text-indigo-600">{operationLogs.filter(l => l.actionType === 'Ads').length}</div>
              </div>

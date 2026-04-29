@@ -107,7 +107,7 @@ export default function SoftwareSuggestions() {
           
           <button 
             onClick={() => setShowForm(!showForm)}
-            className="v2-button-primary bg-slate-900 hover:bg-black"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-black text-sm shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
           >
             {showForm ? <XCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             <span>{showForm ? '取消提交' : '提交新建议'}</span>
@@ -120,7 +120,7 @@ export default function SoftwareSuggestions() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="v2-card p-8 mb-8 border-purple-100 shadow-2xl shadow-purple-500/5"
+              className="v2-card bg-white p-8 mb-8 border-purple-100 shadow-2xl shadow-purple-500/10"
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -130,7 +130,7 @@ export default function SoftwareSuggestions() {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         required
-                        className={`${inputCls} pl-10`} 
+                        className={`${inputCls} pl-10 bg-white`} 
                         placeholder="输入姓名..." 
                         value={form.user_name} 
                         onChange={e => setForm({...form, user_name: e.target.value})} 
@@ -142,7 +142,7 @@ export default function SoftwareSuggestions() {
                     <div className="relative">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <select 
-                        className={`${inputCls} pl-10`}
+                        className={`${inputCls} pl-10 bg-white`}
                         value={form.category}
                         onChange={e => setForm({...form, category: e.target.value as any})}
                       >
@@ -158,7 +158,7 @@ export default function SoftwareSuggestions() {
                     <div className="relative">
                       <AlertCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <select 
-                        className={`${inputCls} pl-10`}
+                        className={`${inputCls} pl-10 bg-white`}
                         value={form.priority}
                         onChange={e => setForm({...form, priority: e.target.value as any})}
                       >
@@ -175,7 +175,7 @@ export default function SoftwareSuggestions() {
                   <textarea 
                     required
                     rows={4}
-                    className={`${inputCls} resize-none py-3`}
+                    className={`${inputCls} resize-none py-3 bg-white`}
                     placeholder="请详细描述您的想法、目前遇到的痛点，以及您期望的改进方案..."
                     value={form.content}
                     onChange={e => setForm({...form, content: e.target.value})}
@@ -186,7 +186,7 @@ export default function SoftwareSuggestions() {
                   <button 
                     type="submit" 
                     disabled={submitting}
-                    className="v2-button-primary min-w-[200px] h-12 bg-indigo-600 hover:bg-indigo-700"
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl font-black text-sm shadow-xl transition-all active:scale-95 disabled:opacity-50"
                   >
                     {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                     <span>提交建议</span>
@@ -204,10 +204,10 @@ export default function SoftwareSuggestions() {
               <p className="font-bold uppercase tracking-widest text-xs">加载建议列表中...</p>
             </div>
           ) : suggestions.length === 0 ? (
-            <div className="col-span-2 py-32 v2-card border-dashed flex flex-col items-center justify-center text-slate-400 opacity-50">
+            <div className="col-span-2 py-32 v2-card bg-white/50 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
               <MessageSquare className="w-16 h-16 mb-4 opacity-10" />
               <p className="font-bold">暂无迭代建议</p>
-              <p className="text-xs mt-1">点击上方按钮，提交第一个建议吧！</p>
+              <p className="text-xs mt-1 uppercase tracking-tighter">点击上方按钮，提交第一个建议吧！</p>
             </div>
           ) : suggestions.map((s, idx) => (
             <motion.div 
@@ -215,7 +215,7 @@ export default function SoftwareSuggestions() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.05 }}
-              className="v2-card p-6 flex flex-col hover:shadow-2xl hover:shadow-slate-200/50 transition-all group"
+              className="v2-card bg-white p-6 flex flex-col hover:shadow-2xl hover:shadow-slate-200/40 transition-all group border-slate-100"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function SoftwareSuggestions() {
                 </div>
               </div>
 
-              <div className="flex-1 text-sm text-slate-600 leading-relaxed font-medium bg-slate-50/50 p-4 rounded-2xl border border-slate-100 group-hover:bg-white transition-colors">
+              <div className="flex-1 text-sm text-slate-600 leading-relaxed font-medium bg-slate-50/80 p-4 rounded-2xl border border-slate-100 group-hover:bg-indigo-50/30 group-hover:border-indigo-100 transition-colors">
                 {s.content}
               </div>
 
@@ -262,7 +262,7 @@ export default function SoftwareSuggestions() {
                     {s.priority}
                   </span>
                 </div>
-                <button className="text-[10px] font-black text-slate-300 hover:text-indigo-600 flex items-center gap-1 transition-colors uppercase tracking-widest">
+                <button className="text-[10px] font-black text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors uppercase tracking-widest">
                   查看详情 <ArrowRight className="w-3 h-3" />
                 </button>
               </div>

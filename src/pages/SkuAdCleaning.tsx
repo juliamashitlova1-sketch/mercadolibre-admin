@@ -244,7 +244,7 @@ export default function SkuAdCleaning() {
               <h1 className="v2-header-title">
                 各 SKU 每日广告数据清洗
               </h1>
-              <p className="v2-header-subtitle text-slate-400">手动填写 SKU 广告消耗、效果及设定值</p>
+              <p className="v2-header-subtitle">手动填写 SKU 广告消耗、效果及设定值</p>
             </div>
           </div>
           

@@ -127,19 +127,19 @@
   }
 
   .v2-header {
-    @apply flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md;
+    @apply flex justify-between items-center bg-white/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200/60 shadow-xl;
   }
 
   .v2-header-icon {
-    @apply p-2 rounded-lg shadow-sm font-bold text-white;
+    @apply p-3 rounded-xl shadow-lg font-bold text-white;
   }
 
   .v2-header-title {
-    @apply text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-100 tracking-tight;
+    @apply text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-sky-700 tracking-tight;
   }
 
   .v2-header-subtitle {
-    @apply text-xs text-slate-400 mt-0.5;
+    @apply text-xs text-slate-500 mt-1 font-medium;
   }
 
   .v2-card {

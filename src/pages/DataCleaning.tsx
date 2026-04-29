@@ -217,41 +217,37 @@ export default function DataCleaning() {
   const renderTable = (title: string, orders: CleanedOrder[], badgeColor: string) => {
     if (orders.length === 0) return null;
     return (
-      <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl overflow-hidden shadow-lg mb-4">
-        <div className="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
-          <h2 className="text-xs font-semibold text-white tracking-tight flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${badgeColor}`}></span>
+      <div className="v2-card mb-6">
+        <div className="v2-card-header">
+          <h2 className="v2-card-title">
+            <span className={`w-2.5 h-2.5 rounded-full ${badgeColor} shadow-sm`}></span>
             {title} ({orders.length})
           </h2>
         </div>
-        <div className="overflow-x-auto max-h-[250px] custom-scrollbar">
-          <table className="w-full text-[11px] text-left">
-            <thead className="bg-slate-800/90 text-slate-400 tracking-wider sticky top-0 z-10 font-medium">
+        <div className="v2-table-wrapper max-h-[400px] custom-scrollbar">
+          <table className="v2-table">
+            <thead className="v2-table-thead">
               <tr>
-                <th className="px-4 py-2 border-b border-slate-700/50">状态</th>
-                <th className="px-4 py-2 border-b border-slate-700/50">订单号 (Order #)</th>
-                <th className="px-4 py-2 border-b border-slate-700/50">订单时间</th>
-                <th className="px-4 py-2 border-b border-slate-700/50">SKU</th>
-                <th className="px-4 py-2 border-b border-slate-700/50 text-center">件数</th>
-                <th className="px-4 py-2 border-b border-slate-700/50">买家地址</th>
+                <th className="v2-table-th">状态</th>
+                <th className="v2-table-th">订单号 (Order #)</th>
+                <th className="v2-table-th">订单时间</th>
+                <th className="v2-table-th">SKU</th>
+                <th className="v2-table-th text-center">件数</th>
+                <th className="v2-table-th">买家地址</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
+            <tbody className="divide-y divide-slate-100">
               {orders.map((order) => (
-                <tr key={order.order_id} className="hover:bg-slate-800/80 transition-colors">
-                  <td className="px-4 py-1.5">
-                    {order.status === 'valid' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-emerald-500/10 text-emerald-400">有效</span>}
-                    {order.status === 'cancel' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-rose-500/10 text-rose-400">取消</span>}
-                <tr key={order.order_id} className="v2-table-tr">
+                <tr key={order.order_id} className="v2-table-tr group">
                   <td className="v2-table-td">
-                    {order.status === 'valid' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">有效</span>}
-                    {order.status === 'cancel' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-100">取消</span>}
-                    {order.status === 'refund' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100">退款</span>}
+                    {order.status === 'valid' && <span className="status-pill pill-success">有效</span>}
+                    {order.status === 'cancel' && <span className="status-pill pill-danger">取消</span>}
+                    {order.status === 'refund' && <span className="status-pill pill-warning">退款</span>}
                   </td>
                   <td className="v2-table-td font-mono font-bold text-sky-600">{order.order_id}</td>
-                  <td className="v2-table-td text-slate-500 whitespace-nowrap">{order.order_date.substring(0, 20)}</td>
-                  <td className="v2-table-td text-indigo-600 font-black">{order.sku}</td>
-                  <td className="v2-table-td text-center text-slate-900 font-black">{order.units}</td>
+                  <td className="v2-table-td text-slate-500 whitespace-nowrap">{order.order_date.substring(0, 10)}</td>
+                  <td className="v2-table-td text-indigo-600 font-bold">{order.sku}</td>
+                  <td className="v2-table-td text-center text-slate-900 font-bold">{order.units}</td>
                   <td className="v2-table-td text-slate-500 leading-relaxed truncate max-w-[250px]" title={order.buyer_address}>
                     {order.buyer_address}
                   </td>
@@ -265,100 +261,101 @@ export default function DataCleaning() {
   };
 
   return (
-    <div className="v2-page-container custom-scrollbar">
+    <div className="v2-page-container">
       <div className="v2-inner-container">
         {/* Header Compact */}
         <header className="v2-header">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-indigo-600">
-              <Database className="w-5 h-5 text-white" />
+              <Database className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="v2-header-title">
                 订单及销售数量清洗
               </h1>
-              <p className="v2-header-subtitle">从 Mercado Libre 订单表提取与清洗，分为有效、取消与退款</p>
+              <p className="v2-header-subtitle">同步 Mercado Libre 原始数据，自动分类为有效、取消与退款</p>
             </div>
           </div>
           
-          <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs">
+          <label className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-5 py-2.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-sky-500/20 active:scale-95 text-sm font-bold">
             {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            <span className="font-medium">{isUploading ? '处理中...' : '上传表格 (.xlsx)'}</span>
+            <span>{isUploading ? '正在处理...' : '上传原始报表 (.xlsx)'}</span>
             <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={isUploading} />
           </label>
         </header>
 
         {syncStatus.message && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            className={`p-3 rounded-lg flex items-center space-x-2 border shadow-sm text-xs ${
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-4 rounded-xl flex items-center space-x-3 border shadow-sm text-sm ${
               syncStatus.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
               syncStatus.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-700' :
               'bg-sky-50 border-sky-200 text-sky-700'
             }`}
           >
-            {syncStatus.type === 'success' && <CheckCircle className="w-4 h-4" />}
-            {syncStatus.type === 'error' && <AlertCircle className="w-4 h-4" />}
-            {!syncStatus.type && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span className="font-medium">{syncStatus.message}</span>
+            {syncStatus.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {syncStatus.type === 'error' && <AlertCircle className="w-5 h-5" />}
+            {!syncStatus.type && <Loader2 className="w-5 h-5 animate-spin" />}
+            <span className="font-bold">{syncStatus.message}</span>
           </motion.div>
         )}
 
-        {/* Summaries Compact */}
+        {/* Summaries */}
         {!isLoading && data.length > 0 && (
           <div className="v2-stats-grid">
-             <div className="v2-stat-card bg-white/70 border-slate-200/60">
-                <span className="v2-stat-label text-slate-500">总订单 (Total)</span>
-                <div className="v2-stat-value text-slate-900">{data.length}</div>
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
+                <span className="v2-stat-label text-slate-400">导入总订单</span>
+                <div className="v2-stat-value text-slate-900">{data.length.toLocaleString()}</div>
              </div>
-             <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20">
+             <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20 shadow-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="v2-stat-label text-emerald-600">有效成交 (Valid)</span>
-                    <div className="v2-stat-value text-emerald-600">{validOrders.length}</div>
+                    <span className="v2-stat-label text-emerald-600">有效成交量</span>
+                    <div className="v2-stat-value text-emerald-600">{validOrders.length.toLocaleString()}</div>
                   </div>
-                  <TrendingUp className="w-6 h-6 text-emerald-500/20" />
+                  <TrendingUp className="w-8 h-8 text-emerald-500/20" />
                 </div>
              </div>
-             <div className="v2-stat-card bg-rose-500/5 border-rose-500/20">
+             <div className="v2-stat-card bg-rose-500/5 border-rose-500/20 shadow-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="v2-stat-label text-rose-600">取消拦截 (Cancel)</span>
-                    <div className="v2-stat-value text-rose-600">{cancelOrders.length}</div>
+                    <span className="v2-stat-label text-rose-600">取消/拦截</span>
+                    <div className="v2-stat-value text-rose-600">{cancelOrders.length.toLocaleString()}</div>
                   </div>
-                  <CopyX className="w-6 h-6 text-rose-500/20" />
+                  <CopyX className="w-8 h-8 text-rose-500/20" />
                 </div>
              </div>
-             <div className="v2-stat-card bg-orange-500/5 border-orange-500/20">
+             <div className="v2-stat-card bg-amber-500/5 border-amber-500/20 shadow-lg">
                 <div className="flex justify-between items-center">
                   <div>
-                     <span className="v2-stat-label text-orange-600">退款损失 (Refund)</span>
-                     <div className="v2-stat-value text-orange-600">{refundOrders.length}</div>
+                     <span className="v2-stat-label text-amber-600">退款/退货</span>
+                     <div className="v2-stat-value text-amber-600">{refundOrders.length.toLocaleString()}</div>
                   </div>
-                  <PackageX className="w-6 h-6 text-orange-500/20" />
+                  <PackageX className="w-8 h-8 text-amber-500/20" />
                 </div>
              </div>
           </div>
         )}
 
-        {/* Separated Tables */}
-        <div className="space-y-4">
+        {/* Tables */}
+        <div className="space-y-6">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400 v2-card">
-              <Loader2 className="w-8 h-8 animate-spin mb-4" />
-              <p className="text-sm">加载云端数据中...</p>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 v2-card bg-white/50">
+              <Loader2 className="w-10 h-10 animate-spin mb-4 text-sky-500" />
+              <p className="text-sm font-bold">正在拉取云端清洗数据...</p>
             </div>
           ) : data.length > 0 ? (
             <>
-              {renderTable('有效订单 (Valid)', validOrders, 'bg-emerald-500')}
-              {renderTable('取消订单 (Cancel)', cancelOrders, 'bg-rose-500')}
-              {renderTable('退款订单 (Refund)', refundOrders, 'bg-orange-500')}
+              {renderTable('有效订单明细 (Valid)', validOrders, 'bg-emerald-500')}
+              {renderTable('取消订单记录 (Cancel)', cancelOrders, 'bg-rose-500')}
+              {renderTable('退款订单记录 (Refund)', refundOrders, 'bg-amber-500')}
             </>
           ) : (
-            <div className="py-20 text-center text-slate-400 v2-card">
-              <Database className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">此表暂无数据，请上传包含订单的 Excel 表格</p>
+            <div className="py-32 text-center text-slate-400 v2-card bg-white/50 border-dashed">
+              <Database className="w-16 h-16 mx-auto mb-4 opacity-10" />
+              <p className="text-base font-bold">暂无清洗记录，请上传 Mercado Libre 原始报表</p>
+              <p className="text-xs opacity-60 mt-2">系统将自动识别订单状态并按 SKU 进行分类统计</p>
             </div>
           )}
         </div>
@@ -366,3 +363,4 @@ export default function DataCleaning() {
     </div>
   );
 }
+

@@ -96,13 +96,13 @@ export default function Operations() {
 
         {operationLogs.length > 0 && (
           <div className="v2-stats-grid">
-             <div className="v2-stat-card bg-slate-900/50 border-slate-800">
-               <span className="v2-stat-label text-slate-500">总记录数</span>
-               <div className="v2-stat-value text-white">{operationLogs.length}</div>
+             <div className="v2-stat-card bg-white/70 border-slate-200/60 shadow-lg">
+                <span className="v2-stat-label text-slate-400">总运营动作</span>
+                <div className="v2-stat-value text-slate-900">{operationLogs.length}</div>
              </div>
-             <div className="v2-stat-card bg-sky-500/5 border-sky-500/20">
-               <span className="v2-stat-label text-sky-500">调价次数</span>
-               <div className="v2-stat-value text-sky-400">{operationLogs.filter(l => l.actionType === 'Price').length}</div>
+             <div className="v2-stat-card bg-sky-500/5 border-sky-500/20 shadow-lg">
+                <span className="v2-stat-label text-sky-600">本月活跃度</span>
+                <div className="v2-stat-value text-sky-600">{operationLogs.filter(l => l.date.startsWith(new Date().toISOString().substring(0, 7))).length}</div>
              </div>
              <div className="v2-stat-card bg-purple-500/5 border-purple-500/20">
                <span className="v2-stat-label text-purple-500">广告调整</span>

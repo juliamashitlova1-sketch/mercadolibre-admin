@@ -53,9 +53,9 @@ export default function Health() {
                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                      <ShieldCheck className="w-6 h-6 text-emerald-500" />
                    </div>
-                   <div>
-                     <span className="v2-stat-label text-emerald-500">店铺信誉状态</span>
-                     <div className="v2-stat-value text-white">{latestStats.reputation || '绿色店铺'}</div>
+                   <div className="v2-stat-card bg-white/70 border-slate-200/60 shadow-lg">
+                      <span className="v2-stat-label text-slate-400">当前账号信誉</span>
+                      <div className="v2-stat-value text-slate-900">{latestStats.reputation || '绿色店铺'}</div>
                    </div>
                 </div>
                 <Select 

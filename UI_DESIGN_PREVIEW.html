@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美客多 - UI设计规范效果展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e7f0ff 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        /* ========== 色彩系统 ========== */
+        .section {
+            margin-bottom: 60px;
+        }
+        
+        .section-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 30px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #0052cc;
+        }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .color-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 300ms ease-in-out;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        .color-swatch {
+            height: 120px;
+            transition: all 300ms ease-in-out;
+        }
+        
+        .color-info {
+            padding: 16px;
+        }
+        
+        .color-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .color-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* ========== 按钮示例 ========== */
+        .button-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+        
+        .button-group {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .button-group h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0052cc;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .button-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* 主按钮 */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            background-color: #0052cc;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 300ms ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 82, 204, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background-color: #003a99;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 82, 204, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 次按钮 */
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: none;
+            background-color: #e7f0ff;
+            color: #0052cc;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 300ms ease-in-out;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d0e2ff;
+        }
+        
+        /* 幽灵按钮 */
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            background-color: transparent;
+            color: #0052cc;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 300ms ease-in-out;
+        }
+        
+        .btn-ghost:hover {
+            background-color: #f0f7ff;
+            border-color: #00b4d8;
+        }
+        
+        /* ========== 卡片示例 ========== */
+        .card-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 300ms ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0052cc, #00b4d8);
+            opacity: 0;
+            transition: opacity 300ms ease-in-out;
+        }
+        
+        .stat-card:hover {
+            border-color: #00b4d8;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+            color: #05a854;
+        }
+        
+        /* ========== 表格示例 ========== */
+        .table-demo {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .demo-table thead {
+            background: #f0f7ff;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        
+        .demo-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0052cc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .demo-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e8e8e8;
+            font-size: 14px;
+            color: #1a1a1a;
+        }
+        
+        .demo-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #05a8541a;
+            color: #05a854;
+        }
+        
+        .status-warning {
+            background: #ffb8361a;
+            color: #ffb836;
+        }
+        
+        .status-danger {
+            background: #e83e3e1a;
+            color: #e83e3e;
+        }
+        
+        /* ========== 响应式断点演示 ========== */
+        .breakpoint-demo {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        
+        .breakpoint {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .breakpoint-name {
+            font-weight: 600;
+            color: #0052cc;
+            margin-bottom: 8px;
+        }
+        
+        .breakpoint-size {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+        
+        /* 动画演示 */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animation-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .animation-box {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .animation-demo-item {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0052cc, #00b4d8);
+            border-radius: 8px;
+            margin: 16px auto;
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .bounce {
+            animation: bounce 1s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .spin {
+            animation: spin 2s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animation-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+        }
+        
+        /* ========== 间距示例 ========== */
+        .spacing-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .spacing-box {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .spacing-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .spacing-visual {
+            background: linear-gradient(90deg, #0052cc, #00b4d8);
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+        
+        .spacing-label {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            border-top: 1px solid #e8e8e8;
+            margin-top: 60px;
+        }
+        
+        @media (max-width: 768px) {
+            .color-grid,
+            .button-demo,
+            .card-demo,
+            .spacing-demo,
+            .animation-demo {
+                grid-template-columns: 1fr;
+            }
+            
+            .breakpoint-demo {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题 -->
+        <div class="header">
+            <h1>🎨 美客多 UI设计规范</h1>
+            <p>现代、统一、专业的设计系统</p>
+        </div>
+        
+        <!-- 色彩系统 -->
+        <div class="section">
+            <h2 class="section-title">🎭 色彩系统</h2>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #0052cc;"></div>
+                    <div class="color-info">
+                        <div class="color-name">主蓝色</div>
+                        <div class="color-code">#0052CC</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #003a99;"></div>
+                    <div class="color-info">
+                        <div class="color-name">深蓝色</div>
+                        <div class="color-code">#003A99</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #e7f0ff;"></div>
+                    <div class="color-info">
+                        <div class="color-name">浅蓝色</div>
+                        <div class="color-code">#E7F0FF</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #00b4d8;"></div>
+                    <div class="color-info">
+                        <div class="color-name">天青色</div>
+                        <div class="color-code">#00B4D8</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #05a854;"></div>
+                    <div class="color-info">
+                        <div class="color-name">成功绿</div>
+                        <div class="color-code">#05A854</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #ffb836;"></div>
+                    <div class="color-info">
+                        <div class="color-name">警告黄</div>
+                        <div class="color-code">#FFB836</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #e83e3e;"></div>
+                    <div class="color-info">
+                        <div class="color-name">危险红</div>
+                        <div class="color-code">#E83E3E</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: #1a1a1a;"></div>
+                    <div class="color-info">
+                        <div class="color-name">文本深色</div>
+                        <div class="color-code">#1A1A1A</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 按钮系统 -->
+        <div class="section">
+            <h2 class="section-title">🔘 按钮系统</h2>
+            <div class="button-demo">
+                <div class="button-group">
+                    <h3>主按钮 (Primary)</h3>
+                    <div class="button-showcase">
+                        <button class="btn-primary">正常状态</button>
+                        <button class="btn-primary" style="opacity: 0.7;">悬停状态</button>
+                        <button class="btn-primary" disabled>禁用状态</button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <h3>次按钮 (Secondary)</h3>
+                    <div class="button-showcase">
+                        <button class="btn-secondary">正常状态</button>
+                        <button class="btn-secondary" style="background: #d0e2ff;">悬停状态</button>
+                        <button class="btn-secondary" disabled>禁用状态</button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <h3>幽灵按钮 (Ghost)</h3>
+                    <div class="button-showcase">
+                        <button class="btn-ghost">正常状态</button>
+                        <button class="btn-ghost" style="background: #f0f7ff; border-color: #00b4d8;">悬hover</button>
+                        <button class="btn-ghost" disabled>禁用状态</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 卡片系统 -->
+        <div class="section">
+            <h2 class="section-title">📇 数据卡片系统</h2>
+            <div class="card-demo">
+                <div class="stat-card">
+                    <div class="stat-label">总销售额</div>
+                    <div class="stat-value">¥245,680</div>
+                    <div class="stat-change">↑ 12.5% 较上周</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">订单数量</div>
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-change">↑ 8.3% 较上周</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均订单值</div>
+                    <div class="stat-value">$197</div>
+                    <div class="stat-change">↓ 2.1% 较上周</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">退货率</div>
+                    <div class="stat-value">3.2%</div>
+                    <div class="stat-change">↓ 0.5% 较上周</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 表格示例 -->
+        <div class="section">
+            <h2 class="section-title">📋 表格系统</h2>
+            <div class="table-demo">
+                <table class="demo-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>产品名称</th>
+                            <th>库存</th>
+                            <th>状态</th>
+                            <th>销售额</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SKU-001</td>
+                            <td>蓝色T恤 XL</td>
+                            <td>245</td>
+                            <td><span class="status-badge status-success">上架中</span></td>
+                            <td>¥12,450</td>
+                        </tr>
+                        <tr>
+                            <td>SKU-002</td>
+                            <td>黑色夹克 M</td>
+                            <td>52</td>
+                            <td><span class="status-badge status-warning">库存预警</span></td>
+                            <td>¥8,920</td>
+                        </tr>
+                        <tr>
+                            <td>SKU-003</td>
+                            <td>运动鞋 EU42</td>
+                            <td>0</td>
+                            <td><span class="status-badge status-danger">已下架</span></td>
+                            <td>¥15,340</td>
+                        </tr>
+                        <tr>
+                            <td>SKU-004</td>
+                            <td>帽子 通用码</td>
+                            <td>380</td>
+                            <td><span class="status-badge status-success">上架中</span></td>
+                            <td>¥5,280</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 响应式断点 -->
+        <div class="section">
+            <h2 class="section-title">📱 响应式断点</h2>
+            <div class="breakpoint-demo">
+                <div class="breakpoint">
+                    <div class="breakpoint-name">Mobile</div>
+                    <div class="breakpoint-size">320 - 640px</div>
+                </div>
+                <div class="breakpoint">
+                    <div class="breakpoint-name">Tablet</div>
+                    <div class="breakpoint-size">641 - 1024px</div>
+                </div>
+                <div class="breakpoint">
+                    <div class="breakpoint-name">Desktop</div>
+                    <div class="breakpoint-size">1025 - 1600px</div>
+                </div>
+                <div class="breakpoint">
+                    <div class="breakpoint-name">Ultra</div>
+                    <div class="breakpoint-size">1600px+</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 动画演示 -->
+        <div class="section">
+            <h2 class="section-title">⚡ 动画效果</h2>
+            <div class="animation-demo">
+                <div class="animation-box">
+                    <div class="animation-demo-item pulse"></div>
+                    <div class="animation-label">脉冲动画</div>
+                </div>
+                <div class="animation-box">
+                    <div class="animation-demo-item bounce"></div>
+                    <div class="animation-label">弹跳动画</div>
+                </div>
+                <div class="animation-box">
+                    <div class="animation-demo-item spin"></div>
+                    <div class="animation-label">旋转动画</div>
+                </div>
+                <div class="animation-box">
+                    <div class="animation-demo-item" style="transition: all 300ms ease-in-out;"></div>
+                    <div class="animation-label">过渡效果</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 间距系统 -->
+        <div class="section">
+            <h2 class="section-title">📐 间距系统 (8px基础单位)</h2>
+            <div class="spacing-demo">
+                <div class="spacing-box">
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 4px; height: 20px;"></div>
+                        <div class="spacing-label">XS: 4px</div>
+                    </div>
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 8px; height: 20px;"></div>
+                        <div class="spacing-label">S: 8px</div>
+                    </div>
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 16px; height: 20px;"></div>
+                        <div class="spacing-label">M: 16px</div>
+                    </div>
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 24px; height: 20px;"></div>
+                        <div class="spacing-label">L: 24px</div>
+                    </div>
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 32px; height: 20px;"></div>
+                        <div class="spacing-label">XL: 32px</div>
+                    </div>
+                    <div class="spacing-item">
+                        <div class="spacing-visual" style="width: 48px; height: 20px;"></div>
+                        <div class="spacing-label">2XL: 48px</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer>
+            <p>💡 设计规范 v1.0 | 美客多数据管理平台</p>
+            <p style="font-size: 12px; margin-top: 8px;">🚀 Phase 1 实施中 - 预计完成时间：2周</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -122,7 +122,7 @@ export default function FakeOrders() {
       <div className="v2-inner-container">
         <header className="v2-header">
           <div className="flex items-center space-x-3">
-            <div className="v2-header-icon bg-gradient-to-br from-amber-500 to-orange-600">
+            <div className="v2-header-icon bg-gradient-to-br from-indigo-500 to-purple-600">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
@@ -139,7 +139,7 @@ export default function FakeOrders() {
               });
               setIsEditing(true);
             }}
-            className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white transition-all px-6 py-2.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 active:scale-95 text-xs font-bold"
           >
             <Plus className="w-4 h-4" />
             <span>新增记录</span>
@@ -147,14 +147,14 @@ export default function FakeOrders() {
         </header>
 
         {isEditing && (
-          <div className="v2-card bg-sky-500/5 border-sky-500/20 animate-in fade-in slide-in-from-top-4 p-6">
-            <h3 className="text-sm font-bold text-sky-400 mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4" />
+          <div className="v2-card bg-white/40 border-indigo-500/20 animate-slide-up p-8">
+            <h3 className="text-sm font-black text-slate-900 mb-6 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-indigo-500" />
               {currentRecord.id ? '编辑测评记录' : '新增测评记录'}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-              <div className="space-y-1.5 min-w-0">
-                <Label className="text-xs font-bold text-slate-500 uppercase">业务日期</Label>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+              <div className="space-y-2 min-w-0">
+                <Label className="stat-label">业务日期</Label>
                 <Input 
                   type="date" 
                   value={currentRecord.date} 
@@ -162,8 +162,8 @@ export default function FakeOrders() {
                   className="v2-input"
                 />
               </div>
-              <div className="space-y-1.5 min-w-0">
-                <Label className="text-xs font-bold text-slate-500 uppercase">选择 SKU</Label>
+              <div className="space-y-2 min-w-0">
+                <Label className="stat-label">选择 SKU</Label>
                 <Select value={currentRecord.sku} onValueChange={handleSkuSelect}>
                   <SelectTrigger className="v2-input">
                     <SelectValue placeholder="选择 SKU" />
@@ -178,8 +178,8 @@ export default function FakeOrders() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5 min-w-0">
-                <Label className="text-xs font-bold text-slate-500 uppercase">测评费 (CNY)</Label>
+              <div className="space-y-2 min-w-0">
+                <Label className="stat-label">测评费 (CNY)</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -188,8 +188,8 @@ export default function FakeOrders() {
                   className="v2-input"
                 />
               </div>
-              <div className="space-y-1.5 min-w-0">
-                <Label className="text-xs font-bold text-slate-500 uppercase">回款额 (USD)</Label>
+              <div className="space-y-2 min-w-0">
+                <Label className="stat-label">回款额 (USD)</Label>
                 <Input 
                   type="number" 
                   step="any"
@@ -198,41 +198,41 @@ export default function FakeOrders() {
                   className="v2-input"
                 />
               </div>
-              <div className="flex gap-2">
-                <button onClick={handleSave} className="flex-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg h-9 text-xs font-bold transition-all active:scale-95">保存</button>
-                <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg h-9 text-xs font-bold transition-all border border-slate-700">取消</button>
+              <div className="flex gap-3">
+                <button onClick={handleSave} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-12 text-sm font-black transition-all shadow-lg shadow-indigo-500/20 active:scale-95">保存</button>
+                <button onClick={() => setIsEditing(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl h-12 text-sm font-black transition-all border border-slate-200">取消</button>
               </div>
             </div>
             {currentRecord.skuName && (
-              <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
-                <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                自动匹配: <span className="text-sky-400 font-mono">{currentRecord.skuName}</span>
+              <div className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                自动匹配: <span className="text-indigo-500">{currentRecord.skuName}</span>
               </div>
             )}
           </div>
         )}
 
         {data.length > 0 && !loading && (
-          <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-slate-900/50 border-slate-800">
-               <span className="v2-stat-label text-slate-500">记录总数</span>
-               <div className="v2-stat-value text-white">{data.length}</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="v2-stat-card border-slate-200/50">
+               <span className="stat-label">记录总数</span>
+               <div className="stat-value">{data.length}</div>
             </div>
-            <div className="v2-stat-card bg-amber-500/5 border-amber-500/20">
-               <span className="v2-stat-label text-amber-500">累计支出 (CNY)</span>
-               <div className="v2-stat-value text-amber-400">¥{calculateTotalFees()}</div>
+            <div className="v2-stat-card border-indigo-200/50">
+               <span className="stat-label">累计支出 (CNY)</span>
+               <div className="stat-value text-indigo-600">¥{calculateTotalFees()}</div>
             </div>
-            <div className="v2-stat-card bg-sky-500/5 border-sky-500/20">
-               <span className="v2-stat-label text-sky-500">累计回款 (USD)</span>
-               <div className="v2-stat-value text-sky-400">${calculateTotalRefundsUSD()}</div>
+            <div className="v2-stat-card border-amber-200/50">
+               <span className="stat-label">累计回款 (USD)</span>
+               <div className="stat-value text-amber-600">${calculateTotalRefundsUSD()}</div>
             </div>
-            <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20">
+            <div className="v2-stat-card border-emerald-200/50">
                <div className="flex justify-between items-center">
                  <div>
-                   <span className="v2-stat-label text-emerald-500">实际总成 (CNY)</span>
-                   <div className="v2-stat-value text-emerald-400">¥{calculateActualCostTotal()}</div>
+                   <span className="stat-label">实际总成 (CNY)</span>
+                   <div className="stat-value text-emerald-600">¥{calculateActualCostTotal()}</div>
                  </div>
-                 <RefreshCcw className="w-6 h-6 text-emerald-500/20" />
+                 <RefreshCcw className="w-8 h-8 text-emerald-500/10" />
                </div>
             </div>
           </div>

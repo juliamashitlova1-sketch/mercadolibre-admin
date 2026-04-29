@@ -215,6 +215,61 @@ export default function Pricing() {
 
   const [detailRecord, setDetailRecord] = useState<any>(null);
 
+  const handleRollback = async (rec: any) => {
+    setForm({
+      sku: rec.sku || '',
+      name: rec.name || '',
+      model: rec.model || '',
+      replenishmentQty: rec.replenishment_qty || 100,
+      purchaseLink: rec.purchase_link || '',
+      competitorLink: rec.competitor_link || '',
+      competitorPriceMxn: rec.competitor_price || 0,
+      imageUrl: rec.image_url || '',
+      sellingPriceMxn: rec.selling_price_mxn || 0,
+      purchasePriceCny: rec.purchase_price_cny || 0,
+      exchangeRate: rec.exchange_rate || 0.3891,
+      commissionRate: rec.commission_rate || 0.175,
+      fixedFee: rec.fixed_fee || 0,
+      lastMileFee: rec.last_mile_fee || 0,
+      adRate: rec.ad_rate || 0.08,
+      returnRate: rec.return_rate || 0.02,
+      taxRate: rec.tax_rate || 0.0905,
+      boxLength: rec.box_length || 0, 
+      boxWidth: rec.box_width || 0, 
+      boxHeight: rec.box_height || 0, 
+      packCount: rec.pack_count || 1, 
+      boxWeight: rec.box_weight || 0,
+      unitLength: rec.unit_length || 10,
+      unitWidth: rec.unit_width || 5,
+      unitHeight: rec.unit_height || 5,
+      productWeight: rec.product_weight || 0,
+      logisticsProvider: rec.logistics_provider || '',
+      logisticsMode: rec.logistics_mode || '海运',
+      seaFreightUnitPrice: rec.sea_freight_unit_price || 3100,
+      airFreightUnitPrice: rec.air_freight_unit_price || 95,
+      auditor: rec.auditor || ''
+    });
+    
+    const { error } = await supabase.from('sku_pricing').delete().eq('id', rec.id);
+    if (!error) {
+       fetchRecords();
+       window.location.hash = '#/pricing/new';
+       alert('已将数据回退到计算器，请进行修改。');
+    }
+  };
+
+  const updateStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase.from('sku_pricing').update({ status: newStatus }).eq('id', id);
+    if (!error) fetchRecords();
+  };
+
+  const deleteRecord = async (id: string) => {
+    if (confirm('确定删除？')) {
+      const { error } = await supabase.from('sku_pricing').delete().eq('id', id);
+      if (!error) fetchRecords();
+    }
+  };
+
   const inputCls = "v2-input";
   const labelCls = "block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-0.5";
 
@@ -228,7 +283,7 @@ export default function Pricing() {
             </div>
             <div>
               <h1 className="v2-header-title text-slate-900">
-                {isCalculatorView ? '新品深度核价' : '核价历史记录'}
+                {isCalculatorView ? '新品深度核价' : isListView ? '已核价历史记录' : isSuccessView ? '核价成功区' : '暂存箱'}
               </h1>
               <p className="v2-header-subtitle font-medium">精确测算单品利润、ROI 及盈亏平衡点</p>
             </div>
@@ -428,73 +483,215 @@ export default function Pricing() {
               </div>
             </motion.div>
           ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="v2-card shadow-xl overflow-hidden">
-              <div className="v2-table-wrapper max-h-[750px] custom-scrollbar">
-                <table className="v2-table">
-                  <thead className="v2-table-thead">
-                    <tr>
-                      <th className="v2-table-th">核价对象信息</th>
-                      <th className="v2-table-th text-center">预估毛利 (单)</th>
-                      <th className="v2-table-th text-center">利润率 (ROI)</th>
-                      <th className="v2-table-th text-center">物流配置</th>
-                      <th className="v2-table-th text-center">结汇到账</th>
-                      <th className="v2-table-th text-right">核价详情与管理</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {records.length === 0 ? (
-                      <tr><td colSpan={6} className="py-40 text-center text-slate-400 font-bold italic text-sm uppercase tracking-widest opacity-30">暂无历史核价记录</td></tr>
-                    ) : sortedRecords.map(rec => (
-                      <tr key={rec.id} className="v2-table-tr group">
-                        <td className="v2-table-td">
-                           <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-xl bg-white border border-slate-100 overflow-hidden shadow-md">
-                                <img src={rec.image_url || 'https://via.placeholder.com/100'} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="min-w-0">
-                                 <div className="text-base font-black text-slate-900 truncate tracking-tight">{rec.name || '未命名新品'}</div>
-                                 <div className="text-[10px] text-slate-400 font-black uppercase mt-0.5 flex items-center gap-2">
-                                    <span>{rec.model || '标准型号'}</span>
-                                    <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                    <span>{rec.auditor || '系统归档'}</span>
+            <>
+              {isSuccessView && (
+                <div className="v2-card bg-white/50 p-3 flex items-center gap-3 mb-6 shadow-sm border-slate-100">
+                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
+                    <Filter className="w-4 h-4" /> 快速排序:
+                  </div>
+                  {[
+                    { label: '核价时间', key: 'created_at' },
+                    { label: '毛利率', key: 'margin' },
+                    { label: '采购总额', key: 'total_purchase' }
+                  ].map(sort => (
+                    <button
+                      key={sort.key}
+                      onClick={() => setSortConfig({ 
+                        key: sort.key, 
+                        order: sortConfig.key === sort.key && sortConfig.order === 'desc' ? 'asc' : 'desc' 
+                      })}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                        sortConfig.key === sort.key 
+                          ? 'bg-sky-600 text-white shadow-md' 
+                          : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
+                      }`}
+                    >
+                      {sort.label} {sortConfig.key === sort.key && (sortConfig.order === 'desc' ? '↓' : '↑')}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="v2-card shadow-xl overflow-hidden">
+                <div className="v2-table-wrapper max-h-[750px] custom-scrollbar">
+                  <table className="v2-table">
+                    <thead className="v2-table-thead">
+                      <tr>
+                        <th className="v2-table-th">核价对象信息</th>
+                        <th className="v2-table-th text-center">预估毛利 (单)</th>
+                        <th className="v2-table-th text-center">利润率 (ROI)</th>
+                        <th className="v2-table-th text-center">物流配置</th>
+                        <th className="v2-table-th text-center">结汇到账</th>
+                        <th className="v2-table-th text-right">核价详情与管理</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {records.length === 0 ? (
+                        <tr><td colSpan={6} className="py-40 text-center text-slate-400 font-bold italic text-sm uppercase tracking-widest opacity-30">暂无历史核价记录</td></tr>
+                      ) : sortedRecords.map(rec => (
+                        <tr key={rec.id} className="v2-table-tr group">
+                          <td className="v2-table-td">
+                             <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-xl bg-white border border-slate-100 overflow-hidden shadow-md">
+                                  <img src={rec.image_url || 'https://via.placeholder.com/100'} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="min-w-0">
+                                   <div className="text-base font-black text-slate-900 truncate tracking-tight">{rec.name || '未命名新品'}</div>
+                                   <div className="text-[10px] text-slate-400 font-black uppercase mt-0.5 flex items-center gap-2">
+                                      <span>{rec.model || '标准型号'}</span>
+                                      <span className="w-1 h-1 rounded-full bg-slate-200" />
+                                      <span>{rec.auditor || '系统归档'}</span>
+                                   </div>
+                                </div>
+                             </div>
+                          </td>
+                          <td className="v2-table-td text-center">
+                            <div className={`text-sm font-black font-mono ${rec.margin > 15 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              ¥{(rec.margin / 100 * rec.selling_price_mxn * rec.exchange_rate).toFixed(1)}
+                            </div>
+                          </td>
+                          <td className="v2-table-td text-center">
+                             <div className="flex flex-col items-center gap-1">
+                                <span className="text-[11px] font-black text-slate-900">{rec.margin.toFixed(1)}%</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase italic">ROI: {(rec.roi*100).toFixed(0)}%</span>
+                             </div>
+                          </td>
+                          <td className="v2-table-td text-center">
+                             <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border shadow-sm inline-flex items-center gap-1.5 ${
+                               rec.logistics_mode === '空运' ? 'bg-sky-50 text-sky-600 border-sky-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                             }`}>
+                               {rec.logistics_mode === '空运' ? <Plane className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
+                               {rec.logistics_mode || '海运'}
+                             </div>
+                          </td>
+                          <td className="v2-table-td text-center">
+                             <div className="text-xs font-mono font-black text-slate-600">¥{(rec.selling_price_mxn * rec.exchange_rate * 0.7).toFixed(1)}</div>
+                          </td>
+                          <td className="v2-table-td text-right">
+                             <div className="flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => handleRollback(rec)}
+                                  className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                                  title="回退编辑"
+                                >
+                                  <ArrowLeftCircle className="w-4 h-4" />
+                                </button>
+                                {isListView && (
+                                   <>
+                                     <button onClick={() => updateStatus(rec.id, 'success')} className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="确认核价"><CheckCircle className="w-4 h-4" /></button>
+                                     <button onClick={() => updateStatus(rec.id, 'staging')} className="p-2 text-slate-300 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="移至暂存"><Inbox className="w-4 h-4" /></button>
+                                   </>
+                                )}
+                                <button onClick={() => setDetailRecord(rec)} className="p-2 text-slate-300 hover:text-sky-600 hover:bg-sky-50 rounded-xl transition-all" title="查看详情"><Search className="w-4 h-4" /></button>
+                                <button onClick={() => deleteRecord(rec.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="删除记录"><Trash2 className="w-4 h-4" /></button>
+                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+
+              {/* 详情侧边栏 (Details Drawer) - Light Theme */}
+              <AnimatePresence>
+                {detailRecord && (
+                  <>
+                    <motion.div 
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      exit={{ opacity: 0 }}
+                      onClick={() => setDetailRecord(null)}
+                      className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50"
+                    />
+                    <motion.div 
+                      initial={{ x: '100%' }} 
+                      animate={{ x: 0 }} 
+                      exit={{ x: '100%' }}
+                      className="fixed top-0 right-0 h-full w-[550px] bg-white/95 backdrop-blur-2xl shadow-[-20px_0_50px_rgba(0,0,0,0.1)] z-[60] overflow-y-auto border-l border-slate-100"
+                    >
+                      <div className="p-8">
+                         <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-100">
+                            <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm"><Info className="w-6 h-6" /></div>
+                               核价原始数据详情
+                            </h3>
+                            <button onClick={() => setDetailRecord(null)} className="p-2.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400">
+                               <X className="w-6 h-6" />
+                            </button>
+                         </div>
+
+                         <div className="space-y-8">
+                            {/* 产品预览 */}
+                            <div className="flex gap-6 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+                               <img src={detailRecord.image_url} referrerPolicy="no-referrer" className="w-24 h-24 rounded-2xl object-cover bg-white shadow-md border-2 border-white" />
+                               <div className="flex flex-col justify-center">
+                                  <div className="text-lg font-black text-slate-900">{detailRecord.name || '未命名产品'}</div>
+                                  <div className="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">型号: {detailRecord.model || '--'}</div>
+                                  <div className="text-[10px] font-mono text-slate-300 mt-3 uppercase tracking-tighter bg-white px-2 py-1 rounded-lg border border-slate-100 self-start">ID: {detailRecord.id}</div>
+                               </div>
+                            </div>
+
+                            {/* 数据网格 */}
+                            {[
+                              { title: '基础采购与生命周期', items: [
+                                  { l: 'SKU 编码', v: detailRecord.sku },
+                                  { l: '补货数量', v: `${detailRecord.replenishment_qty} PCS` },
+                                  { l: '采购单价', v: `¥${detailRecord.purchase_price_cny}` },
+                                  { l: '总采购总额', v: `¥${(detailRecord.replenishment_qty * detailRecord.purchase_price_cny).toLocaleString()}`, highlight: true },
+                                  { l: '最后核价人', v: detailRecord.auditor || '系统' },
+                                  { l: '采购链接', v: detailRecord.purchase_link, isLink: true },
+                                  { l: '竞品链接', v: detailRecord.competitor_link, isLink: true },
+                              ]},
+                              { title: '平台费率与财务模型', items: [
+                                  { l: '比索建议售价', v: `$${detailRecord.selling_price_mxn}` },
+                                  { l: '核价时汇率', v: detailRecord.exchange_rate },
+                                  { l: '平台佣金率', v: `${(detailRecord.commission_rate * 100).toFixed(1)}%` },
+                                  { l: '固定费 (Fixed)', v: `$${detailRecord.fixed_fee}` },
+                                  { l: '尾程费 (Last Mile)', v: `$${detailRecord.last_mile_fee}` },
+                                  { l: '广告预算比', v: `${(detailRecord.ad_rate * 100).toFixed(1)}%` },
+                                  { l: '综合税率', v: `${(detailRecord.tax_rate * 100).toFixed(2)}%` },
+                              ]},
+                              { title: '物流包装与物理规格', items: [
+                                  { l: '单品尺寸 (CM)', v: `${detailRecord.unit_length}x${detailRecord.unit_width}x${detailRecord.unit_height}` },
+                                  { l: '单品实重 (KG)', v: `${detailRecord.product_weight}` },
+                                  { l: '整箱规格 (CM)', v: `${detailRecord.box_length}x${detailRecord.box_width}x${detailRecord.box_height}` },
+                                  { l: '装箱密度', v: `${detailRecord.pack_count} PCS/箱` },
+                                  { l: '物流模式', v: detailRecord.logistics_mode, highlight: true },
+                              ]}
+                            ].map(sec => (
+                              <div key={sec.title} className="space-y-3">
+                                 <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1">{sec.title}</h4>
+                                 <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden divide-y divide-slate-50 shadow-sm">
+                                    {sec.items.map(item => (
+                                      <div key={item.l} className="flex items-center justify-between p-4 px-6 hover:bg-slate-50 transition-colors">
+                                         <span className="text-[11px] font-bold text-slate-400 uppercase">{item.l}</span>
+                                         {item.isLink && item.v ? (
+                                            <a href={item.v} target="_blank" className="text-[11px] font-black text-sky-600 hover:text-sky-700 flex items-center gap-1 bg-sky-50 px-2 py-1 rounded-lg">访问链接 <ExternalLink className="w-3 h-3" /></a>
+                                         ) : (
+                                            <span className={`text-sm font-mono font-black ${item.highlight ? 'text-indigo-600' : 'text-slate-900'}`}>{item.v || '--'}</span>
+                                         )}
+                                      </div>
+                                    ))}
                                  </div>
                               </div>
-                           </div>
-                        </td>
-                        <td className="v2-table-td text-center">
-                          <div className={`text-sm font-black font-mono ${rec.margin > 15 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            ¥{(rec.margin / 100 * rec.selling_price_mxn * rec.exchange_rate).toFixed(1)}
-                          </div>
-                        </td>
-                        <td className="v2-table-td text-center">
-                           <div className="flex flex-col items-center gap-1">
-                              <span className="text-[11px] font-black text-slate-900">{rec.margin.toFixed(1)}%</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase italic">ROI: {(rec.roi*100).toFixed(0)}%</span>
-                           </div>
-                        </td>
-                        <td className="v2-table-td text-center">
-                           <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border shadow-sm inline-flex items-center gap-1.5 ${
-                             rec.logistics_mode === '空运' ? 'bg-sky-50 text-sky-600 border-sky-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                           }`}>
-                             {rec.logistics_mode === '空运' ? <Plane className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
-                             {rec.logistics_mode || '海运'}
-                           </div>
-                        </td>
-                        <td className="v2-table-td text-center">
-                           <div className="text-xs font-mono font-black text-slate-600">¥{(rec.selling_price_mxn * rec.exchange_rate * 0.7).toFixed(1)}</div>
-                        </td>
-                        <td className="v2-table-td text-right">
-                           <div className="flex items-center justify-end gap-3">
-                              <button onClick={() => setDetailRecord(rec)} className="p-2 text-slate-300 hover:text-sky-600 hover:bg-sky-50 rounded-xl transition-all"><Search className="w-4 h-4" /></button>
-                              <button onClick={() => deleteRecord(rec.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"><Trash2 className="w-4 h-4" /></button>
-                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
+                            ))}
+
+                            <div className="pt-8 pb-10">
+                               <button 
+                                 onClick={() => { handleRollback(detailRecord); setDetailRecord(null); }}
+                                 className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black text-sm flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/20 transition-all active:scale-95"
+                               >
+                                  <ArrowLeftCircle className="w-5 h-5" /> 回退至计算器重新编辑
+                               </button>
+                               <p className="text-[10px] text-slate-400 font-bold text-center mt-4 uppercase tracking-widest">Rollback will clear current record and reload into calculator</p>
+                            </div>
+                         </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </>
           )}
         </AnimatePresence>
       </div>

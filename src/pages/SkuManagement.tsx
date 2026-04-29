@@ -410,10 +410,10 @@ export default function SkuManagement() {
               <PackageX className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">SKU Intelligence Center</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">SKU 智能经营分析中心</h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Real-time SKU Performance & Logistics</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">实时运营表现与物流链条动态看板</p>
               </div>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function SkuManagement() {
             <button 
               onClick={() => { fetchCloudData(); fetchAuxiliaryData(); }}
               className="w-11 h-11 rounded-xl glass-panel flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all hover:bg-white/60"
-              title="Refresh Global Data"
+              title="同步云端最新数据"
             >
               <RefreshCw className={`w-5 h-5 ${(isLoading || isLoadingAux) ? 'animate-spin' : ''}`} />
             </button>
@@ -430,7 +430,7 @@ export default function SkuManagement() {
               className="h-11 px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-500/30 active:scale-95 transition-all text-xs font-black uppercase tracking-wider"
             >
               <Plus className="w-4 h-4" />
-              <span>Create SKU</span>
+              <span>新建资产档案</span>
             </button>
           </div>
         </header>
@@ -439,28 +439,28 @@ export default function SkuManagement() {
         <div className="v2-card border-white/40 overflow-hidden">
           <div className="p-6 border-b border-slate-100 bg-white/40 backdrop-blur-md flex items-center justify-between">
              <div className="flex items-center gap-4">
-                <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-tighter">Active Database</div>
-                <div className="text-xs text-slate-400 font-bold">Total SKUs: <span className="text-indigo-600">{skus.length}</span></div>
+                <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-tighter">在线数据库</div>
+                <div className="text-xs text-slate-400 font-bold">档案总数: <span className="text-indigo-600">{skus.length} 条记录</span></div>
              </div>
              <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-[10px] font-bold text-slate-500">All Systems Normal</span>
+                <span className="text-[10px] font-bold text-slate-500">所有系统连接正常</span>
              </div>
           </div>
           <div className="v2-table-wrapper">
             <table className="v2-table">
               <thead className="bg-slate-50/50 backdrop-blur-md">
                 <tr>
-                  <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Media</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Identity</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Product Detail</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Cost (CNY)</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Price (MXN)</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Listed</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Restock</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Current</th>
-                  <th className="px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Status</th>
-                  <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Actions</th>
+                  <th className="w-[6%] px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">图示</th>
+                  <th className="w-[12%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">SKU 编码</th>
+                  <th className="w-[28%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">产品档案详细名称</th>
+                  <th className="w-[9%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">成本 (RMB)</th>
+                  <th className="w-[9%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">售价 (MXN)</th>
+                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">上架数</th>
+                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">补货数</th>
+                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">实时结余</th>
+                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">状态</th>
+                  <th className="w-[8%] px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">操作</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-600">
@@ -492,7 +492,7 @@ export default function SkuManagement() {
                             <div className="w-14 h-14 rounded-2xl glass-panel p-1 group-hover:scale-110 transition-transform duration-500 shadow-sm border-white/60 overflow-hidden">
                               <img 
                                  src={item.imageUrl} 
-                                alt="SKU Preview" 
+                                alt="SKU 预览" 
                                 className="w-full h-full object-cover rounded-xl"
                                 loading="lazy"
                                 onError={(e: any) => {
@@ -512,13 +512,13 @@ export default function SkuManagement() {
                             <span className="text-sm font-black text-slate-900 tracking-tighter group-hover:text-indigo-600 transition-colors uppercase">{item.sku}</span>
                             <div className="flex items-center gap-1.5 mt-1">
                                <div className={`w-1.5 h-1.5 rounded-full ${isExpanded ? 'bg-indigo-500 animate-ping' : 'bg-slate-300'}`} />
-                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isExpanded ? 'Viewing' : 'Summary'}</span>
+                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isExpanded ? '正在分析' : '摘要概览'}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="v2-table-td max-w-[200px]">
+                        <td className="v2-table-td">
                             <div className="text-xs font-black text-slate-700 truncate" title={item.productName}>{item.productName}</div>
-                            <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">Listed: {item.listedDate}</div>
+                            <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">上架日期: {item.listedDate}</div>
                         </td>
                         <td className="v2-table-td font-black text-emerald-600">¥{item.costRMB}</td>
                         <td className="v2-table-td font-black text-indigo-600">${item.priceMXN}</td>
@@ -635,18 +635,18 @@ export default function SkuManagement() {
                                                   </div>
                                                   <div>
                                                     <div className="flex items-center gap-2">
-                                                       <h4 className="text-xl font-black text-slate-900 tracking-tight">Intelligence Dashboard</h4>
-                                                       <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black rounded-md border border-indigo-100 uppercase tracking-widest">v2.0 PRO</span>
+                                                       <h4 className="text-xl font-black text-slate-900 tracking-tight">智能经营分析看板</h4>
+                                                       <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black rounded-md border border-indigo-100 uppercase tracking-widest">高级专业版</span>
                                                     </div>
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Advanced Analytics for <span className="text-indigo-600">{item.sku}</span></p>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">正在深度剖析 SKU: <span className="text-indigo-600">{item.sku}</span></p>
                                                   </div>
                                                 </div>
 
                                                 <div className="flex items-center bg-white/60 backdrop-blur-xl p-1.5 rounded-2xl border border-white/80 shadow-sm">
                                                   {[
-                                                    { id: 'performance', label: 'Performance', icon: BarChart3 },
-                                                    { id: 'logistics', label: 'Operations', icon: Activity },
-                                                    { id: 'ai', label: 'AI & History', icon: History }
+                                                    { id: 'performance', label: '经营表现', icon: BarChart3 },
+                                                    { id: 'logistics', label: '物流记录', icon: Activity },
+                                                    { id: 'ai', label: 'AI 洞察与历史', icon: History }
                                                   ].map(tab => (
                                                     <button
                                                       key={tab.id}
@@ -678,10 +678,10 @@ export default function SkuManagement() {
                                                     {/* Hero Grid */}
                                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                       {[
-                                                        { label: 'Total Volume', val: totalUnitsCount, sub: `${totalAdUnits} Ads / ${totalNaturalUnits} Org`, icon: PackageX, color: 'from-indigo-600 to-violet-700' },
-                                                        { label: 'Ad Efficiency', val: `${totalAdCV.toFixed(2)}%`, sub: `CVR (Ad orders)`, icon: TrendingUp, color: 'from-emerald-500 to-teal-600' },
-                                                        { label: 'Market Reach', val: totalImps.toLocaleString(), sub: `${totalClicks.toLocaleString()} Clicks`, icon: Eye, color: 'from-sky-500 to-indigo-600' },
-                                                        { label: 'Ad Investment', val: `$${totalAdSpend.toFixed(1)}`, sub: `ROAS: ${totalAdUnits > 0 ? (totalUnitsCount/totalAdUnits).toFixed(1) : 'N/A'}`, icon: MousePointer2, color: 'from-rose-500 to-purple-600' }
+                                                        { label: '累计销售件数', val: totalUnitsCount, sub: `${totalAdUnits} 广告 / ${totalNaturalUnits} 自然`, icon: PackageX, color: 'from-indigo-600 to-violet-700' },
+                                                        { label: '广告转化率', val: `${totalAdCV.toFixed(2)}%`, sub: `CVR (广告订单)`, icon: TrendingUp, color: 'from-emerald-500 to-teal-600' },
+                                                        { label: '全域曝光量', val: totalImps.toLocaleString(), sub: `${totalClicks.toLocaleString()} 次点击`, icon: Eye, color: 'from-sky-500 to-indigo-600' },
+                                                        { label: '广告投入总额', val: `$${totalAdSpend.toFixed(1)}`, sub: `ROAS: ${totalAdUnits > 0 ? (totalUnitsCount/totalAdUnits).toFixed(1) : '计算中'}`, icon: MousePointer2, color: 'from-rose-500 to-purple-600' }
                                                       ].map((hero, hid) => (
                                                         <div key={hid} className="v2-stat-card group relative overflow-hidden p-6">
                                                           <div className={`absolute inset-0 bg-gradient-to-br ${hero.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700`} />
@@ -705,10 +705,10 @@ export default function SkuManagement() {
                                                       <div className="v2-card bg-white/40 border-white/60 p-8 shadow-xl">
                                                         <div className="flex items-center justify-between mb-8">
                                                           <h5 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-indigo-500 rounded-full" /> Sales Performance Trend
+                                                            <div className="w-2 h-6 bg-indigo-500 rounded-full" /> 销售表现趋势图
                                                           </h5>
                                                           <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-9 px-5 glass-panel text-indigo-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                                            <Download className="w-3.5 h-3.5" /> PDF Export
+                                                            <Download className="w-3.5 h-3.5" /> 导出 PDF 报告
                                                           </button>
                                                         </div>
                                                         <div className="h-[280px]">
@@ -738,7 +738,7 @@ export default function SkuManagement() {
                                                       <div className="v2-card bg-white/40 border-white/60 p-8 shadow-xl">
                                                         <div className="flex items-center justify-between mb-8">
                                                           <h5 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-rose-500 rounded-full" /> Advertising Insight
+                                                            <div className="w-2 h-6 bg-rose-500 rounded-full" /> 广告投放效果洞察
                                                           </h5>
                                                           <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
                                                             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
@@ -779,18 +779,18 @@ export default function SkuManagement() {
                                                       <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                                                         <Activity className="w-5 h-5 text-amber-600" />
                                                       </div>
-                                                      <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">Daily Operational Ledger</h5>
+                                                      <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">每日经营明细流水账</h5>
                                                     </div>
                                                     
                                                     <div className="v2-table-wrapper max-h-[500px] overflow-y-auto custom-scrollbar border border-white/50 rounded-2xl">
                                                       <table className="v2-table border-separate border-spacing-0">
                                                         <thead className="bg-white/80 backdrop-blur sticky top-0 z-10 text-[10px] uppercase font-black text-slate-400">
                                                           <tr>
-                                                            <th className="px-6 py-4 text-left border-b border-slate-100">Date</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">Traffic (Vis/Cli/Imp)</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">Units (Tot/Ad/Org)</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">Efficiency (CPC/ROAS/ACOS)</th>
-                                                            <th className="px-6 py-4 text-right border-b border-slate-100">Net Profit (USD)</th>
+                                                            <th className="px-6 py-4 text-left border-b border-slate-100">日期</th>
+                                                            <th className="px-6 py-4 text-center border-b border-slate-100">流量概览 (访客/点击/曝光)</th>
+                                                            <th className="px-6 py-4 text-center border-b border-slate-100">销量分布 (总数/广告/自然)</th>
+                                                            <th className="px-6 py-4 text-center border-b border-slate-100">广告效率 (CPC/ROAS/ACOS)</th>
+                                                            <th className="px-6 py-4 text-right border-b border-slate-100">净损益 (USD)</th>
                                                           </tr>
                                                         </thead>
                                                         <tbody className="text-[11px] font-bold divide-y divide-slate-50">
@@ -848,14 +848,14 @@ export default function SkuManagement() {
                                                         <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                                                           <History className="w-5 h-5 text-white" />
                                                         </div>
-                                                        <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">Operation History</h5>
+                                                        <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">操作历史轨迹</h5>
                                                       </div>
                                                       
                                                       <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
                                                         {(() => {
                                                           const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
                                                           if (skuLogs.length === 0) {
-                                                            return <div className="py-20 text-center text-slate-400 italic text-xs">No historical logs found for this SKU.</div>;
+                                                            return <div className="py-20 text-center text-slate-400 italic text-xs">暂无该 SKU 的历史操作记录。</div>;
                                                           }
                                                           return skuLogs.map((log: any, lid: number) => (
                                                             <div key={lid} className="group relative pl-6 pb-6 border-l-2 border-slate-100 last:pb-0">
@@ -867,7 +867,9 @@ export default function SkuManagement() {
                                                                   log.actionType === 'Ads' ? 'bg-sky-500 text-white' :
                                                                   'bg-slate-500 text-white'
                                                                 }`}>
-                                                                  {log.actionType}
+                                                                  {log.actionType === 'Price' ? '调价' : 
+                                                                   log.actionType === 'Stock' ? '库存' : 
+                                                                   log.actionType === 'Ads' ? '广告' : log.actionType}
                                                                 </span>
                                                                 <span className="text-[10px] text-slate-400 font-bold font-mono">{log.date}</span>
                                                               </div>
@@ -926,9 +928,9 @@ export default function SkuManagement() {
                    </div>
                    <div>
                       <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                        {editingIndex !== null ? 'Modify Asset' : 'New Product Entry'}
+                        {editingIndex !== null ? '修改资产档案' : '录入新产品'}
                       </h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Intelligence Database Management</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">智能数据库资产管理系统</p>
                    </div>
                 </div>
                 <button onClick={closeForm} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all rounded-xl hover:bg-rose-50">
@@ -939,30 +941,30 @@ export default function SkuManagement() {
               <form onSubmit={saveSku} className="p-8 space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">SKU Identification</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">SKU 唯一标识符</label>
                     <input required type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="MILY-X-001" />
                   </div>
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Launch Date</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">首发上架日期</label>
                     <input required type="date" name="listedDate" value={formData.listedDate} onChange={handleInputChange} className="v2-input h-12 px-4" />
                   </div>
                   
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Product Title / Specs</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">产品完整标题 / 规格参数</label>
                     <input required type="text" name="productName" value={formData.productName} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Full product description..." />
                   </div>
 
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Operational Status</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">当前运营状态</label>
                     <select name="status" value={formData.status} onChange={handleInputChange} className="v2-input h-12 px-4 appearance-none cursor-pointer">
-                      <option value="活跃中">ACTIVE (Selling)</option>
-                      <option value="补货中">RESTOCK (In Transit)</option>
-                      <option value="缺货">STOCKOUT (Inactive)</option>
+                      <option value="活跃中">活跃 (正常销售中)</option>
+                      <option value="补货中">补货 (在途或生产中)</option>
+                      <option value="缺货">缺货 (暂时停止销售)</option>
                     </select>
                   </div>
 
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Asset Preview URL</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">资产预览图片 URL</label>
                     <div className="flex gap-4">
                       <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleInputChange} className="v2-input h-12 px-4 flex-1" placeholder="Image HTTPS Link" />
                       {formData.imageUrl && (
@@ -975,14 +977,14 @@ export default function SkuManagement() {
 
                   <div className="col-span-2 grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Cost (CNY)</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">采购成本 (CNY)</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">¥</span>
                         <input required type="number" step="0.01" name="costRMB" value={formData.costRMB} onChange={handleInputChange} className="v2-input h-12 pl-8 pr-4" placeholder="0.00" />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Price (MXN)</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">销售价格 (MXN)</label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
                         <input required type="number" step="0.01" name="priceMXN" value={formData.priceMXN} onChange={handleInputChange} className="v2-input h-12 pl-8 pr-4" placeholder="0.00" />
@@ -992,11 +994,11 @@ export default function SkuManagement() {
 
                   <div className="col-span-2 grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Warehouse Stock</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">仓库现有库存</label>
                       <input required type="number" name="inventory" value={formData.inventory} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Physical count" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Supply Chain (Restock)</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">供应链补货 (在途)</label>
                       <input type="number" name="replenishInventory" value={formData.replenishInventory || ''} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Transit count" />
                     </div>
                   </div>
@@ -1004,11 +1006,11 @@ export default function SkuManagement() {
 
                 <div className="pt-8 flex justify-end items-center gap-4">
                   <button type="button" onClick={closeForm} className="px-8 py-3 rounded-2xl text-slate-500 hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all">
-                    Dismiss
+                    取消返回
                   </button>
                   <button type="submit" className="h-14 px-10 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-indigo-500/30 active:scale-95 transition-all">
                     <Save className="w-4 h-4" />
-                    Archive Asset
+                    保存资产档案
                   </button>
                 </div>
               </form>

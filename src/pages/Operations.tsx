@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Plus, Trash2, Calendar, Activity, FileText, 
   RefreshCw, Filter, DollarSign, Image as ImageIcon, 
-  Zap, Type, Package, AlertCircle
+  Zap, Type, Package, Clock
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useOutletContext } from 'react-router-dom';
@@ -32,12 +32,12 @@ export default function Operations() {
 
   const getActionIcon = (type: string) => {
     switch (type) {
-      case 'Price': return <DollarSign className="w-4 h-4 text-emerald-400" />;
-      case 'Image': return <ImageIcon className="w-4 h-4 text-sky-400" />;
-      case 'Ads': return <Zap className="w-4 h-4 text-purple-400" />;
-      case 'Title': return <Type className="w-4 h-4 text-orange-400" />;
-      case 'Stock': return <Package className="w-4 h-4 text-cyan-400" />;
-      default: return <Activity className="w-4 h-4 text-slate-400" />;
+      case 'Price': return <DollarSign className="w-3.5 h-3.5" />;
+      case 'Image': return <ImageIcon className="w-3.5 h-3.5" />;
+      case 'Ads': return <Zap className="w-3.5 h-3.5" />;
+      case 'Title': return <Type className="w-3.5 h-3.5" />;
+      case 'Stock': return <Package className="w-3.5 h-3.5" />;
+      default: return <Activity className="w-3.5 h-3.5" />;
     }
   };
 
@@ -54,12 +54,12 @@ export default function Operations() {
 
   const getCategoryColor = (type: string) => {
     switch (type) {
-      case 'Price': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-      case 'Image': return 'bg-sky-500/10 border-sky-500/20 text-sky-400';
-      case 'Ads': return 'bg-purple-500/10 border-purple-500/20 text-purple-400';
-      case 'Title': return 'bg-orange-500/10 border-orange-500/20 text-orange-400';
-      case 'Stock': return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
-      default: return 'bg-slate-800/50 border-slate-700 text-slate-400';
+      case 'Price': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+      case 'Image': return 'bg-sky-50 text-sky-600 border-sky-100';
+      case 'Ads': return 'bg-purple-50 text-purple-600 border-purple-100';
+      case 'Title': return 'bg-orange-50 text-orange-600 border-orange-100';
+      case 'Stock': return 'bg-cyan-50 text-cyan-600 border-cyan-100';
+      default: return 'bg-slate-50 text-slate-500 border-slate-100';
     }
   };
 
@@ -67,26 +67,26 @@ export default function Operations() {
     <div className="v2-page-container">
       <div className="v2-inner-container">
         <header className="v2-header">
-          <div className="flex items-center space-x-3">
-            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-cyan-600">
-              <Activity className="w-5 h-5" />
+          <div className="flex items-center space-x-4">
+            <div className="v2-header-icon bg-gradient-to-br from-indigo-500 to-sky-600">
+              <Activity className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="v2-header-title">运营动作</h1>
-              <p className="v2-header-subtitle">记录针对 SKU 的具体优化动作，沉淀运营经验</p>
+              <h1 className="v2-header-title">运营动作日志</h1>
+              <p className="v2-header-subtitle font-medium">记录 SKU 优化轨迹，沉淀运营决策经验</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button 
               onClick={refreshLogs} 
-              className="p-2.5 bg-slate-800/50 hover:bg-slate-700 border border-slate-700 rounded-lg transition-all"
+              className="p-2.5 bg-white border border-slate-200 text-slate-500 hover:text-sky-600 hover:border-sky-200 hover:bg-sky-50 rounded-xl transition-all shadow-sm"
               title="刷新数据"
             >
-              <RefreshCw className="w-4 h-4 text-slate-300" />
+              <RefreshCw className="w-4 h-4" />
             </button>
             <button 
               onClick={onAddLog}
-              className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+              className="bg-slate-900 hover:bg-slate-800 text-white transition-all px-5 py-2.5 rounded-xl flex items-center justify-center space-x-2 shadow-lg active:scale-95 text-xs font-bold"
             >
               <Plus className="w-4 h-4" />
               <span>新建操作记录</span>
@@ -96,94 +96,101 @@ export default function Operations() {
 
         {operationLogs.length > 0 && (
           <div className="v2-stats-grid">
-             <div className="v2-stat-card bg-white/70 border-slate-200/60 shadow-lg">
-                <span className="v2-stat-label text-slate-400">总运营动作</span>
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
+                <span className="v2-stat-label text-slate-400 font-bold">累计操作</span>
                 <div className="v2-stat-value text-slate-900">{operationLogs.length}</div>
              </div>
              <div className="v2-stat-card bg-sky-500/5 border-sky-500/20 shadow-lg">
-                <span className="v2-stat-label text-sky-600">本月活跃度</span>
-                <div className="v2-stat-value text-sky-600">{operationLogs.filter(l => l.date.startsWith(new Date().toISOString().substring(0, 7))).length}</div>
+                <span className="v2-stat-label text-sky-600 font-bold">本月活跃记录</span>
+                <div className="v2-stat-value text-sky-600">
+                  {operationLogs.filter(l => l.date.startsWith(new Date().toISOString().substring(0, 7))).length}
+                </div>
              </div>
-             <div className="v2-stat-card bg-purple-500/5 border-purple-500/20">
-               <span className="v2-stat-label text-purple-500">广告调整</span>
-               <div className="v2-stat-value text-purple-400">{operationLogs.filter(l => l.actionType === 'Ads').length}</div>
+             <div className="v2-stat-card bg-indigo-500/5 border-indigo-500/20 shadow-lg">
+                <span className="v2-stat-label text-indigo-600 font-bold">广告优化次数</span>
+                <div className="v2-stat-value text-indigo-600">{operationLogs.filter(l => l.actionType === 'Ads').length}</div>
              </div>
-             <div className="v2-stat-card bg-slate-900/50 border-slate-800">
-               <span className="v2-stat-label text-slate-500">最近活跃</span>
-               <div className="v2-stat-value text-slate-400 text-sm">{operationLogs[0]?.date}</div>
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
+                <span className="v2-stat-label text-slate-400 font-bold flex items-center gap-1.5">
+                  <Clock className="w-3 h-3" /> 最近更新
+                </span>
+                <div className="v2-stat-value text-slate-500 text-sm font-mono">{operationLogs[0]?.date}</div>
              </div>
           </div>
         )}
 
         <div className="v2-card">
           <div className="v2-card-header">
-            <h2 className="v2-card-title">
-              <FileText className="w-4 h-4 text-sky-400" />
-              历史日志
+            <h2 className="v2-card-title text-slate-800">
+              <FileText className="w-4 h-4 text-sky-500" />
+              运营记录明细
             </h2>
-            <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-              <Filter className="w-3 h-3" /> 共 {operationLogs.length} 条记录
-            </span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full">
+              <Filter className="w-3 h-3 text-slate-400" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">共 {operationLogs.length} 条</span>
+            </div>
           </div>
 
-          <div className="v2-table-wrapper">
+          <div className="v2-table-wrapper max-h-[650px] custom-scrollbar">
             <table className="v2-table">
               <thead className="v2-table-thead">
                 <tr>
-                  <th className="v2-table-th">日期</th>
-                  <th className="v2-table-th">SKU</th>
-                  <th className="v2-table-th text-center">类型</th>
-                  <th className="v2-table-th">操作详情</th>
+                  <th className="v2-table-th">执行日期</th>
+                  <th className="v2-table-th">关联 SKU</th>
+                  <th className="v2-table-th text-center">动作类型</th>
+                  <th className="v2-table-th">具体操作描述</th>
                   <th className="v2-table-th text-right">管理</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {operationLogs.length > 0 ? (
                   operationLogs.map((log) => (
                     <tr key={log.id} className="v2-table-tr group">
                       <td className="v2-table-td">
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3 text-slate-600" />
-                          <span className="text-slate-400 font-mono">{log.date}</span>
+                          <Calendar className="w-3.5 h-3.5 text-slate-300" />
+                          <span className="text-slate-500 font-mono font-medium">{log.date}</span>
                         </div>
                       </td>
                       <td className="v2-table-td">
-                        <span className="px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded border border-sky-500/20 text-xs font-mono font-bold">
+                        <span className="px-2.5 py-1 bg-sky-50 text-sky-600 rounded-lg border border-sky-100 text-[11px] font-bold shadow-sm">
                           {log.sku}
                         </span>
                       </td>
                       <td className="v2-table-td">
                         <div className="flex justify-center">
-                          <div className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${getCategoryColor(log.actionType)} flex items-center gap-1.5`}>
+                          <div className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-wide shadow-sm flex items-center gap-1.5 ${getCategoryColor(log.actionType)}`}>
                             {getActionIcon(log.actionType)}
                             {getActionLabel(log.actionType)}
                           </div>
                         </div>
                       </td>
                       <td className="v2-table-td">
-                        <div className="max-w-[450px]">
-                          <p className="text-slate-300 whitespace-pre-wrap leading-relaxed truncate group-hover:whitespace-normal group-hover:overflow-visible text-xs">
+                        <div className="max-w-[500px]">
+                          <p className="text-slate-700 whitespace-pre-wrap leading-relaxed text-xs font-medium group-hover:text-slate-900 transition-colors">
                             {log.description}
                           </p>
-                          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-600 font-mono">
-                            <span>{format(parseISO(log.createdAt), 'HH:mm:ss')} 记录</span>
+                          <div className="flex items-center gap-2 mt-1.5 text-[10px] text-slate-400 font-mono">
+                            <Clock className="w-3 h-3" />
+                            <span>{format(parseISO(log.createdAt), 'HH:mm:ss')} 自动归档</span>
                           </div>
                         </div>
                       </td>
                       <td className="v2-table-td text-right">
                         <button 
                           onClick={() => handleDelete(log.id)}
-                          className="p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-all"
+                          className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-20 text-center text-slate-500 italic">
-                      暂无操作记录
+                    <td colSpan={5} className="py-32 text-center text-slate-400 italic">
+                      <Activity className="w-12 h-12 mx-auto mb-4 opacity-5" />
+                      <p className="text-sm font-bold opacity-60">暂无运营操作记录</p>
                     </td>
                   </tr>
                 )}

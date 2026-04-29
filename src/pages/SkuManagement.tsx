@@ -64,7 +64,6 @@ export default function SkuManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState(null);
   const [expandedIndex, setExpandedIndex] = useState(null); // Tracks the currently expanded SKU row
-  const [activeTab, setActiveTab] = useState('performance'); 
   
   // Load Mercado Libre Data for Analytics
   const [mlData, setMlData] = useState<any>({ validSales: [] });
@@ -404,63 +403,51 @@ export default function SkuManagement() {
   return (
     <div className="v2-page-container">
       <div className="v2-inner-container">
-        <header className="v2-header mb-10">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-500/20 transform -rotate-3">
-              <PackageX className="w-6 h-6 text-white" />
+        <header className="v2-header">
+          <div className="flex items-center space-x-3">
+            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-cyan-600">
+              <PackageX className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">SKU 智能经营分析中心</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">实时运营表现与物流链条动态看板</p>
-              </div>
+              <h1 className="v2-header-title">SKU 档案管理</h1>
+              <p className="v2-header-subtitle">管理产品图文、成本售价及库存信息</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => { fetchCloudData(); fetchAuxiliaryData(); }}
-              className="w-11 h-11 rounded-xl glass-panel flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all hover:bg-white/60"
-              title="同步云端最新数据"
+              className="v2-button-secondary p-2"
+              title="刷新云端同步数据"
             >
-              <RefreshCw className={`w-5 h-5 ${(isLoading || isLoadingAux) ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${(isLoading || isLoadingAux) ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={() => openForm()}
-              className="h-11 px-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-500/30 active:scale-95 transition-all text-xs font-black uppercase tracking-wider"
+              className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
             >
               <Plus className="w-4 h-4" />
-              <span>新建资产档案</span>
+              <span>新增 SKU</span>
             </button>
           </div>
         </header>
 
-        {/* Dynamic Data Table */}
-        <div className="v2-card border-white/40 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-white/40 backdrop-blur-md flex items-center justify-between">
-             <div className="flex items-center gap-4">
-                <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-tighter">在线数据库</div>
-                <div className="text-xs text-slate-400 font-bold">档案总数: <span className="text-indigo-600">{skus.length} 条记录</span></div>
-             </div>
-             <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-[10px] font-bold text-slate-500">所有系统连接正常</span>
-             </div>
-          </div>
+        {/* Table Display */}
+        <div className="v2-card">
           <div className="v2-table-wrapper">
             <table className="v2-table">
-              <thead className="bg-slate-50/50 backdrop-blur-md">
+              <thead className="v2-table-thead">
                 <tr>
-                  <th className="w-[6%] px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">图示</th>
-                  <th className="w-[12%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">SKU 编码</th>
-                  <th className="w-[28%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">产品档案详细名称</th>
-                  <th className="w-[9%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">成本 (RMB)</th>
-                  <th className="w-[9%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">售价 (MXN)</th>
-                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">上架数</th>
-                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">补货数</th>
-                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">实时结余</th>
-                  <th className="w-[7%] px-4 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">状态</th>
-                  <th className="w-[8%] px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">操作</th>
+                  <th className="v2-table-th">主图</th>
+                  <th className="v2-table-th">SKU</th>
+                  <th className="v2-table-th">产品名称</th>
+                  <th className="v2-table-th">成本 (RMB)</th>
+                  <th className="v2-table-th">售价 (MXN)</th>
+                  <th className="v2-table-th">上架库存</th>
+                  <th className="v2-table-th">补货库存</th>
+                  <th className="v2-table-th">现有库存</th>
+                  <th className="v2-table-th">上架时间</th>
+                  <th className="v2-table-th">当前状态</th>
+                  <th className="v2-table-th text-right">操作</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-600">
@@ -481,19 +468,19 @@ export default function SkuManagement() {
                     return (
                     <React.Fragment key={index}>
                       <tr 
-                        className={`v2-table-tr group cursor-pointer transition-all duration-500 ${isExpanded ? 'bg-indigo-50/30' : 'hover:bg-slate-50'}`} 
+                        className={`v2-table-tr group cursor-pointer ${isExpanded ? 'bg-slate-50' : ''}`} 
                         onClick={() => {
                           setExpandedIndex(isExpanded ? null : index);
                           setSelectedVisitDate(null);
                         }}
                       >
-                        <td className="v2-table-td pl-8">
+                        <td className="v2-table-td border-l-4 border-transparent group-hover:border-sky-500 transition-all">
                           {item.imageUrl ? (
-                            <div className="w-14 h-14 rounded-2xl glass-panel p-1 group-hover:scale-110 transition-transform duration-500 shadow-sm border-white/60 overflow-hidden">
+                            <div className="w-11 h-11 rounded-md border border-slate-100 overflow-hidden bg-slate-50 flex items-center justify-center">
                               <img 
                                  src={item.imageUrl} 
-                                alt="SKU 预览" 
-                                className="w-full h-full object-cover rounded-xl"
+                                alt="SKU Preview" 
+                                className="w-full h-full object-cover object-center"
                                 loading="lazy"
                                 onError={(e: any) => {
                                   e.target.onerror = null; 
@@ -502,57 +489,46 @@ export default function SkuManagement() {
                               />
                             </div>
                           ) : (
-                            <div className="w-14 h-14 rounded-2xl glass-panel flex items-center justify-center text-slate-300">
-                              <ImageIcon className="w-6 h-6" />
+                            <div className="w-11 h-11 rounded-md border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-400">
+                              <ImageIcon className="w-4 h-4" />
                             </div>
                           )}
                         </td>
                         <td className="v2-table-td">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-black text-slate-900 tracking-tighter group-hover:text-indigo-600 transition-colors uppercase">{item.sku}</span>
-                            <div className="flex items-center gap-1.5 mt-1">
-                               <div className={`w-1.5 h-1.5 rounded-full ${isExpanded ? 'bg-indigo-500 animate-ping' : 'bg-slate-300'}`} />
-                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isExpanded ? '正在分析' : '摘要概览'}</span>
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-black text-indigo-950 bg-indigo-50/70 px-2.5 py-1 rounded-md border border-indigo-200/50 shadow-sm tracking-tight">{item.sku}</span>
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-sky-500" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                           </div>
                         </td>
-                        <td className="v2-table-td">
-                            <div className="text-xs font-black text-slate-700 truncate" title={item.productName}>{item.productName}</div>
-                            <div className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">上架日期: {item.listedDate}</div>
-                        </td>
-                        <td className="v2-table-td font-black text-emerald-600">¥{item.costRMB}</td>
-                        <td className="v2-table-td font-black text-indigo-600">${item.priceMXN}</td>
-                        <td className="v2-table-td font-bold text-slate-600 tabular-nums">{listedInv}</td>
-                        <td className="v2-table-td">
-                            {replenishInv > 0 ? (
-                                <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-md text-[10px] font-black border border-amber-100">+{replenishInv}</span>
-                            ) : (
-                                <span className="text-slate-300">-</span>
-                            )}
-                        </td>
-                        <td className="v2-table-td font-bold text-slate-400 tabular-nums">{currentInv}</td>
+                        <td className="v2-table-td max-w-[200px] truncate text-slate-700 font-bold" title={item.productName}>{item.productName}</td>
+                        <td className="v2-table-td text-emerald-600 font-mono">¥{item.costRMB}</td>
+                        <td className="v2-table-td text-sky-600 font-mono">${item.priceMXN}</td>
+                        <td className="v2-table-td text-slate-600 font-mono">{listedInv}</td>
+                        <td className="v2-table-td text-purple-600 font-mono">{replenishInv > 0 ? `+${replenishInv}` : '-'}</td>
+                        <td className="v2-table-td text-slate-400 font-mono">{currentInv}</td>
+                        <td className="v2-table-td text-slate-500">{item.listedDate}</td>
                         <td className="v2-table-td">
                            <select 
                              value={item.status || '活跃中'} 
                              onChange={(e) => handleStatusChange(item.sku, e.target.value)}
                              onClick={(e) => e.stopPropagation()}
-                             className={`text-[9px] font-black px-3 py-1.5 rounded-xl bg-white border-2 transition-all cursor-pointer outline-none shadow-sm uppercase tracking-widest ${
-                               item.status === '缺货' ? 'text-rose-600 border-rose-100' : 
-                               item.status === '补货中' ? 'text-amber-500 border-amber-100' : 
-                               'text-emerald-600 border-emerald-100'
+                             className={`text-[10px] font-bold px-2 py-1 rounded bg-white border transition-all cursor-pointer outline-none ${
+                               item.status === '缺货' ? 'text-rose-600 border-rose-200' : 
+                               item.status === '补货中' ? 'text-yellow-600 border-yellow-200' : 
+                               'text-emerald-600 border-emerald-200'
                              }`}
                            >
-                              <option value="活跃中">ACTIVE</option>
-                              <option value="补货中">RESTOCK</option>
-                              <option value="缺货">OUT</option>
+                              <option value="活跃中">活跃中</option>
+                              <option value="补货中">补货中</option>
+                              <option value="缺货">缺货</option>
                            </select>
                         </td>
-                        <td className="v2-table-td text-right pr-8">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => openForm(index)} className="w-9 h-9 flex items-center justify-center bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 rounded-xl transition-all shadow-sm">
+                        <td className="v2-table-td text-right">
+                          <div className="flex justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => openForm(index)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-all">
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
-                            <button onClick={() => deleteSku(index)} className="w-9 h-9 flex items-center justify-center bg-white border border-slate-100 text-slate-400 hover:text-rose-600 hover:border-rose-100 rounded-xl transition-all shadow-sm">
+                            <button onClick={() => deleteSku(index)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -626,266 +602,217 @@ export default function SkuManagement() {
                                           const totalAdCV = totalClicks > 0 ? (totalAdUnits / totalClicks) * 100 : 0;
 
                                           return (
-                                            <div className="space-y-8 animate-in fade-in duration-700">
-                                              {/* 1. Dashboard Header & Tabs */}
-                                              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
-                                                <div className="flex items-center gap-4">
-                                                  <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 transform rotate-3">
-                                                    <Activity className="w-7 h-7 text-white" />
+                                            <div className="space-y-6">
+                                              {/* 1. Summary Header */}
+                                              <div className="flex items-center justify-between px-1">
+                                                <div className="flex items-center gap-3">
+                                                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                                    <TrendingUp className="w-4 h-4 text-white" />
                                                   </div>
                                                   <div>
-                                                    <div className="flex items-center gap-2">
-                                                       <h4 className="text-xl font-black text-slate-900 tracking-tight">智能经营分析看板</h4>
-                                                       <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[9px] font-black rounded-md border border-indigo-100 uppercase tracking-widest">高级专业版</span>
-                                                    </div>
-                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">正在深度剖析 SKU: <span className="text-indigo-600">{item.sku}</span></p>
+                                                    <h4 className="text-sm font-black text-slate-800 tracking-tight">SKU 深度经营分析看板</h4>
+                                                    <p className="text-[10px] text-slate-400 font-medium">Auto-synced from MILYFLY Cleaning Engine</p>
                                                   </div>
                                                 </div>
-
-                                                <div className="flex items-center bg-white/60 backdrop-blur-xl p-1.5 rounded-2xl border border-white/80 shadow-sm">
-                                                  {[
-                                                    { id: 'performance', label: '经营表现', icon: BarChart3 },
-                                                    { id: 'logistics', label: '物流记录', icon: Activity },
-                                                    { id: 'ai', label: 'AI 洞察与历史', icon: History }
-                                                  ].map(tab => (
-                                                    <button
-                                                      key={tab.id}
-                                                      onClick={() => setActiveTab(tab.id)}
-                                                      className={`
-                                                        flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all duration-300
-                                                        ${activeTab === tab.id 
-                                                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105' 
-                                                          : 'text-slate-500 hover:text-indigo-600 hover:bg-white/40'}
-                                                      `}
-                                                    >
-                                                      <tab.icon className="w-4 h-4" />
-                                                      <span>{tab.label}</span>
-                                                    </button>
-                                                  ))}
+                                                <div className="flex gap-2">
+                                                  <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-8 px-4 bg-slate-900 text-white rounded-lg flex items-center gap-2 text-[10px] font-bold hover:bg-slate-800 transition-all shadow-md">
+                                                    <Download className="w-3 h-3" /> 导出报告
+                                                  </button>
                                                 </div>
                                               </div>
 
-                                              {/* 2. Tab Content */}
-                                              <AnimatePresence mode="wait">
-                                                {activeTab === 'performance' && (
-                                                  <motion.div 
-                                                    key="performance"
-                                                    initial={{ opacity: 0, y: 10 }} 
-                                                    animate={{ opacity: 1, y: 0 }} 
-                                                    exit={{ opacity: 0, y: -10 }}
-                                                    className="space-y-8"
-                                                  >
-                                                    {/* Hero Grid */}
-                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                      {[
-                                                        { label: '累计销售件数', val: totalUnitsCount, sub: `${totalAdUnits} 广告 / ${totalNaturalUnits} 自然`, icon: PackageX, color: 'from-indigo-600 to-violet-700' },
-                                                        { label: '广告转化率', val: `${totalAdCV.toFixed(2)}%`, sub: `CVR (广告订单)`, icon: TrendingUp, color: 'from-emerald-500 to-teal-600' },
-                                                        { label: '全域曝光量', val: totalImps.toLocaleString(), sub: `${totalClicks.toLocaleString()} 次点击`, icon: Eye, color: 'from-sky-500 to-indigo-600' },
-                                                        { label: '广告投入总额', val: `$${totalAdSpend.toFixed(1)}`, sub: `ROAS: ${totalAdUnits > 0 ? (totalUnitsCount/totalAdUnits).toFixed(1) : '计算中'}`, icon: MousePointer2, color: 'from-rose-500 to-purple-600' }
-                                                      ].map((hero, hid) => (
-                                                        <div key={hid} className="v2-stat-card group relative overflow-hidden p-6">
-                                                          <div className={`absolute inset-0 bg-gradient-to-br ${hero.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700`} />
-                                                          <div className="flex justify-between items-start mb-6">
-                                                            <span className="stat-label">{hero.label}</span>
-                                                            <div className={`p-2 bg-gradient-to-br ${hero.color} rounded-xl shadow-lg shadow-indigo-500/10`}>
-                                                              <hero.icon className="w-4 h-4 text-white" />
-                                                            </div>
-                                                          </div>
-                                                          <div className="stat-value text-2xl">{hero.val}</div>
-                                                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                                                            {hero.sub}
-                                                          </div>
-                                                        </div>
-                                                      ))}
-                                                    </div>
+                                              {/* 2. Summary Cards */}
+                                              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4" id={`sku-dashboard-${item.sku}`}>
+                                                {[
+                                                  { label: '广告曝光', val: totalImps.toLocaleString(), color: 'text-slate-600' },
+                                                  { label: '广告点击', val: totalClicks.toLocaleString(), color: 'text-sky-600' },
+                                                  { label: '进店访客', val: totalVisits.toLocaleString(), color: 'text-purple-600' },
+                                                  { label: '广告消耗', val: `$${totalAdSpend.toFixed(1)}`, color: 'text-rose-500' },
+                                                  { label: '成交总件', val: totalUnitsCount, color: 'text-emerald-600' },
+                                                  { label: '广告订单', val: totalAdUnits, color: 'text-cyan-600' },
+                                                  { label: '自然转化', val: `${totalNaturalCV.toFixed(2)}%`, color: 'text-emerald-500' },
+                                                  { label: '广告转化', val: `${totalAdCV.toFixed(2)}%`, color: 'text-amber-500' }
+                                                ].map((card, cid) => (
+                                                  <div key={cid} className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center">
+                                                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">{card.label}</div>
+                                                    <div className={`text-sm font-black ${card.color}`}>{card.val}</div>
+                                                  </div>
+                                                ))}
+                                              </div>
 
-                                                    {/* Analytics Charts */}
-                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                                      <div className="v2-card bg-white/40 border-white/60 p-8 shadow-xl">
-                                                        <div className="flex items-center justify-between mb-8">
-                                                          <h5 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-indigo-500 rounded-full" /> 销售表现趋势图
-                                                          </h5>
-                                                          <button onClick={(e) => { e.stopPropagation(); handleExportPdf(item.sku); }} className="h-9 px-5 glass-panel text-indigo-600 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                                            <Download className="w-3.5 h-3.5" /> 导出 PDF 报告
-                                                          </button>
-                                                        </div>
-                                                        <div className="h-[280px]">
-                                                          <ResponsiveContainer width="100%" height="100%">
-                                                            <AreaChart data={enrichedAnalytics.slice(-30)}>
-                                                              <defs>
-                                                                <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                                                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                                                                </linearGradient>
-                                                              </defs>
-                                                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                                                              <XAxis dataKey="dateShort" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700}} />
-                                                              <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700}} />
-                                                              <Tooltip 
-                                                                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
-                                                                itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
-                                                              />
-                                                              <Area type="monotone" dataKey="unitsCount" stroke="#6366f1" fill="url(#colorTotal)" strokeWidth={4} />
-                                                              <Area type="monotone" dataKey="adUnits" stroke="#10b981" fill="transparent" strokeWidth={2} />
-                                                              <Area type="monotone" dataKey="organicUnits" stroke="#f59e0b" fill="transparent" strokeWidth={2} strokeDasharray="5 5" />
-                                                            </AreaChart>
-                                                          </ResponsiveContainer>
-                                                        </div>
-                                                      </div>
+                                          {/* 3. Charts & AI Side-by-Side */}
+                                          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                                            <div className="xl:col-span-3 space-y-6">
+                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                                <div className="flex items-center justify-between mb-6">
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                    <BarChart3 className="w-4 h-4 text-sky-600" /> 销售趋势 (Pieces)
+                                                  </div>
+                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> 总数</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> 广告</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> 自然</div>
+                                                  </div>
+                                                </div>
+                                                <div className="h-[180px]">
+                                                  <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={enrichedAnalytics.slice(-30)}>
+                                                      <defs>
+                                                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                                        </linearGradient>
+                                                      </defs>
+                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                      <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
+                                                      <YAxis fontSize={9} axisLine={false} tickLine={false} />
+                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '10px' }} />
+                                                      <Area type="monotone" dataKey="unitsCount" stroke="#ef4444" fill="url(#colorTotal)" strokeWidth={3} />
+                                                      <Area type="monotone" dataKey="adUnits" stroke="#10b981" fill="transparent" strokeWidth={2} />
+                                                      <Area type="monotone" dataKey="organicUnits" stroke="#f59e0b" fill="transparent" strokeWidth={1} strokeDasharray="4 4" />
+                                                    </AreaChart>
+                                                  </ResponsiveContainer>
+                                                </div>
+                                              </div>
 
-                                                      <div className="v2-card bg-white/40 border-white/60 p-8 shadow-xl">
-                                                        <div className="flex items-center justify-between mb-8">
-                                                          <h5 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-rose-500 rounded-full" /> 广告投放效果洞察
-                                                          </h5>
-                                                          <div className="flex gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
-                                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-sky-500" /> ROAS</div>
-                                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ACOS</div>
-                                                          </div>
-                                                        </div>
-                                                        <div className="h-[280px]">
-                                                          <ResponsiveContainer width="100%" height="100%">
-                                                            <LineChart data={enrichedAnalytics.slice(-30)}>
-                                                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                                                              <XAxis dataKey="dateShort" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700}} />
-                                                              <YAxis yAxisId="left" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700}} />
-                                                              <YAxis yAxisId="right" orientation="right" fontSize={10} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontWeight: 700}} />
-                                                              <Tooltip 
-                                                                contentStyle={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
-                                                              />
-                                                              <Line yAxisId="left" type="monotone" dataKey="cpc" stroke="#ef4444" strokeWidth={4} dot={false} />
-                                                              <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#0ea5e9" strokeWidth={3} dot={false} />
-                                                              <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#10b981" strokeWidth={3} dot={false} />
-                                                            </LineChart>
-                                                          </ResponsiveContainer>
-                                                        </div>
-                                                      </div>
-                                                    </div>
-                                                  </motion.div>
-                                                )}
-
-                                                {activeTab === 'logistics' && (
-                                                  <motion.div 
-                                                    key="logistics"
-                                                    initial={{ opacity: 0, x: 20 }} 
-                                                    animate={{ opacity: 1, x: 0 }} 
-                                                    exit={{ opacity: 0, x: -20 }}
-                                                    className="v2-card bg-white/40 border-white/60 p-8 shadow-xl"
-                                                  >
-                                                    <div className="flex items-center gap-3 mb-8">
-                                                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                                                        <Activity className="w-5 h-5 text-amber-600" />
-                                                      </div>
-                                                      <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">每日经营明细流水账</h5>
-                                                    </div>
-                                                    
-                                                    <div className="v2-table-wrapper max-h-[500px] overflow-y-auto custom-scrollbar border border-white/50 rounded-2xl">
-                                                      <table className="v2-table border-separate border-spacing-0">
-                                                        <thead className="bg-white/80 backdrop-blur sticky top-0 z-10 text-[10px] uppercase font-black text-slate-400">
-                                                          <tr>
-                                                            <th className="px-6 py-4 text-left border-b border-slate-100">日期</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">流量概览 (访客/点击/曝光)</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">销量分布 (总数/广告/自然)</th>
-                                                            <th className="px-6 py-4 text-center border-b border-slate-100">广告效率 (CPC/ROAS/ACOS)</th>
-                                                            <th className="px-6 py-4 text-right border-b border-slate-100">净损益 (USD)</th>
-                                                          </tr>
-                                                        </thead>
-                                                        <tbody className="text-[11px] font-bold divide-y divide-slate-50">
-                                                          {analytics.map((row, rid) => {
-                                                            const rowE = enrichedAnalytics.find(e => e.date === row.date);
-                                                            return (
-                                                              <tr key={rid} className="hover:bg-indigo-50/30 transition-colors">
-                                                                <td className="px-6 py-4 text-left text-slate-500">{row.date}</td>
-                                                                <td className="px-6 py-4 text-center text-slate-400">{rowE?.visits} <span className="opacity-30">/</span> {rowE?.clicks} <span className="opacity-30">/</span> {rowE?.impressions}</td>
-                                                                <td className="px-6 py-4 text-center">
-                                                                  <span className="text-indigo-600 font-black">{row.unitsCount}</span>
-                                                                  <span className="mx-2 opacity-20">/</span>
-                                                                  <span className="text-emerald-500">{rowE?.adUnits}</span>
-                                                                  <span className="mx-2 opacity-20">/</span>
-                                                                  <span className="text-amber-500">{rowE?.organicUnits}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4 text-center">
-                                                                  <span className="text-rose-500">${rowE?.cpc.toFixed(1)}</span>
-                                                                  <span className="mx-2 opacity-20">|</span>
-                                                                  <span className="text-sky-600">{rowE?.roas.toFixed(2)}</span>
-                                                                  <span className="mx-2 opacity-20">|</span>
-                                                                  <span className="text-emerald-600">{rowE?.acos.toFixed(1)}%</span>
-                                                                </td>
-                                                                <td className="px-6 py-4 text-right font-black text-rose-500">
-                                                                  {row.lossUsd > 0 ? `-$${row.lossUsd.toFixed(1)}` : '-'}
-                                                                </td>
-                                                              </tr>
-                                                            );
-                                                          })}
-                                                        </tbody>
-                                                      </table>
-                                                    </div>
-                                                  </motion.div>
-                                                )}
-
-                                                {activeTab === 'ai' && (
-                                                  <motion.div 
-                                                    key="ai"
-                                                    initial={{ opacity: 0, scale: 0.98 }} 
-                                                    animate={{ opacity: 1, scale: 1 }} 
-                                                    exit={{ opacity: 0, scale: 0.98 }}
-                                                    className="grid grid-cols-1 lg:grid-cols-5 gap-8"
-                                                  >
-                                                    <div className="lg:col-span-3">
-                                                      <SkuAiAnalysis 
-                                                        sku={item.sku} 
-                                                        skuName={item.productName} 
-                                                        skuStats={analytics}
-                                                        operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
-                                                      />
-                                                    </div>
-                                                    
-                                                    <div className="lg:col-span-2 v2-card bg-white/40 border-white/60 p-8 shadow-xl overflow-hidden">
-                                                      <div className="flex items-center gap-3 mb-8">
-                                                        <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                                                          <History className="w-5 h-5 text-white" />
-                                                        </div>
-                                                        <h5 className="text-sm font-black text-slate-900 uppercase tracking-tight">操作历史轨迹</h5>
-                                                      </div>
-                                                      
-                                                      <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
-                                                        {(() => {
-                                                          const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
-                                                          if (skuLogs.length === 0) {
-                                                            return <div className="py-20 text-center text-slate-400 italic text-xs">暂无该 SKU 的历史操作记录。</div>;
-                                                          }
-                                                          return skuLogs.map((log: any, lid: number) => (
-                                                            <div key={lid} className="group relative pl-6 pb-6 border-l-2 border-slate-100 last:pb-0">
-                                                              <div className="absolute left-[-9px] top-0 w-4 h-4 rounded-full bg-white border-2 border-indigo-500 z-10" />
-                                                              <div className="flex items-center justify-between mb-2">
-                                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter ${
-                                                                  log.actionType === 'Price' ? 'bg-rose-500 text-white' :
-                                                                  log.actionType === 'Stock' ? 'bg-emerald-500 text-white' :
-                                                                  log.actionType === 'Ads' ? 'bg-sky-500 text-white' :
-                                                                  'bg-slate-500 text-white'
-                                                                }`}>
-                                                                  {log.actionType === 'Price' ? '调价' : 
-                                                                   log.actionType === 'Stock' ? '库存' : 
-                                                                   log.actionType === 'Ads' ? '广告' : log.actionType}
-                                                                </span>
-                                                                <span className="text-[10px] text-slate-400 font-bold font-mono">{log.date}</span>
-                                                              </div>
-                                                              <p className="text-xs font-bold text-slate-700 leading-relaxed">{log.description}</p>
-                                                              <div className="mt-2 text-[9px] text-slate-300 uppercase tracking-widest font-black">
-                                                                {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                              </div>
-                                                            </div>
-                                                          ));
-                                                        })()}
-                                                      </div>
-                                                    </div>
-                                                  </motion.div>
-                                                )}
-                                              </AnimatePresence>
+                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                                <div className="flex items-center justify-between mb-6">
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                    <MousePointer2 className="w-4 h-4 text-rose-500" /> 广告表现 (Ads Insight)
+                                                  </div>
+                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> CPC</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-sky-500" /> ROAS</div>
+                                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ACOS</div>
+                                                  </div>
+                                                </div>
+                                                <div className="h-[180px]">
+                                                  <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={enrichedAnalytics.slice(-30)}>
+                                                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                      <XAxis dataKey="dateShort" fontSize={9} axisLine={false} tickLine={false} />
+                                                      <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
+                                                      <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
+                                                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                                                      <Line yAxisId="left" type="monotone" dataKey="cpc" stroke="#ef4444" strokeWidth={3} dot={false} />
+                                                      <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                                                      <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#10b981" strokeWidth={2} dot={false} />
+                                                    </LineChart>
+                                                  </ResponsiveContainer>
+                                                </div>
+                                              </div>
                                             </div>
+
+                                            <div className="xl:col-span-2">
+                                              <SkuAiAnalysis 
+                                                sku={item.sku} 
+                                                skuName={item.productName} 
+                                                skuStats={analytics}
+                                                operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
+                                              />
+                                            </div>
+                                          </div>
+
+                                          {/* 4. Bottom Table */}
+                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                              <Activity className="w-4 h-4 text-orange-500" /> 每日经营明细表
+                                            </div>
+                                            <div className="v2-table-wrapper max-h-[350px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              <table className="v2-table border-separate border-spacing-0">
+                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                  <tr>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">流量 (访/点/曝)</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">销量 (总/广/自)</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">广告 (CPC/ROAS/ACOS)</th>
+                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">净损益 (USD)</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="text-[10px] font-mono divide-y divide-slate-50">
+                                                  {analytics.map((row, rid) => {
+                                                    const rowE = enrichedAnalytics.find(e => e.date === row.date);
+                                                    return (
+                                                      <tr key={rid} className="v2-table-tr hover:bg-slate-50/80 text-center transition-colors">
+                                                        <td className="px-3 py-2.5 text-left text-slate-500 font-bold">{row.date}</td>
+                                                        <td className="px-3 py-2.5 text-slate-400 font-medium">{rowE?.visits} / {rowE?.clicks} / {rowE?.impressions}</td>
+                                                        <td className="px-3 py-2.5">
+                                                          <span className="text-rose-600 font-black">{row.unitsCount}</span>
+                                                          <span className="mx-1 text-slate-200">/</span>
+                                                          <span className="text-emerald-600 font-bold">{rowE?.adUnits}</span>
+                                                          <span className="mx-1 text-slate-200">/</span>
+                                                          <span className="text-amber-500 font-bold">{rowE?.organicUnits}</span>
+                                                        </td>
+                                                        <td className="px-3 py-2.5">
+                                                          <span className="text-rose-500 font-bold">${rowE?.cpc.toFixed(1)}</span>
+                                                          <span className="mx-1 text-slate-200">|</span>
+                                                          <span className="text-sky-600 font-bold">{rowE?.roas.toFixed(2)}</span>
+                                                          <span className="mx-1 text-slate-200">|</span>
+                                                          <span className="text-emerald-600 font-bold">{rowE?.acos.toFixed(1)}%</span>
+                                                        </td>
+                                                        <td className="px-3 py-2.5 text-right font-black text-rose-600">
+                                                          {row.lossUsd > 0 ? `-$${row.lossUsd.toFixed(1)}` : '-'}
+                                                        </td>
+                                                      </tr>
+                                                    );
+                                                  })}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+
+                                          {/* 5. Historical Operations Log */}
+                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                              <History className="w-4 h-4 text-indigo-500" /> SKU 历史运营记录
+                                            </div>
+                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              <table className="v2-table border-separate border-spacing-0">
+                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                  <tr>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">日期</th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">动作类型</th>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">详情描述</th>
+                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">记录时间</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="text-[10px] divide-y divide-slate-50">
+                                                  {(() => {
+                                                    const skuLogs = operationLogs.filter((op: any) => op.sku === item.sku);
+                                                    if (skuLogs.length === 0) {
+                                                      return (
+                                                        <tr>
+                                                          <td colSpan={4} className="px-3 py-8 text-center text-slate-400 italic">
+                                                            暂无历史运营记录
+                                                          </td>
+                                                        </tr>
+                                                      );
+                                                    }
+                                                    return skuLogs.map((log: any, lid: number) => (
+                                                      <tr key={lid} className="v2-table-tr hover:bg-slate-50/80 transition-colors">
+                                                        <td className="px-3 py-2.5 text-slate-600 font-bold whitespace-nowrap">{log.date}</td>
+                                                        <td className="px-3 py-2.5 text-center">
+                                                          <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold ${
+                                                            log.actionType === 'Price' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
+                                                            log.actionType === 'Stock' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                            log.actionType === 'Ads' ? 'bg-sky-50 text-sky-600 border border-sky-100' :
+                                                            'bg-slate-50 text-slate-600 border border-slate-100'
+                                                          }`}>
+                                                            {log.actionType}
+                                                          </span>
+                                                        </td>
+                                                        <td className="px-3 py-2.5 text-slate-500 leading-relaxed font-medium">{log.description}</td>
+                                                        <td className="px-3 py-2.5 text-right text-slate-300 tabular-nums">
+                                                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </td>
+                                                      </tr>
+                                                    ));
+                                                  })()}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+                                        </div>
                                       );
                                     })()}
                                   </div>
@@ -912,105 +839,91 @@ export default function SkuManagement() {
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={closeForm}
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 40 }}
-              className="relative w-full max-w-2xl bg-white/90 backdrop-blur-2xl border border-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[32px] overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-xl overflow-hidden text-slate-800"
             >
-              <div className="flex justify-between items-center p-8 border-b border-slate-100 bg-white/50">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                      <PackageX className="w-6 h-6 text-white" />
-                   </div>
-                   <div>
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                        {editingIndex !== null ? '修改资产档案' : '录入新产品'}
-                      </h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">智能数据库资产管理系统</p>
-                   </div>
-                </div>
-                <button onClick={closeForm} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 transition-all rounded-xl hover:bg-rose-50">
-                  <X className="w-5 h-5" />
+              <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50">
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <PackageX className="w-4 h-4 text-sky-600" />
+                  {editingIndex !== null ? '修改 SKU' : '新增 SKU'}
+                </h3>
+                <button onClick={closeForm} className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={saveSku} className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">SKU 唯一标识符</label>
-                    <input required type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="MILY-X-001" />
+              <form onSubmit={saveSku} className="p-5 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">SKU</label>
+                    <input required type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="v2-input" placeholder="例如: MILY-A01" />
                   </div>
-                  <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">首发上架日期</label>
-                    <input required type="date" name="listedDate" value={formData.listedDate} onChange={handleInputChange} className="v2-input h-12 px-4" />
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">上架时间</label>
+                    <input required type="date" name="listedDate" value={formData.listedDate} onChange={handleInputChange} className="v2-input" />
                   </div>
                   
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">产品完整标题 / 规格参数</label>
-                    <input required type="text" name="productName" value={formData.productName} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Full product description..." />
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">产品名称</label>
+                    <input required type="text" name="productName" value={formData.productName} onChange={handleInputChange} className="v2-input" placeholder="输入完整的商品标题" />
                   </div>
 
-                  <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">当前运营状态</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange} className="v2-input h-12 px-4 appearance-none cursor-pointer">
-                      <option value="活跃中">活跃 (正常销售中)</option>
-                      <option value="补货中">补货 (在途或生产中)</option>
-                      <option value="缺货">缺货 (暂时停止销售)</option>
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">当前状态</label>
+                    <select name="status" value={formData.status} onChange={handleInputChange} className="v2-input">
+                      <option value="活跃中">活跃中 (Active)</option>
+                      <option value="补货中">补货中 (Restocking)</option>
+                      <option value="缺货">缺货 (Out of Stock)</option>
                     </select>
                   </div>
 
-                  <div className="col-span-2 md:col-span-1">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">资产预览图片 URL</label>
-                    <div className="flex gap-4">
-                      <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleInputChange} className="v2-input h-12 px-4 flex-1" placeholder="Image HTTPS Link" />
+                  <div className="col-span-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">图片 URL (网络地址)</label>
+                    <div className="flex gap-3 items-start">
+                      <input type="url" name="imageUrl" value={formData.imageUrl} onChange={handleInputChange} className="v2-input flex-1" placeholder="https://example.com/image.png" />
                       {formData.imageUrl && (
-                        <div className="w-12 h-12 rounded-xl glass-panel p-1 border-white/60 overflow-hidden shrink-0">
-                           <img src={formData.imageUrl} className="w-full h-full object-cover rounded-lg" alt="Preview" />
+                        <div className="w-11 h-11 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shrink-0">
+                           <img src={formData.imageUrl} className="w-full h-full object-cover object-center" alt="Preview" />
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="col-span-2 grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">采购成本 (CNY)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">¥</span>
-                        <input required type="number" step="0.01" name="costRMB" value={formData.costRMB} onChange={handleInputChange} className="v2-input h-12 pl-8 pr-4" placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">销售价格 (MXN)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
-                        <input required type="number" step="0.01" name="priceMXN" value={formData.priceMXN} onChange={handleInputChange} className="v2-input h-12 pl-8 pr-4" placeholder="0.00" />
-                      </div>
-                    </div>
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">成本 (RMB)</label>
+                    <input required type="number" step="0.01" name="costRMB" value={formData.costRMB} onChange={handleInputChange} className="v2-input" placeholder="0.00" />
                   </div>
 
-                  <div className="col-span-2 grid grid-cols-2 gap-6">
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">售价 (MXN)</label>
+                    <input required type="number" step="0.01" name="priceMXN" value={formData.priceMXN} onChange={handleInputChange} className="v2-input" placeholder="0.00" />
+                  </div>
+
+                  <div className="col-span-2 grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">仓库现有库存</label>
-                      <input required type="number" name="inventory" value={formData.inventory} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Physical count" />
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">上架库存</label>
+                      <input required type="number" name="inventory" value={formData.inventory} onChange={handleInputChange} className="v2-input" placeholder="库房库存" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">供应链补货 (在途)</label>
-                      <input type="number" name="replenishInventory" value={formData.replenishInventory || ''} onChange={handleInputChange} className="v2-input h-12 px-4" placeholder="Transit count" />
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">补货库存 (在途/采购)</label>
+                      <input type="number" name="replenishInventory" value={formData.replenishInventory || ''} onChange={handleInputChange} className="v2-input" placeholder="0" />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-8 flex justify-end items-center gap-4">
-                  <button type="button" onClick={closeForm} className="px-8 py-3 rounded-2xl text-slate-500 hover:text-slate-900 font-black text-xs uppercase tracking-widest transition-all">
-                    取消返回
+                <div className="pt-4 mt-3 border-t border-slate-100 flex justify-end space-x-2">
+                  <button type="button" onClick={closeForm} className="px-5 py-2 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-50 transition text-xs font-medium">
+                    取消
                   </button>
-                  <button type="submit" className="h-14 px-10 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-indigo-500/30 active:scale-95 transition-all">
+                  <button type="submit" className="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-all text-xs">
                     <Save className="w-4 h-4" />
-                    保存资产档案
+                    保存档案
                   </button>
                 </div>
               </form>

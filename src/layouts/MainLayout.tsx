@@ -197,34 +197,56 @@ export default function MainLayout({
   , []);
 
   return (
-    <div className="flex h-screen overflow-hidden selection:bg-indigo-100 selection:text-indigo-900 transition-colors duration-700 bg-[#f8fafc] text-slate-900">
-      {/* Full App Prism Glass Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Animated Mesh Gradients */}
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse-slow" />
-        <div className="absolute top-[10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[50%] bg-sky-500/10 blur-[140px] rounded-full animate-pulse-slow" />
-        <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[40%] bg-emerald-500/5 blur-[120px] rounded-full" />
-        
-        {/* Subtle Texture Overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" 
-             style={{ backgroundImage: 'radial-gradient(circle, #6366f1 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-      </div>
+    <div className={`flex h-screen overflow-hidden selection:bg-sky-100 selection:text-sky-900 transition-colors duration-700 ${uiVersion === 'v2' ? 'theme-v2 bg-white text-slate-900' : 'bg-transparent'}`}>
+      {/* Full App Background Image (V2 Only) with Enhanced Light Feel */}
+      {uiVersion === 'v2' && (
+        <>
+          <div 
+            className="fixed inset-0 pointer-events-none z-0 bg-white" 
+          />
+          {/* Subtle Ambient Glow */}
+          <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <div className="absolute -top-[10%] left-[20%] w-[60%] h-[50%] bg-sky-400/[0.08] blur-[140px] rounded-full animate-pulse-slow" />
+            <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-indigo-400/[0.05] blur-[120px] rounded-full" />
+          </div>
+          
+          <div 
+            className="fixed inset-0 pointer-events-none z-0" 
+            style={{ 
+              backgroundImage: `url(${appBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              opacity: 0.18, 
+              mixBlendMode: 'multiply',
+              filter: 'grayscale(1) brightness(1.2) contrast(0.9)'
+            }} 
+          />
+
+          {/* Minimalist Grid Texture Overlay */}
+          <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03]" 
+               style={{ backgroundImage: 'radial-gradient(circle, #cbd5e1 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
+          {/* Bottom vignette for focus */}
+          <div className="fixed inset-0 pointer-events-none z-0 bg-gradient-to-t from-slate-50/50 via-transparent to-transparent opacity-80" />
+        </>
+      )}
+
+
 
       {/* Floating Sidebar */}
-      <div className="hidden md:flex p-4 pr-0 h-full w-[280px]">
-        <aside className="w-full h-full glass-panel rounded-[2rem] flex flex-col relative z-20 overflow-hidden border-white/50">
-          <div className="px-8 pt-10 pb-8 flex items-center gap-4 cursor-default group">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-[0_8px_20px_-4px_rgba(99,102,241,0.2)] flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
-              <MilyflyLogo className="w-6 h-6" />
+
+      <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
+        <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
+          <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-default group">
+            <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
+              <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
-            <div>
-              <div className="font-black text-2xl tracking-tighter text-slate-900">MILYFLY</div>
-              <div className="text-[10px] font-bold text-indigo-500/60 uppercase tracking-[0.2em] -mt-1">Analytics Pro</div>
+            <div className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
+              MILYFLY
             </div>
           </div>
           
-          <nav className="flex-1 flex flex-col gap-1.5 px-5 overflow-y-auto hidden-scrollbar">
+          <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar">
             {menuItems.map((item: any) => {
               const Icon = item.icon;
               const isPricingActive = location.pathname.startsWith('/pricing');
@@ -235,24 +257,28 @@ export default function MainLayout({
                   <NavLink
                     to={item.children ? item.children[0].id : item.id}
                     className={() => `
-                      w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-300 group
+                      w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 group
                       ${isActive 
-                        ? 'bg-indigo-600 text-white shadow-[0_10px_25px_-5px_rgba(99,102,241,0.4)] scale-[1.02]' 
-                        : 'text-slate-500 hover:text-indigo-600 hover:bg-white/40'}
+                        ? (uiVersion === 'v2' 
+                            ? 'bg-sky-500/10 text-sky-600 border border-sky-500/20 shadow-sm' 
+                            : 'bg-sky-50 text-sky-600 border border-sky-100 shadow-sm') 
+                        : (uiVersion === 'v2'
+                            ? 'text-slate-500 hover:text-sky-600 hover:bg-slate-50 border border-transparent'
+                            : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent')}
                     `}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'opacity-60 group-hover:opacity-100'}`} />
+                      <Icon className={`w-[18px] h-[18px] opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ''}`} />
                       <span>{item.label}</span>
                     </div>
                     {item.badge && item.badge === '需补货' && (
-                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : 'bg-rose-500'} animate-pulse`} />
+                      <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                     )}
                   </NavLink>
 
                   {/* Sub-menu items */}
                   {item.children && (item.id === '/pricing' ? isPricingActive : location.pathname.startsWith(item.id)) && (
-                    <div className="flex flex-col gap-1.5 ml-8 mt-1 mb-3 border-l-2 border-indigo-500/20 pl-4">
+                    <div className="flex flex-col gap-1 ml-6 mt-1 mb-2 border-l-2 border-slate-100 pl-2">
                       {item.children.map(child => {
                         const ChildIcon = child.icon;
                         const isChildActive = location.pathname === child.id;
@@ -261,11 +287,13 @@ export default function MainLayout({
                             key={child.id}
                             to={child.id}
                             className={() => `
-                              flex items-center gap-3 py-2 text-[12px] font-bold transition-all
-                              ${isChildActive ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-500'}
+                              flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
+                              ${isChildActive 
+                                ? (uiVersion === 'v2' ? 'text-sky-600 bg-sky-500/5' : 'text-sky-600 bg-sky-50/50') 
+                                : (uiVersion === 'v2' ? 'text-slate-400 hover:text-sky-600 hover:bg-slate-50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50')}
                             `}
                           >
-                            <ChildIcon className={`w-4 h-4 ${isChildActive ? 'animate-pulse' : ''}`} />
+                            <ChildIcon className="w-3.5 h-3.5" />
                             <span>{child.label}</span>
                           </NavLink>
                         );
@@ -277,17 +305,22 @@ export default function MainLayout({
             })}
           </nav>
 
-          <div className="p-6 mt-auto">
-            <div className="glass-card rounded-2xl p-4 border-white/60 hover:border-indigo-500/20 transition-all group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-black shadow-lg">
+          <div className="p-4 mt-auto space-y-4">
+
+
+            <div className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === 'v2' ? 'border-slate-800' : ''}`}>
+              <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
+                <span>管理员</span>
+                <Settings className={`w-3 h-3 text-slate-400 group-hover:text-slate-700 transition-colors hover:rotate-90 duration-500 ${uiVersion === 'v2' ? 'group-hover:text-sky-400' : ''}`} />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ${uiVersion === 'v2' ? 'bg-sky-600' : 'bg-sky-500'}`}>
                   JC
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-black text-slate-900 truncate">Juan Carlos</div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Administrator</div>
+                <div>
+                  <div className={`text-sm font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>Juan Carlos</div>
+                  <div className="text-xs text-slate-500 font-mono mt-1">v1.0.6</div>
                 </div>
-                <Settings className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-all hover:rotate-90" />
               </div>
             </div>
           </div>
@@ -296,44 +329,70 @@ export default function MainLayout({
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <header className="h-[88px] shrink-0 flex items-center justify-between px-10 z-10">
-          <div className="flex items-center gap-3">
-            <div className="px-3 py-1 bg-white/40 backdrop-blur-md rounded-full border border-white/60 shadow-sm text-[10px] font-black text-indigo-600 uppercase tracking-widest">
-              Console
-            </div>
-            <div className="h-4 w-px bg-slate-200/50" />
-            <h2 className="text-sm font-black text-slate-900 tracking-tight capitalize">
-              {location.pathname === '/' ? 'Overview' : location.pathname.substring(1).split('/')[0].replace(/-/g, ' ')}
-            </h2>
+        {/* Dynamic Island Top Bar Container */}
+        <header className="h-[72px] shrink-0 flex items-center justify-between px-8 z-10">
+          <div className={`flex items-center gap-2 font-medium text-sm ${uiVersion === 'v2' ? 'text-slate-400' : 'text-slate-500'}`}>
+            <span className="hidden sm:inline">MILYFLY 控制台</span>
+            <span className="text-slate-300 hidden sm:inline">/</span>
+            <span className={`capitalize font-semibold ${uiVersion === 'v2' ? 'text-slate-900' : 'text-slate-800'}`}>
+              {location.pathname === '/' ? '总览看板' : location.pathname.substring(1).split('/')[0].replace(/-/g, ' ')}
+            </span>
+            <span className="ml-2 text-[8px] text-slate-300 opacity-50">v1.0.5</span>
+
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center bg-white/50 backdrop-blur-xl border border-white/60 rounded-full px-4 h-11 shadow-sm gap-4">
+          <div className="flex-1 flex items-center justify-center gap-3 mx-4">
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-xs font-mono font-bold tracking-tight border ${uiVersion === 'v2' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' : 'bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-100 text-sky-700'}`}>
+              <Compass className={`w-3.5 h-3.5 animate-pulse ${uiVersion === 'v2' ? 'text-sky-300' : 'text-sky-500'}`} />
+              <span className="hidden xl:inline">墨西哥当地时间：</span>
+              <span>{currentTime}</span>
+            </div>
+            
+            {/* 汇率转换小工具 - 仅在较大屏幕显示 */}
+            <div className="hidden lg:flex items-center bg-white/80 backdrop-blur border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
                <CurrencyConverter />
             </div>
 
-            <div className="hidden xl:flex items-center gap-3">
+            {/* 全局数据导出 - 增加阴影和边框确保可见性 */}
+            <div className="relative z-50">
+              {/* DataExporter was here */}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* 全局数据导出 - 按用户要求移至搜索栏左侧 */}
+            {/* FORCE SYNC v1.0.2 */}
+            <div className="hidden xl:block">
+
               <DataExporter skuData={skuData} />
-              
-              <div className="w-10 h-10 rounded-full glass-panel flex items-center justify-center group cursor-pointer hover:bg-white/60 transition-all">
-                <Search className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
-              </div>
-              
+            </div>
+
+            <div className="hidden lg:flex items-center gap-2 glass-panel shadow-none h-10 px-4 rounded-full text-sm text-slate-400 focus-within:text-slate-700 transition-colors cursor-text group w-[240px]">
+              <Search className="w-4 h-4 opacity-70 group-focus-within:opacity-100 group-focus-within:text-sky-500" />
+              <input 
+                type="text" 
+                placeholder="搜索 SKU 或 订单号..." 
+                className="flex-1 text-xs bg-transparent outline-none placeholder:text-slate-400 text-slate-800"
+              />
+              <kbd className="hidden group-hover:flex items-center h-5 px-1.5 text-[10px] font-mono bg-slate-100 rounded font-medium text-slate-500 border border-slate-200">⌘K</kbd>
+            </div>
+            
+            <div className="relative">
               <button 
                 onClick={() => {
                   setIsNotificationOpen(!isNotificationOpen);
-                  if (appUpdates.length > 0) localStorage.setItem('milyfly_last_seen_version', appUpdates[0].version);
+                  if (appUpdates.length > 0) {
+                    localStorage.setItem('milyfly_last_seen_version', appUpdates[0].version);
+                  }
                   setHasNewUpdate(false);
                 }}
-                className={`relative w-10 h-10 rounded-full glass-panel flex items-center justify-center transition-all ${isNotificationOpen ? 'bg-indigo-600 shadow-indigo-500/40' : 'hover:bg-white/60'}`}
+                className={`relative w-10 h-10 rounded-full glass-panel shadow-none flex items-center justify-center transition-all group ${isNotificationOpen ? 'bg-sky-500/20 ring-2 ring-sky-500/50' : 'hover:bg-slate-50/10'}`}
               >
-                <Bell className={`w-4 h-4 transition-colors ${isNotificationOpen ? 'text-white' : 'text-slate-400'}`} />
+                <Bell className={`w-[18px] h-[18px] transition-colors ${isNotificationOpen ? 'text-sky-400' : 'text-slate-500 group-hover:text-white'}`} />
                 {hasNewUpdate && (
-                  <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-bounce" />
+                  <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-slate-900 animate-pulse" />
                 )}
-
               </button>
-            
 
               <AnimatePresence>
                 {isNotificationOpen && (

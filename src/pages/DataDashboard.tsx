@@ -165,38 +165,21 @@ export default function DataDashboard() {
 
   // UI Components Helper
   // UI Components Helper
-  const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => {
-    const colorMap: any = {
-      sky: 'from-indigo-500 to-blue-600',
-      amber: 'from-orange-400 to-amber-600',
-      indigo: 'from-purple-500 to-indigo-600',
-      emerald: 'from-emerald-400 to-teal-600'
-    };
-    
-    return (
-      <div className="v2-stat-card group relative overflow-hidden">
-        {/* Animated Glow Accent */}
-        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colorMap[color] || 'from-slate-400 to-slate-600'} opacity-[0.03] blur-3xl rounded-full -mr-16 -mt-16 group-hover:opacity-[0.08] transition-opacity duration-500`} />
-        
-        <div className="flex justify-between items-start mb-4 relative z-10">
-          <span className="stat-label">{title}</span>
-          <div className={`p-2 bg-gradient-to-br ${colorMap[color] || 'from-slate-400 to-slate-600'} rounded-xl shadow-lg shadow-indigo-500/10`}>
-            <Icon className="w-4 h-4 text-white" />
-          </div>
-        </div>
-        
-        <div className="flex flex-col relative z-10">
-          <div className="stat-value">{value}</div>
-          {subValue && (
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-              {subValue}
-            </div>
-          )}
+  const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
+    <div className={`v2-stat-card border-${color}-200 p-4 relative overflow-hidden group`}>
+      <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-full blur-2xl -mr-8 -mt-8`} />
+      <div className="flex justify-between items-start mb-2 relative z-10">
+        <span className="v2-stat-label">{title}</span>
+        <div className={`p-1.5 bg-${color}-50 rounded-lg`}>
+          <Icon className={`w-4 h-4 text-${color}-600`} />
         </div>
       </div>
-    );
-  };
+      <div className="flex flex-col relative z-10">
+        <span className="v2-stat-value">{value}</span>
+        {subValue && <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{subValue}</span>}
+      </div>
+    </div>
+  );
 
   // ====== 利润计算核心逻辑 ======
   const calculateUnitProfit = (p: any) => {
@@ -455,30 +438,30 @@ export default function DataDashboard() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.05}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                   <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickFormatter={(str) => str.slice(5)} />
                   <YAxis yAxisId="left" stroke="#94a3b8" fontSize={10} />
                   <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={10} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' }}
-                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                    itemStyle={{ fontSize: '11px' }}
                   />
-                  <Legend verticalAlign="top" height={48} iconType="circle" />
-                  <Area yAxisId="left" type="monotone" name="销售额 (MXN)" dataKey="sales" stroke="#6366f1" fillOpacity={1} fill="url(#colorSales)" strokeWidth={3} />
-                  <Area yAxisId="right" type="monotone" name="广告支出 (USD)" dataKey="spend" stroke="#f59e0b" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={2} />
-                  <Area yAxisId="right" type="monotone" name="盈利总额 (RMB)" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={4} />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
+                  <Area yAxisId="right" type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
+                  <Area yAxisId="right" type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

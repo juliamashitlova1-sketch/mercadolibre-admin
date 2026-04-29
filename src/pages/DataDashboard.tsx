@@ -213,10 +213,10 @@ export default function DataDashboard() {
     }
 
     // 2. 计算平台费
-    const commissionMxn = sellingPrice * (p.commission_rate || 0);
-    const adFeeMxn = sellingPrice * (p.ad_rate || 0);
-    const returnFeeMxn = sellingPrice * (p.return_rate || 0);
-    const taxMxn = sellingPrice * (p.tax_rate || 0);
+    const commissionMxn = sellingPrice * (p.commission_rate !== undefined ? p.commission_rate : 0.175);
+    const adFeeMxn = sellingPrice * (p.ad_rate !== undefined ? p.ad_rate : 0.08);
+    const returnFeeMxn = sellingPrice * (p.return_rate !== undefined ? p.return_rate : 0.02);
+    const taxMxn = sellingPrice * (p.tax_rate !== undefined ? p.tax_rate : 0.0905);
     const totalFeesMxn = commissionMxn + calculatedFixed + calculatedLastMile + adFeeMxn + returnFeeMxn + taxMxn;
     
     // 3. 换算 CNY
@@ -244,39 +244,70 @@ export default function DataDashboard() {
     return payoutCny - (p.purchase_price_cny || 0) - currentFreightPerUnit;
   };
 
+  // 综合 SKU 成本与核价信息映射 (Merge skus table defaults with sku_pricing table)
+  const skuPricingMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    
+    // 1. 先用 skus 表初始化基础参数
+    skus.forEach(s => {
+      const key = s.sku?.toUpperCase();
+      if (!key) return;
+      map[key] = {
+        sku: key,
+        purchase_price_cny: parseFloat(s.cost_rmb) || 0,
+        selling_price_mxn: parseFloat(s.price_mxn) || 0,
+        exchange_rate: MXN_TO_CNY,
+        commission_rate: 0.175,
+        ad_rate: 0.08,
+        return_rate: 0.02,
+        tax_rate: 0.0905,
+        logistics_mode: '海运'
+      };
+    });
+
+    // 2. 用 sku_pricing 表覆盖/增强参数
+    pricing.forEach(p => {
+      const key = p.sku?.toUpperCase();
+      if (!key) return;
+      map[key] = { ...map[key], ...p };
+    });
+
+    return map;
+  }, [skus, pricing]);
+
   const skuDailyProfits = useMemo(() => {
     const dailyMap: Record<string, any> = {};
 
-    // 1. 处理订单与毛利 (过滤 A15, A06, N/A 和 空 SKU)
-    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15' && d.sku.toUpperCase() !== 'A06' && d.sku.toUpperCase() !== 'N/A').forEach(d => {
+    // 1. 处理订单与毛利 (仅过滤 A15 和 空 SKU)
+    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15').forEach(d => {
       const key = `${d.order_date}_${d.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku: d.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       
-      const p = pricing.find(item => item.sku?.toUpperCase() === d.sku?.toUpperCase());
+      const p = skuPricingMap[d.sku?.toUpperCase()];
       const unitProfit = calculateUnitProfit(p);
       
       dailyMap[key].units += (d.units || 1);
       dailyMap[key].grossProfit += (unitProfit * (d.units || 1));
     });
 
-    // 2. 处理广告支出 (过滤 A15, A06, N/A 和 空 SKU)
-    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15' && a.sku.toUpperCase() !== 'A06' && a.sku.toUpperCase() !== 'N/A').forEach(a => {
+    // 2. 处理广告支出 (仅过滤 A15 和 空 SKU)
+    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15').forEach(a => {
       const key = `${a.date}_${a.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku: a.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       // 广告费自动换算 RMB (用户确认：adsData.ad_spend 是 USD)
       dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
-    // 3. 处理刷单支出 (过滤 A15, A06, N/A 和 空 SKU)
-    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15' && f.sku.toUpperCase() !== 'A06' && f.sku.toUpperCase() !== 'N/A').forEach(f => {
+    // 3. 处理刷单支出 (仅过滤 A15 和 空 SKU)
+    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15').forEach(f => {
       const key = `${f.date}_${f.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: f.date, sku: f.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const actualCost = Number(f.review_fee_cny || 0) - (Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY);
       dailyMap[key].fakeOrderCost += actualCost;
     });
 
-    // 4. 处理货损支出 (过滤 A15, A06, N/A 和 空 SKU)
-    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15' && c.sku.toUpperCase() !== 'A06' && c.sku.toUpperCase() !== 'N/A').forEach(c => {
+    // 4. 处理货损支出 (仅过滤 A15 和 空 SKU)
+    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15').forEach(c => {
       const key = `${c.date}_${c.sku}`;
       if (!dailyMap[key]) dailyMap[key] = { date: c.date, sku: c.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       const damageCost = Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
@@ -516,7 +547,7 @@ export default function DataDashboard() {
               {(() => {
                 const now = new Date();
                 const skuWarnings = skus
-                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15' && sku.sku.toUpperCase() !== 'A06' && sku.sku.toUpperCase() !== 'N/A')
+                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15')
                   .map(sku => {
                   // 1. Calculate Total Stock
                   const listedInv = parseInt(sku.inventory, 10) || 0;

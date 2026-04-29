@@ -15,6 +15,7 @@ import SkuVisitCleaning from './pages/SkuVisitCleaning';
 import SkuAdCleaning from './pages/SkuAdCleaning';
 import SkuManagement from './pages/SkuManagement';
 import SkuCostManagement from './pages/SkuCostManagement';
+import SoftwareSuggestions from './pages/SoftwareSuggestions';
 
 import DataEntry from './components/DataEntry';
 import SKUEntry from './components/SKUEntry';
@@ -188,6 +189,7 @@ function AppContent() {
             <Route path="/pricing/list" element={<Pricing />} />
             <Route path="/pricing/success" element={<Pricing />} />
             <Route path="/pricing/staging" element={<Pricing />} />
+            <Route path="/software-suggestions" element={<SoftwareSuggestions />} />
             
             {/* Redirects for legacy routes */}
             <Route path="/orders-dashboard" element={<Navigate to="/fake-orders" replace />} />

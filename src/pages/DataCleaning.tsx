@@ -308,31 +308,34 @@ export default function DataCleaning() {
                 <span className="v2-stat-label text-slate-400">导入总订单</span>
                 <div className="v2-stat-value text-slate-900">{data.length.toLocaleString()}</div>
              </div>
-             <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20 shadow-lg">
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="v2-stat-label text-emerald-600">有效成交量</span>
+                    <span className="v2-stat-label text-slate-400 font-bold uppercase tracking-wider">有效成交量</span>
                     <div className="v2-stat-value text-emerald-600">{validOrders.length.toLocaleString()}</div>
                   </div>
-                  <TrendingUp className="w-8 h-8 text-emerald-500/20" />
+                  <TrendingUp className="w-8 h-8 text-emerald-500/10 group-hover:scale-110 transition-transform" />
                 </div>
              </div>
-             <div className="v2-stat-card bg-rose-500/5 border-rose-500/20 shadow-lg">
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="v2-stat-label text-rose-600">取消/拦截</span>
+                    <span className="v2-stat-label text-slate-400 font-bold uppercase tracking-wider">取消/拦截</span>
                     <div className="v2-stat-value text-rose-600">{cancelOrders.length.toLocaleString()}</div>
                   </div>
-                  <CopyX className="w-8 h-8 text-rose-500/20" />
+                  <CopyX className="w-8 h-8 text-rose-500/10 group-hover:scale-110 transition-transform" />
                 </div>
              </div>
-             <div className="v2-stat-card bg-amber-500/5 border-amber-500/20 shadow-lg">
+             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
                 <div className="flex justify-between items-center">
                   <div>
-                     <span className="v2-stat-label text-amber-600">退款/退货</span>
+                     <span className="v2-stat-label text-slate-400 font-bold uppercase tracking-wider">退款/退货</span>
                      <div className="v2-stat-value text-amber-600">{refundOrders.length.toLocaleString()}</div>
                   </div>
-                  <PackageX className="w-8 h-8 text-amber-500/20" />
+                  <PackageX className="w-8 h-8 text-amber-500/10 group-hover:scale-110 transition-transform" />
                 </div>
              </div>
           </div>

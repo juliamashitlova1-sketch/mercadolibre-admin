@@ -119,3 +119,12 @@ export interface SkuAdStats {
   acos?: number;
   createdAt?: string;
 }
+export interface SoftwareSuggestion {
+  id: string;
+  user_name: string;
+  category: 'Feature Request' | 'Bug Report' | 'UI/UX' | 'Other';
+  content: string;
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'pending' | 'reviewed' | 'implemented' | 'rejected';
+  created_at: string;
+}

@@ -214,23 +214,23 @@ export default function FakeOrders() {
 
         {data.length > 0 && !loading && (
           <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-slate-900/50 border-slate-800">
+            <div className="v2-stat-card bg-white/70 border-slate-200/60">
                <span className="v2-stat-label text-slate-500">记录总数</span>
-               <div className="v2-stat-value text-white">{data.length}</div>
+               <div className="v2-stat-value text-slate-900">{data.length}</div>
             </div>
             <div className="v2-stat-card bg-amber-500/5 border-amber-500/20">
-               <span className="v2-stat-label text-amber-500">累计支出 (CNY)</span>
-               <div className="v2-stat-value text-amber-400">¥{calculateTotalFees()}</div>
+               <span className="v2-stat-label text-amber-600">累计支出 (CNY)</span>
+               <div className="v2-stat-value text-amber-600">¥{calculateTotalFees()}</div>
             </div>
             <div className="v2-stat-card bg-sky-500/5 border-sky-500/20">
-               <span className="v2-stat-label text-sky-500">累计回款 (USD)</span>
-               <div className="v2-stat-value text-sky-400">${calculateTotalRefundsUSD()}</div>
+               <span className="v2-stat-label text-sky-600">累计回款 (USD)</span>
+               <div className="v2-stat-value text-sky-600">${calculateTotalRefundsUSD()}</div>
             </div>
             <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20">
                <div className="flex justify-between items-center">
                  <div>
-                   <span className="v2-stat-label text-emerald-500">实际总成 (CNY)</span>
-                   <div className="v2-stat-value text-emerald-400">¥{calculateActualCostTotal()}</div>
+                   <span className="v2-stat-label text-emerald-600">实际总成 (CNY)</span>
+                   <div className="v2-stat-value text-emerald-600">¥{calculateActualCostTotal()}</div>
                  </div>
                  <RefreshCcw className="w-6 h-6 text-emerald-500/20" />
                </div>
@@ -240,8 +240,8 @@ export default function FakeOrders() {
 
         <div className="v2-card">
           <div className="v2-card-header">
-            <h2 className="v2-card-title">
-              <DollarSign className="w-4 h-4 text-amber-400" />
+            <h2 className="v2-card-title text-slate-800">
+              <DollarSign className="w-4 h-4 text-amber-500" />
               测评支出明细
             </h2>
           </div>
@@ -257,32 +257,32 @@ export default function FakeOrders() {
                   <th className="v2-table-th text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center">
-                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-sky-400" />
+                    <td colSpan={6} className="v2-table-td py-10 text-center">
+                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-sky-500" />
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-slate-500 italic">暂无记录</td>
+                    <td colSpan={6} className="v2-table-td py-20 text-center text-slate-400 italic">暂无记录</td>
                   </tr>
                 ) : data.map((record) => {
                   const actual = Number(record.reviewFeeCNY || 0) - (Number(record.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY);
                   return (
                     <tr key={record.id} className="v2-table-tr group">
-                      <td className="v2-table-td text-slate-400">{record.date}</td>
+                      <td className="v2-table-td text-slate-500">{record.date}</td>
                       <td className="v2-table-td">
                          <div className="flex flex-col">
-                           <span className="text-sky-400 font-bold">{record.sku}</span>
-                           <span className="text-[11px] text-slate-500 truncate max-w-[120px]">{record.skuName}</span>
+                           <span className="text-sky-600 font-bold">{record.sku}</span>
+                           <span className="text-[11px] text-slate-400 truncate max-w-[120px]">{record.skuName}</span>
                          </div>
                       </td>
-                      <td className="v2-table-td text-slate-300">¥{(record.reviewFeeCNY || 0).toLocaleString()}</td>
-                      <td className="v2-table-td text-slate-300">${(record.refundAmountUSD || 0).toLocaleString()}</td>
+                      <td className="v2-table-td text-slate-600">¥{(record.reviewFeeCNY || 0).toLocaleString()}</td>
+                      <td className="v2-table-td text-slate-600">${(record.refundAmountUSD || 0).toLocaleString()}</td>
                       <td className="v2-table-td">
-                        <span className={`font-bold ${actual > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        <span className={`font-bold ${actual > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                            ¥{actual.toFixed(2)}
                         </span>
                       </td>
@@ -290,13 +290,13 @@ export default function FakeOrders() {
                         <div className="flex justify-end gap-1">
                           <button 
                             onClick={() => { setCurrentRecord(record); setIsEditing(true); }}
-                            className="p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
+                            className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-all"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button 
                             onClick={() => handleDelete(record.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-all"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -309,6 +309,7 @@ export default function FakeOrders() {
             </table>
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -218,24 +218,24 @@ export default function CargoDamagePage() {
 
         {!loading && data.length > 0 && (
           <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-slate-900/50 border-slate-800">
+            <div className="v2-stat-card bg-white/70 border-slate-200/60">
                <span className="v2-stat-label text-slate-500">异常记录数</span>
-               <div className="v2-stat-value text-white">{data.length}</div>
+               <div className="v2-stat-value text-slate-900">{data.length}</div>
             </div>
             <div className="v2-stat-card bg-rose-500/5 border-rose-500/20">
-               <span className="v2-stat-label text-rose-500">总货损件数</span>
-               <div className="v2-stat-value text-rose-400">{calculateTotalQuantity()} units</div>
+               <span className="v2-stat-label text-rose-600">总货损件数</span>
+               <div className="v2-stat-value text-rose-600">{calculateTotalQuantity()} units</div>
             </div>
-            <div className="v2-stat-card bg-red-500/10 border-red-500/30">
+            <div className="v2-stat-card bg-red-500/5 border-red-500/20">
                <div className="flex justify-between items-center">
                  <div>
-                   <span className="v2-stat-label text-red-500">损失估值 (CNY)</span>
-                   <div className="v2-stat-value text-red-400">¥{calculateTotalValue()}</div>
+                   <span className="v2-stat-label text-red-600">损失估值 (CNY)</span>
+                   <div className="v2-stat-value text-red-600">¥{calculateTotalValue()}</div>
                  </div>
                  <TrendingDown className="w-6 h-6 text-red-500/20" />
                </div>
             </div>
-            <div className="v2-stat-card bg-slate-900/50 border-slate-800">
+            <div className="v2-stat-card bg-white/70 border-slate-200/60">
                <span className="v2-stat-label text-slate-500">最近活跃</span>
                <div className="v2-stat-value text-slate-400 text-sm">{data[0]?.date}</div>
             </div>
@@ -244,8 +244,8 @@ export default function CargoDamagePage() {
 
         <div className="v2-card">
           <div className="v2-card-header">
-            <h2 className="v2-card-title">
-              <ClipboardList className="w-4 h-4 text-rose-400" />
+            <h2 className="v2-card-title text-slate-800">
+              <ClipboardList className="w-4 h-4 text-rose-500" />
               货损明细清单
             </h2>
           </div>
@@ -261,35 +261,35 @@ export default function CargoDamagePage() {
                   <th className="v2-table-th text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center">
-                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-rose-400" />
+                    <td colSpan={6} className="v2-table-td py-10 text-center">
+                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-rose-500" />
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-20 text-center text-slate-500 italic">暂无记录</td>
+                    <td colSpan={6} className="v2-table-td py-20 text-center text-slate-400 italic">暂无记录</td>
                   </tr>
                 ) : data.map((record) => (
                   <tr key={record.id} className="v2-table-tr group">
-                    <td className="v2-table-td text-slate-400">{record.date}</td>
+                    <td className="v2-table-td text-slate-500">{record.date}</td>
                     <td className="v2-table-td">
                        <div className="flex flex-col">
-                         <span className="text-rose-400 font-bold">{record.sku}</span>
-                         <span className="text-[11px] text-slate-500 truncate max-w-[150px]">{record.skuName}</span>
+                         <span className="text-rose-600 font-bold">{record.sku}</span>
+                         <span className="text-[11px] text-slate-400 truncate max-w-[150px]">{record.skuName}</span>
                        </div>
                     </td>
-                    <td className="v2-table-td text-white font-mono font-bold">{record.quantity}</td>
+                    <td className="v2-table-td text-slate-900 font-mono font-bold">{record.quantity}</td>
                     <td className="v2-table-td">
-                       <div className="flex items-center gap-1 text-slate-400">
+                       <div className="flex items-center gap-1 text-slate-500">
                          <AlertCircle className="w-3 h-3 text-rose-500/60" />
                          {record.reason}
                        </div>
                     </td>
                     <td className="v2-table-td">
-                      <span className="font-bold text-rose-500">
+                      <span className="font-bold text-rose-600">
                          ¥{(Number(record.quantity || 0) * Number(record.skuValueCNY || 0)).toFixed(2)}
                       </span>
                     </td>
@@ -297,13 +297,13 @@ export default function CargoDamagePage() {
                       <div className="flex justify-end gap-1">
                         <button 
                           onClick={() => { setCurrentRecord(record); setIsEditing(true); }}
-                          className="p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded transition-all"
+                          className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded transition-all"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button 
                           onClick={() => handleDelete(record.id)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 rounded transition-all"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -315,6 +315,7 @@ export default function CargoDamagePage() {
             </table>
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -242,13 +242,17 @@ export default function DataCleaning() {
                   <td className="px-4 py-1.5">
                     {order.status === 'valid' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-emerald-500/10 text-emerald-400">有效</span>}
                     {order.status === 'cancel' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-rose-500/10 text-rose-400">取消</span>}
-                    {order.status === 'refund' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-medium bg-orange-500/10 text-orange-400">退款</span>}
+                <tr key={order.order_id} className="v2-table-tr">
+                  <td className="v2-table-td">
+                    {order.status === 'valid' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">有效</span>}
+                    {order.status === 'cancel' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-100">取消</span>}
+                    {order.status === 'refund' && <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-100">退款</span>}
                   </td>
-                  <td className="px-4 py-1.5 font-mono text-sky-400">{order.order_id}</td>
-                  <td className="px-4 py-1.5 text-slate-300 whitespace-nowrap">{order.order_date.substring(0, 20)}</td>
-                  <td className="px-4 py-1.5 text-purple-400 font-semibold">{order.sku}</td>
-                  <td className="px-4 py-1.5 text-center text-slate-300 font-bold">{order.units}</td>
-                  <td className="px-4 py-1.5 text-slate-400 leading-relaxed truncate max-w-[250px]" title={order.buyer_address}>
+                  <td className="v2-table-td font-mono font-bold text-sky-600">{order.order_id}</td>
+                  <td className="v2-table-td text-slate-500 whitespace-nowrap">{order.order_date.substring(0, 20)}</td>
+                  <td className="v2-table-td text-indigo-600 font-black">{order.sku}</td>
+                  <td className="v2-table-td text-center text-slate-900 font-black">{order.units}</td>
+                  <td className="v2-table-td text-slate-500 leading-relaxed truncate max-w-[250px]" title={order.buyer_address}>
                     {order.buyer_address}
                   </td>
                 </tr>
@@ -261,19 +265,19 @@ export default function DataCleaning() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-screen py-6 px-4 bg-transparent custom-scrollbar">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="v2-page-container custom-scrollbar">
+      <div className="v2-inner-container">
         {/* Header Compact */}
-        <header className="flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md">
+        <header className="v2-header">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-lg shadow-sm">
+            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-indigo-600">
               <Database className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-100 tracking-tight">
+              <h1 className="v2-header-title">
                 订单及销售数量清洗
               </h1>
-              <p className="text-[11px] text-slate-400 mt-0.5">从 Mercado Libre 订单表提取与清洗，分为有效、取消与退款</p>
+              <p className="v2-header-subtitle">从 Mercado Libre 订单表提取与清洗，分为有效、取消与退款</p>
             </div>
           </div>
           
@@ -289,9 +293,9 @@ export default function DataCleaning() {
             initial={{ opacity: 0, scale: 0.98 }} 
             animate={{ opacity: 1, scale: 1 }}
             className={`p-3 rounded-lg flex items-center space-x-2 border shadow-sm text-xs ${
-              syncStatus.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-              syncStatus.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-              'bg-sky-500/10 border-sky-500/20 text-sky-400'
+              syncStatus.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+              syncStatus.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+              'bg-sky-50 border-sky-200 text-sky-700'
             }`}
           >
             {syncStatus.type === 'success' && <CheckCircle className="w-4 h-4" />}
@@ -303,31 +307,37 @@ export default function DataCleaning() {
 
         {/* Summaries Compact */}
         {!isLoading && data.length > 0 && (
-          <div className="grid grid-cols-4 gap-3">
-             <div className="bg-slate-900/50 backdrop-blur border border-slate-800 p-3 rounded-xl flex flex-col justify-center shadow-sm">
-                <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase mb-0.5">总订单 (Total)</span>
-                <div className="text-xl font-bold text-white leading-tight">{data.length}</div>
+          <div className="v2-stats-grid">
+             <div className="v2-stat-card bg-white/70 border-slate-200/60">
+                <span className="v2-stat-label text-slate-500">总订单 (Total)</span>
+                <div className="v2-stat-value text-slate-900">{data.length}</div>
              </div>
-             <div className="bg-emerald-500/10 backdrop-blur border border-emerald-500/20 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-emerald-500/80 font-medium tracking-wide uppercase mb-0.5">有效成交 (Valid)</span>
-                  <div className="text-xl font-bold text-emerald-400 leading-tight">{validOrders.length}</div>
+             <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="v2-stat-label text-emerald-600">有效成交 (Valid)</span>
+                    <div className="v2-stat-value text-emerald-600">{validOrders.length}</div>
+                  </div>
+                  <TrendingUp className="w-6 h-6 text-emerald-500/20" />
                 </div>
-                <TrendingUp className="w-6 h-6 text-emerald-500/30" />
              </div>
-             <div className="bg-rose-500/10 backdrop-blur border border-rose-500/20 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-rose-500/80 font-medium tracking-wide uppercase mb-0.5">取消拦截 (Cancel)</span>
-                  <div className="text-xl font-bold text-rose-400 leading-tight">{cancelOrders.length}</div>
+             <div className="v2-stat-card bg-rose-500/5 border-rose-500/20">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="v2-stat-label text-rose-600">取消拦截 (Cancel)</span>
+                    <div className="v2-stat-value text-rose-600">{cancelOrders.length}</div>
+                  </div>
+                  <CopyX className="w-6 h-6 text-rose-500/20" />
                 </div>
-                <CopyX className="w-6 h-6 text-rose-500/30" />
              </div>
-             <div className="bg-orange-500/10 backdrop-blur border border-orange-500/20 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                <div className="flex flex-col">
-                   <span className="text-[10px] text-orange-500/80 font-medium tracking-wide uppercase mb-0.5">退款损失 (Refund)</span>
-                   <div className="text-xl font-bold text-orange-400 leading-tight">{refundOrders.length}</div>
+             <div className="v2-stat-card bg-orange-500/5 border-orange-500/20">
+                <div className="flex justify-between items-center">
+                  <div>
+                     <span className="v2-stat-label text-orange-600">退款损失 (Refund)</span>
+                     <div className="v2-stat-value text-orange-600">{refundOrders.length}</div>
+                  </div>
+                  <PackageX className="w-6 h-6 text-orange-500/20" />
                 </div>
-                <PackageX className="w-6 h-6 text-orange-500/30" />
              </div>
           </div>
         )}
@@ -335,7 +345,7 @@ export default function DataCleaning() {
         {/* Separated Tables */}
         <div className="space-y-4">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800">
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 v2-card">
               <Loader2 className="w-8 h-8 animate-spin mb-4" />
               <p className="text-sm">加载云端数据中...</p>
             </div>
@@ -346,7 +356,7 @@ export default function DataCleaning() {
               {renderTable('退款订单 (Refund)', refundOrders, 'bg-orange-500')}
             </>
           ) : (
-            <div className="py-20 text-center text-slate-500 bg-slate-900/30 rounded-xl border border-slate-800">
+            <div className="py-20 text-center text-slate-400 v2-card">
               <Database className="w-10 h-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm">此表暂无数据，请上传包含订单的 Excel 表格</p>
             </div>

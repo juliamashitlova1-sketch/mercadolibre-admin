@@ -174,30 +174,30 @@ export default function SkuVisitCleaning() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-screen py-6 px-4 bg-transparent custom-scrollbar">
-      <div className="max-w-[1600px] mx-auto space-y-4">
+    <div className="v2-page-container custom-scrollbar">
+      <div className="v2-inner-container">
         {/* Header Compact */}
-        <header className="flex justify-between items-center bg-slate-900/50 backdrop-blur-md p-4 rounded-xl border border-slate-800 shadow-md">
+        <header className="v2-header">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shadow-sm">
+            <div className="v2-header-icon bg-gradient-to-br from-purple-500 to-indigo-600">
               <Search className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-100 tracking-tight">
+              <h1 className="v2-header-title">
                 各 SKU 访问数据清洗
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
+              <p className="v2-header-subtitle">从 Mercado Libre 流量报表提取独立访问量，同步至 SKU 销量追踪引擎</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-               <span className="text-xs text-slate-400">选择上传日期:</span>
+            <div className="flex items-center space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+               <span className="text-xs text-slate-500">选择上传日期:</span>
                <input 
                  type="date" 
                  value={manualDate} 
                  onChange={(e) => setManualDate(e.target.value)}
-                 className="bg-transparent text-xs text-white outline-none cursor-pointer [color-scheme:dark]"
+                 className="bg-transparent text-xs text-slate-700 outline-none cursor-pointer"
                />
             </div>
 
@@ -214,9 +214,9 @@ export default function SkuVisitCleaning() {
             initial={{ opacity: 0, scale: 0.98 }} 
             animate={{ opacity: 1, scale: 1 }}
             className={`p-3 rounded-lg flex items-center space-x-2 border shadow-sm text-xs ${
-              syncStatus.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-              syncStatus.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-              'bg-purple-500/10 border-purple-500/20 text-purple-400'
+              syncStatus.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+              syncStatus.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+              'bg-purple-50 border-purple-200 text-purple-700'
             }`}
           >
             {syncStatus.type === 'success' && <CheckCircle className="w-4 h-4" />}
@@ -227,48 +227,48 @@ export default function SkuVisitCleaning() {
         )}
 
         {/* List Table */}
-        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-          <div className="px-4 py-2 border-b border-slate-800 flex items-center justify-between bg-slate-800/30">
-            <h2 className="text-xs font-semibold text-white tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-purple-400" />
+        <div className="v2-card">
+          <div className="v2-card-header">
+            <h2 className="v2-card-title">
+              <TrendingUp className="w-4 h-4 text-purple-500" />
               已清洗流量数据 ({data.length})
             </h2>
           </div>
-          <div className="overflow-x-auto max-h-[600px] custom-scrollbar">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-800/90 text-slate-400 tracking-wider sticky top-0 z-10 font-medium">
+          <div className="v2-table-wrapper max-h-[600px] custom-scrollbar">
+            <table className="v2-table">
+              <thead className="v2-table-thead">
                 <tr>
-                  <th className="px-4 py-2 border-b border-slate-700/50">日期</th>
-                  <th className="px-4 py-2 border-b border-slate-700/50">SKU</th>
-                  <th className="px-4 py-2 border-b border-slate-700/50 text-right">独立访问量</th>
-                  <th className="px-4 py-2 border-b border-slate-700/50 text-right">总评论</th>
-                  <th className="px-4 py-2 border-b border-slate-700/50 text-right text-emerald-400/80">正面评论</th>
-                  <th className="px-4 py-2 border-b border-slate-700/50 text-right text-rose-400/80">负面评论</th>
+                  <th className="v2-table-th">日期</th>
+                  <th className="v2-table-th">SKU</th>
+                  <th className="v2-table-th text-right">独立访问量</th>
+                  <th className="v2-table-th text-right">总评论</th>
+                  <th className="v2-table-th text-right text-emerald-600">正面评论</th>
+                  <th className="v2-table-th text-right text-rose-600">负面评论</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-20 text-center text-slate-500">
+                    <td colSpan={6} className="v2-table-td py-20 text-center text-slate-400">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                       加载中...
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-20 text-center text-slate-500">
+                    <td colSpan={6} className="v2-table-td py-20 text-center text-slate-400 italic">
                       暂无数据，请上传报表
                     </td>
                   </tr>
                 ) : (
                   data.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/80 transition-colors">
-                      <td className="px-4 py-1.5 text-slate-400">{row.date}</td>
-                      <td className="px-4 py-1.5 text-purple-400 font-semibold">{row.sku}</td>
-                      <td className="px-4 py-1.5 text-right text-white font-bold">{row.unique_visits?.toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-slate-300">{(row.total_reviews || 0).toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-emerald-400/80">{(row.positive_reviews || 0).toLocaleString()}</td>
-                      <td className="px-4 py-1.5 text-right text-rose-400/80">{(row.negative_reviews || 0).toLocaleString()}</td>
+                    <tr key={idx} className="v2-table-tr">
+                      <td className="v2-table-td text-slate-500">{row.date}</td>
+                      <td className="v2-table-td text-purple-600 font-black">{row.sku}</td>
+                      <td className="v2-table-td text-right text-slate-900 font-black">{row.unique_visits?.toLocaleString()}</td>
+                      <td className="v2-table-td text-right text-slate-500">{(row.total_reviews || 0).toLocaleString()}</td>
+                      <td className="v2-table-td text-right text-emerald-600 font-bold">{(row.positive_reviews || 0).toLocaleString()}</td>
+                      <td className="v2-table-td text-right text-rose-600 font-bold">{(row.negative_reviews || 0).toLocaleString()}</td>
                     </tr>
                   ))
                 )}
@@ -280,3 +280,4 @@ export default function SkuVisitCleaning() {
     </div>
   );
 }
+

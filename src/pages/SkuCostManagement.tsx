@@ -66,8 +66,8 @@ export default function SkuCostManagement() {
           logisticsMode: p?.logistics_mode || '海运',
           seaFreightUnitPrice: p?.sea_freight_unit_price || 0,
           airFreightUnitPrice: p?.air_freight_unit_price || 0,
-          boxCount: p?.box_count || 0,
-          purchaseLogistics: p?.purchase_logistics || ''
+          boxCount: p?.pack_count > 0 ? (p.replenishment_qty / p.pack_count) : 0,
+          purchaseLogistics: p?.logistics_provider || ''
         };
       });
       setEditedData(initialEdited);
@@ -213,8 +213,7 @@ export default function SkuCostManagement() {
         margin: m.margin * 100,
         roi: (f.purchasePriceCny + m.freightPerUnit) > 0 ? (m.unitProfitCny / (f.purchasePriceCny + m.freightPerUnit)) : 0,
         unit_profit_cny: m.unitProfitCny,
-        box_count: f.boxCount,
-        purchase_logistics: f.purchaseLogistics,
+        logistics_provider: f.purchaseLogistics,
         status: 'priced'
       };
 

@@ -177,7 +177,7 @@ export default function Pricing() {
         logistics_mode: form.logisticsMode, sea_freight_unit_price: form.seaFreightUnitPrice, air_freight_unit_price: form.airFreightUnitPrice,
         fixed_fee: form.fixedFee, last_mile_fee: form.lastMileFee, margin: (form.logisticsMode === '空运' ? metrics.marginAir : metrics.marginSea) * 100,
         roi: form.logisticsMode === '空运' ? metrics.roiAir : metrics.roiSea, status: 'priced',
-        box_count: form.boxCount, purchase_logistics: form.purchaseLogistics
+        logistics_provider: form.purchaseLogistics
       };
       
       await supabase.from('skus').update({

@@ -457,12 +457,12 @@ export default function DataDashboard() {
           />
         </div>
 
-        {/* 第二行：主分析视图 (9:3 布局) */}
+        {/* 第二行：主分析视图 (6:3:3 布局) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 广告/销售混合趋势 */}
-          <div className="lg:col-span-9 v2-card p-4">
+          {/* 销售与利润趋势 */}
+          <div className="lg:col-span-6 v2-card p-4">
             <div className="flex justify-between items-center mb-4 px-2">
-              <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与投放效率趋势 (30D)</h3>
+              <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与盈利趋势 (30D)</h3>
             </div>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -472,10 +472,6 @@ export default function DataDashboard() {
                       <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.1}/>
                       <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
                     </linearGradient>
-                    <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.05}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                    </linearGradient>
                     <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
@@ -483,17 +479,36 @@ export default function DataDashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
                   <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickFormatter={(str) => str.slice(5)} />
-                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={10} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={10} />
+                  <YAxis stroke="#94a3b8" fontSize={10} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                     itemStyle={{ fontSize: '11px' }}
                   />
                   <Legend verticalAlign="top" height={36}/>
-                  <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                  <Area yAxisId="right" type="monotone" name="广告支出" dataKey="spend" stroke="#6366f1" fillOpacity={1} fill="url(#colorSpend)" strokeWidth={1} />
-                  <Area yAxisId="right" type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
+                  <Area type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
+                  <Area type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
                 </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 广告支出趋势 - 新增 */}
+          <div className="lg:col-span-3 v2-card p-4">
+            <div className="flex justify-between items-center mb-4 px-2">
+              <h3 className="v2-card-title"><Target className="w-4 h-4 text-indigo-400" /> 每日广告支出</h3>
+            </div>
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
+                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
+                  <YAxis stroke="#94a3b8" fontSize={9} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                    itemStyle={{ fontSize: '10px' }}
+                  />
+                  <Bar name="支出" dataKey="spend" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={12} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>

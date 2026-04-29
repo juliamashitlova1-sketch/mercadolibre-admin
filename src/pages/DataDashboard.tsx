@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
   ArrowDownRight, Zap, Target, Users, Receipt, RefreshCw, Layers,
-  DollarSign, ShoppingBag
+  DollarSign, ShoppingBag, ShieldAlert, Gauge, Rocket, Scale
 } from 'lucide-react';
 import { MXN_TO_CNY, USD_TO_MXN } from '../constants';
 import { 
@@ -329,7 +329,7 @@ export default function DataDashboard() {
     // 处理订单
     data.filter(d => d.status === 'valid').forEach(d => {
       const date = d.order_date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
       const price = skus.find(s => s.sku === d.sku)?.price_mxn || 0;
       dailyMap[date].sales += (price * (d.units || 1));
       dailyMap[date].units += (d.units || 1);
@@ -338,21 +338,64 @@ export default function DataDashboard() {
     // 处理广告
     adsData.forEach(a => {
       const date = a.date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
-      dailyMap[date].spend += (parseFloat(a.ad_spend) || 0);
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
+      const spendMxn = (parseFloat(a.ad_spend) || 0) * USD_TO_MXN;
+      dailyMap[date].spend += spendMxn;
+      
+      const orders = parseInt(a.ad_orders) || 0;
+      dailyMap[date].adOrders += orders;
+      
+      const price = skus.find(s => s.sku === a.sku)?.price_mxn || 0;
+      dailyMap[date].adSales += (price * orders);
     });
 
     // 处理利润 (从 skuDailyProfits 聚合)
     skuDailyProfits.forEach(item => {
       const date = item.date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0 };
+      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
       dailyMap[date].profit += item.netProfit;
     });
 
     return Object.values(dailyMap)
+      .map(item => {
+        const roas = item.spend > 0 ? (item.adSales / item.spend) : 0;
+        const acos = item.adSales > 0 ? (item.spend / item.adSales) * 100 : 0;
+        const organicUnits = Math.max(0, item.units - item.adOrders);
+        return {
+          ...item,
+          roas: parseFloat(roas.toFixed(2)),
+          acos: parseFloat(acos.toFixed(1)),
+          adUnits: item.adOrders,
+          organicUnits
+        };
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-30);
   }, [data, adsData, skus, skuDailyProfits]);
+
+  // 新增：库存健康度
+  const inventoryHealth = useMemo(() => {
+    return skus.map(s => {
+      const recentOrders = data.filter(d => d.sku === s.sku && d.status === 'valid').reduce((acc, curr) => acc + (curr.units || 1), 0);
+      const velocity = recentOrders / 30; // 30天均销
+      const stock = parseInt(s.inventory) || 0;
+      const days = velocity > 0 ? (stock / velocity) : 999;
+      return { sku: s.sku, stock, days };
+    }).sort((a, b) => a.days - b.days).slice(0, 5);
+  }, [skus, data]);
+
+  // 新增：异常订单统计
+  const anomalyMetrics = useMemo(() => {
+    const total = data.length;
+    const refunds = data.filter(d => d.status === 'refund').length;
+    const cancels = data.filter(d => d.status === 'cancel').length;
+    return {
+      refundRate: total > 0 ? (refunds / total) * 100 : 0,
+      cancelRate: total > 0 ? (cancels / total) * 100 : 0,
+      refundCount: refunds,
+      cancelCount: cancels
+    };
+  }, [data]);
 
   // 新增：精确汇总利润
   const totalNetProfitRmb = useMemo(() => {
@@ -552,6 +595,96 @@ export default function DataDashboard() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* 第三行：深度运营洞察 (新增) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
+           {/* 1. 投放效率监控 (建议一) */}
+           <div className="lg:col-span-5 v2-card p-4">
+              <div className="flex justify-between items-center mb-4 px-2">
+                <h3 className="v2-card-title"><Rocket className="w-4 h-4 text-emerald-400" /> 广告效率 (ROAS / ACOS)</h3>
+                <div className="flex gap-3 text-[9px] font-bold">
+                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ROAS</div>
+                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> ACOS %</div>
+                </div>
+              </div>
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
+                    <YAxis yAxisId="left" stroke="#10b981" fontSize={9} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#ef4444" fontSize={9} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px' }} />
+                    <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#10b981" strokeWidth={2} dot={false} />
+                    <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#ef4444" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+           </div>
+
+           {/* 2. 销售结构分析 (建议四) */}
+           <div className="lg:col-span-4 v2-card p-4">
+              <div className="flex justify-between items-center mb-4 px-2">
+                <h3 className="v2-card-title"><Layers className="w-4 h-4 text-indigo-400" /> 订单构成 (广告 vs 自然)</h3>
+              </div>
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
+                    <YAxis stroke="#94a3b8" fontSize={9} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px' }} />
+                    <Bar dataKey="adUnits" stackId="a" fill="#6366f1" name="广告订单" />
+                    <Bar dataKey="organicUnits" stackId="a" fill="#e2e8f0" name="自然订单" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+           </div>
+
+           {/* 3. 风险与库存管控 (建议二 & 五) */}
+           <div className="lg:col-span-3 v2-card p-4">
+              <h3 className="v2-card-title mb-4 px-2"><ShieldAlert className="w-4 h-4 text-rose-400" /> 风险监控与库存预警</h3>
+              
+              <div className="space-y-5">
+                {/* 异常监控 */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 bg-rose-50 rounded-xl border border-rose-100">
+                    <div className="text-[9px] font-black text-rose-400 uppercase mb-1">退款率 (异常)</div>
+                    <div className="text-lg font-black text-rose-600">{anomalyMetrics.refundRate.toFixed(1)}%</div>
+                  </div>
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <div className="text-[9px] font-black text-amber-500 uppercase mb-1">库存健康度</div>
+                    <div className="text-lg font-black text-amber-600 font-mono">Good</div>
+                  </div>
+                </div>
+
+                {/* 断货预警列表 */}
+                <div className="space-y-3">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Gauge className="w-3 h-3" /> 近期断货风险 SKU
+                  </div>
+                  <div className="space-y-2">
+                    {inventoryHealth.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between group">
+                        <span className="text-[11px] font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.sku}</span>
+                        <div className="flex flex-col items-end">
+                          <span className={`text-[10px] font-bold ${item.days < 7 ? 'text-rose-600' : 'text-amber-600'}`}>
+                            可售 {item.days === 999 ? '∞' : item.days.toFixed(0)} 天
+                          </span>
+                          <div className="w-24 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all ${item.days < 7 ? 'bg-rose-500' : 'bg-amber-500'}`} 
+                              style={{ width: `${Math.min(100, (item.days / 30) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+           </div>
         </div>
 
         {/* 第三行：地理与告警 (3:6:3 布局) */}

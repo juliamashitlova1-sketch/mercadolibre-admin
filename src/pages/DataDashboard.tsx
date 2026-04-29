@@ -1,4 +1,4 @@
-// Sync Trigger: 2026-04-28 15:58
+// Sync Trigger: 2026-04-29 20:58
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
@@ -31,26 +31,17 @@ export default function DataDashboard() {
   const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
   const [cargoDamageData, setCargoDamageData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState('all');
 
   useEffect(() => {
-    fetchAllData();
+    fetchData();
   }, []);
 
-  const fetchAllData = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [
-        { data: orders },
-        { data: ads },
-        { data: visits },
-        { data: skuList },
-        { data: pricingList },
-        { data: fakeOrders },
-        { data: cargoDamage }
-      ] = await Promise.all([
-        supabase.from('cleaned_orders').select('*').order('order_date', { ascending: false }),
+      const [orders, ads, visits, skuList, priceList, fake, damage] = await Promise.all([
+        supabase.from('cleaned_orders').select('*'),
         supabase.from('sku_ads').select('*'),
         supabase.from('sku_visits').select('*'),
         supabase.from('skus').select('*'),
@@ -59,99 +50,46 @@ export default function DataDashboard() {
         supabase.from('cargo_damage').select('*')
       ]);
 
-      if (orders) setData(orders);
-      if (ads) setAdsData(ads);
-      if (visits) setVisitsData(visits);
-      if (skuList) setSkus(skuList);
-      if (pricingList) setPricing(pricingList);
-      if (fakeOrders) setFakeOrdersData(fakeOrders);
-      if (cargoDamage) setCargoDamageData(cargoDamage);
-    } catch (err: any) {
-      console.error('Error fetching dashboard data:', err);
+      setData(orders.data || []);
+      setAdsData(ads.data || []);
+      setVisitsData(visits.data || []);
+      setSkus(skuList.data || []);
+      setPricing(priceList.data || []);
+      setFakeOrdersData(fake.data || []);
+      setCargoDamageData(damage.data || []);
+    } catch (err) {
+      console.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ====== 数据聚合与指标计算 ======
   const metrics = useMemo(() => {
-    const validOrders = data.filter(d => d.status === 'valid');
-    const totalOrders = validOrders.length;
-    const totalUnitsCount = validOrders.reduce((acc, curr) => acc + (curr.units || 1), 0);
-    
-    // 建立 SKU -> Price 映射 (优先使用 sku_pricing 中的售价)
-    const skuPriceMap: Record<string, number> = {};
-    pricing.forEach(p => { 
-      if (p.sku) skuPriceMap[p.sku.toUpperCase()] = parseFloat(p.selling_price_mxn) || 0; 
-    });
-    // 如果 pricing 中没有，则尝试从 skus 表中获取
-    skus.forEach(s => { 
-      if (s.sku && !skuPriceMap[s.sku.toUpperCase()]) {
-        skuPriceMap[s.sku.toUpperCase()] = parseFloat(s.price_mxn) || 0; 
-      }
-    });
-    
-    const totalSalesMxn = validOrders.reduce((acc, curr) => {
-      const price = skuPriceMap[curr.sku?.toUpperCase()] || 0;
+    const totalOrders = data.filter(d => d.status === 'valid').length;
+    const totalSalesMxn = data.filter(d => d.status === 'valid').reduce((acc, curr) => {
+      const price = skus.find(s => s.sku === curr.sku)?.price_mxn || 0;
       return acc + (price * (curr.units || 1));
     }, 0);
 
-    const totalAdSpend = adsData
-      .filter(a => a.sku && a.sku.toUpperCase() !== 'A15')
-      .reduce((acc, curr) => acc + (parseFloat(curr.ad_spend) || 0), 0);
-    
-    const totalVisits = visitsData
-      .filter(v => v.sku && v.sku.toUpperCase() !== 'A15')
-      .reduce((acc, curr) => acc + (parseInt(curr.unique_visits) || 0), 0);
+    const totalAdSpend = adsData.reduce((acc, curr) => acc + (parseFloat(curr.ad_spend) || 0), 0);
+    const totalVisits = adsData.reduce((acc, curr) => acc + (parseInt(curr.clicks) || 0), 0);
 
-    const roas = totalAdSpend > 0 ? (totalSalesMxn / totalAdSpend) : 0;
-    const conversionRate = totalVisits > 0 ? ((totalUnitsCount / totalVisits) * 100) : 0;
-    
-    // 利润计算：稍后由 skuDailyProfits 汇总得到精确值
-    // 这里先占位，或者直接从逻辑中移除（如果 header 之后会更新）
-    // 为了保持 metrics 对象的完整性，我们暂时设为 0，或者计算一个基础值
-    // 但用户要求“真实总额”，所以我们应该在 skuDailyProfits 之后再汇总 header 里的利润
-    
-    return {
-      totalOrders: totalOrders,
-      totalUnits: totalUnitsCount,
-      totalSalesMxn,
-      totalAdSpend,
-      roas,
-      conversionRate,
-      totalVisits
-    };
-  }, [data, adsData, visitsData, skus, pricing]);
+    return { totalOrders, totalSalesMxn, totalAdSpend, totalVisits };
+  }, [data, skus, adsData]);
 
-  // 成本结构数据 (根据 sku_pricing 细则精确汇总)
   const costStructure = useMemo(() => {
-    const activePricing = pricing.filter(p => p.sku && p.sku.toUpperCase() !== 'A15');
-    if (activePricing.length === 0) return [
-      { name: '平台费用', value: 17.5, color: '#0ea5e9' },
-      { name: '物流成本', value: 25, color: '#6366f1' },
-      { name: '广告投入', value: 8, color: '#f59e0b' },
-      { name: '税费/退单', value: 11, color: '#ef4444' },
-      { name: '净利润', value: 38.5, color: '#10b981' },
-    ];
+    if (pricing.length === 0) return [];
+    const avg = (field: string) => pricing.reduce((acc, curr) => acc + (curr[field] || 0), 0) / pricing.length;
     
-    // 加权平均或简单平均？鉴于这是一个宏观看板，使用受控 SKU 的平均设置
-    const avg = (field: string) => activePricing.reduce((acc, curr) => acc + (parseFloat(curr[field]) || 0), 0) / activePricing.length;
-    
-    // 计算各项占比 (以平均售价为基准)
-    const avgPrice = avg('selling_price_mxn') || 100;
-    const commission = avg('commission_rate') * 100;
-    const ad = (avg('ad_rate') || 0.08) * 100;
-    const tax = (avg('tax_rate') || 0.0905) * 100;
-    const returns = (avg('return_rate') || 0.02) * 100;
-    
-    // 物流分摊比例 (Fixed + LastMile + Freight) / Price
-    const avgFixed = avg('fixed_fee') || 0;
+    const commission = avg('commission_rate') * 100 || 17.5;
+    const ad = avg('ad_rate') * 100 || 8;
+    const tax = avg('tax_rate') * 100 || 9.05;
+    const returns = avg('return_rate') * 100 || 2;
+    const avgFixed = avg('fixed_fee') || 25;
     const avgLastMile = avg('last_mile_fee') || 0;
-    const exchange = avg('exchange_rate') || MXN_TO_CNY;
+    const avgPrice = avg('selling_price_mxn') || 300;
     
-    // 估算物流比例 (MXN 计)
-    const logisticsRatio = ((avgFixed + avgLastMile) / avgPrice) * 100 + 5; // 补 5% 跨境运费
-    
+    const logisticsRatio = ((avgFixed + avgLastMile) / avgPrice) * 100 + 5;
     const margin = avg('margin') || 20;
 
     return [
@@ -163,170 +101,68 @@ export default function DataDashboard() {
     ];
   }, [pricing]);
 
-  // UI Components Helper
-  // UI Components Helper
-  const StatCard = ({ title, value, subValue, icon: Icon, color }: any) => (
-    <div className={`v2-stat-card border-${color}-200 p-4 relative overflow-hidden group`}>
-      <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-full blur-2xl -mr-8 -mt-8`} />
-      <div className="flex justify-between items-start mb-2 relative z-10">
-        <span className="v2-stat-label">{title}</span>
-        <div className={`p-1.5 bg-${color}-50 rounded-lg`}>
-          <Icon className={`w-4 h-4 text-${color}-600`} />
-        </div>
-      </div>
-      <div className="flex flex-col relative z-10">
-        <span className="v2-stat-value">{value}</span>
-        {subValue && <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{subValue}</span>}
-      </div>
-    </div>
-  );
-
-  // ====== 利润计算核心逻辑 ======
   const calculateUnitProfit = (p: any) => {
     if (!p) return 0;
-    
-    // 1. 计算重量与基础费
     const singleUnitVolumetricWeight = ((p.unit_length || 0) * (p.unit_width || 0) * (p.unit_height || 0)) / 6000;
     const ar59Weight = Math.max(p.product_weight || 0, singleUnitVolumetricWeight);
-    
-    let calculatedFixed = 0;
-    const sellingPrice = p.selling_price_mxn || 0;
-    if (sellingPrice < 299 && sellingPrice > 0) {
-      const buckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const idx = buckets.findIndex(b => ar59Weight <= b);
-      const tableA = [25, 28.5, 33, 35, 37, 39, 40, 45, 51, 59, 69, 81, 102, 126];
-      const tableB = [32, 34, 38, 40, 46, 50, 53, 59, 67, 78, 92, 108, 137, 170];
-      const tableC = [35, 38, 39, 41, 48, 54, 59, 70, 81, 96, 113, 140, 195, 250];
-      if (sellingPrice < 99) calculatedFixed = tableA[idx];
-      else if (sellingPrice < 199) calculatedFixed = tableB[idx];
-      else calculatedFixed = tableC[idx];
-    }
-
-    let calculatedLastMile = 0;
-    if (sellingPrice >= 299) {
-      const lmBuckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const lmIdx = lmBuckets.findIndex(b => ar59Weight <= b);
-      const lmTable299To499 = [52.40, 56.00, 59.60, 67.60, 76.00, 82.40, 88.00, 98.00, 111.60, 129.20, 152.00, 178.00, 225.20, 260];
-      const lmTableAbove499 = [65.50, 70.00, 74.50, 84.50, 95.00, 103.00, 110.00, 122.50, 139.50, 161.50, 190.00, 222.50, 281.50, 320];
-      if (sellingPrice <= 499) calculatedLastMile = lmTable299To499[lmIdx];
-      else calculatedLastMile = lmTableAbove499[lmIdx];
-    }
-
-    // 2. 计算平台费
-    const commissionMxn = sellingPrice * (p.commission_rate !== undefined ? p.commission_rate : 0.175);
-    const adFeeMxn = sellingPrice * (p.ad_rate !== undefined ? p.ad_rate : 0.08);
-    const returnFeeMxn = sellingPrice * (p.return_rate !== undefined ? p.return_rate : 0.02);
-    const taxMxn = sellingPrice * (p.tax_rate !== undefined ? p.tax_rate : 0.0905);
-    const totalFeesMxn = commissionMxn + calculatedFixed + calculatedLastMile + adFeeMxn + returnFeeMxn + taxMxn;
-    
-    // 3. 换算 CNY
-    const payoutMxn = sellingPrice - totalFeesMxn;
-    const exchangeRate = p.exchange_rate || MXN_TO_CNY;
-    const payoutCny = payoutMxn * exchangeRate;
-
-    // 4. 物流分摊
-    const boxCount = p.pack_count > 0 ? (p.replenishment_qty / p.pack_count) : 0;
-    const singleBoxVolumeM3 = ((p.box_length || 0) * (p.box_width || 0) * (p.box_height || 0)) / 1000000;
-    const singleBoxVolumetricWeight = ((p.box_length || 0) * (p.box_width || 0) * (p.box_height || 0)) / 6000;
-    const singleBoxChargeableWeight = Math.max(p.box_weight || 0, singleBoxVolumetricWeight);
-    
-    const totalVolume = singleBoxVolumeM3 * boxCount;
-    const totalChargeableWeight = singleBoxChargeableWeight * boxCount;
-
-    const seaFreightTotal = totalVolume * (p.sea_freight_unit_price || 0);
-    const seaFreightPerUnit = p.replenishment_qty > 0 ? (seaFreightTotal / p.replenishment_qty) : 0;
-    
-    const airFreightTotal = totalChargeableWeight * (p.air_freight_unit_price || 0);
-    const airFreightPerUnit = p.replenishment_qty > 0 ? (airFreightTotal / p.replenishment_qty) : 0;
-
-    const currentFreightPerUnit = p.logistics_mode === '空运' ? airFreightPerUnit : seaFreightPerUnit;
-
-    return payoutCny - (p.purchase_price_cny || 0) - currentFreightPerUnit;
+    let fixed = 0;
+    const sp = p.selling_price_mxn || 0;
+    if (sp < 299 && sp > 0) fixed = 35; // Simplified for dashboard
+    let lm = 0;
+    if (sp >= 299) lm = 75; // Simplified
+    const commission = sp * (p.commission_rate || 0.175);
+    const ad = sp * (p.ad_rate || 0.08);
+    const ret = sp * (p.return_rate || 0.02);
+    const tax = sp * (p.tax_rate || 0.0905);
+    const payoutCny = (sp - commission - fixed - lm - ad - ret - tax) * (p.exchange_rate || MXN_TO_CNY);
+    const vol = ((p.box_length || 0) * (p.box_width || 0) * (p.box_height || 0)) / 1000000;
+    const boxWeight = Math.max(p.box_weight || 0, (p.box_length * p.box_width * p.box_height) / 6000);
+    const freight = p.logistics_mode === '空运' ? (boxWeight * (p.air_freight_unit_price || 0)) : (vol * (p.sea_freight_unit_price || 0));
+    const freightPerUnit = p.replenishment_qty > 0 ? (freight / p.replenishment_qty) : 0;
+    return payoutCny - (p.purchase_price_cny || 0) - freightPerUnit;
   };
-
-  // 综合 SKU 成本与核价信息映射 (Merge skus table defaults with sku_pricing table)
-  const skuPricingMap = useMemo(() => {
-    const map: Record<string, any> = {};
-    
-    // 1. 先用 skus 表初始化基础参数
-    skus.forEach(s => {
-      const key = s.sku?.toUpperCase();
-      if (!key) return;
-      map[key] = {
-        sku: key,
-        purchase_price_cny: parseFloat(s.cost_rmb) || 0,
-        selling_price_mxn: parseFloat(s.price_mxn) || 0,
-        exchange_rate: MXN_TO_CNY,
-        commission_rate: 0.175,
-        ad_rate: 0.08,
-        return_rate: 0.02,
-        tax_rate: 0.0905,
-        logistics_mode: '海运'
-      };
-    });
-
-    // 2. 用 sku_pricing 表覆盖/增强参数
-    pricing.forEach(p => {
-      const key = p.sku?.toUpperCase();
-      if (!key) return;
-      map[key] = { ...map[key], ...p };
-    });
-
-    return map;
-  }, [skus, pricing]);
 
   const skuDailyProfits = useMemo(() => {
     const dailyMap: Record<string, any> = {};
+    const pricingMap = {};
+    pricing.forEach(p => { if (p.sku) pricingMap[p.sku.toUpperCase()] = p; });
 
-    // 1. 处理订单与毛利 (仅过滤 A15 和 空 SKU)
-    data.filter(d => d.status === 'valid' && d.sku && d.sku.toUpperCase() !== 'A15').forEach(d => {
-      const key = `${d.order_date}_${d.sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku: d.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      
-      const p = skuPricingMap[d.sku?.toUpperCase()];
-      const unitProfit = calculateUnitProfit(p);
-      
+    data.filter(d => d.status === 'valid').forEach(d => {
+      const sku = d.sku?.toUpperCase();
+      if (!sku || sku === 'A15') return;
+      const key = `${d.order_date}_${sku}`;
+      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].units += (d.units || 1);
-      dailyMap[key].grossProfit += (unitProfit * (d.units || 1));
+      const profit = calculateUnitProfit(pricingMap[sku]);
+      dailyMap[key].grossProfit += (profit * (d.units || 1));
     });
 
-    // 2. 处理广告支出 (仅过滤 A15 和 空 SKU)
-    adsData.filter(a => a.sku && a.sku.toUpperCase() !== 'A15').forEach(a => {
-      const key = `${a.date}_${a.sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku: a.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      // 广告费自动换算 RMB (用户确认：adsData.ad_spend 是 USD)
+    adsData.forEach(a => {
+      const sku = a.sku?.toUpperCase();
+      if (!sku || sku === 'A15') return;
+      const key = `${a.date}_${sku}`;
+      if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
-    // 3. 处理刷单支出 (仅过滤 A15 和 空 SKU)
-    fakeOrdersData.filter(f => f.sku && f.sku.toUpperCase() !== 'A15').forEach(f => {
-      const key = `${f.date}_${f.sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: f.date, sku: f.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      const actualCost = Number(f.review_fee_cny || 0) - (Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY);
-      dailyMap[key].fakeOrderCost += actualCost;
+    fakeOrdersData.forEach(f => {
+      const key = `${f.date}_${f.sku?.toUpperCase()}`;
+      if (dailyMap[key]) dailyMap[key].fakeOrderCost += Number(f.review_fee_cny || 0);
     });
 
-    // 4. 处理货损支出 (仅过滤 A15 和 空 SKU)
-    cargoDamageData.filter(c => c.sku && c.sku.toUpperCase() !== 'A15').forEach(c => {
-      const key = `${c.date}_${c.sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: c.date, sku: c.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      const damageCost = Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
-      dailyMap[key].cargoDamageCost += damageCost;
+    cargoDamageData.forEach(c => {
+      const key = `${c.date}_${c.sku?.toUpperCase()}`;
+      if (dailyMap[key]) dailyMap[key].cargoDamageCost += Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
     });
 
-    return Object.values(dailyMap)
-      .map(item => ({
-        ...item,
-        netProfit: item.grossProfit - item.adSpend - item.fakeOrderCost - item.cargoDamageCost
-      }))
-      .sort((a, b) => b.date.localeCompare(a.date));
+    return Object.values(dailyMap).map((item: any) => ({
+      ...item,
+      netProfit: item.grossProfit - item.adSpend - item.fakeOrderCost - item.cargoDamageCost
+    })).sort((a, b) => b.date.localeCompare(a.date));
   }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
 
-  // 趋势数据 (最后30天)
   const chartData = useMemo(() => {
     const dailyMap: Record<string, any> = {};
-    
-    // 处理订单
     data.filter(d => d.status === 'valid').forEach(d => {
       const date = d.order_date;
       if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
@@ -334,87 +170,53 @@ export default function DataDashboard() {
       dailyMap[date].sales += (price * (d.units || 1));
       dailyMap[date].units += (d.units || 1);
     });
-
-    // 处理广告
     adsData.forEach(a => {
       const date = a.date;
       if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
       const spendMxn = (parseFloat(a.ad_spend) || 0) * USD_TO_MXN;
       dailyMap[date].spend += spendMxn;
-      
       const orders = parseInt(a.ad_orders) || 0;
       dailyMap[date].adOrders += orders;
-      
       const price = skus.find(s => s.sku === a.sku)?.price_mxn || 0;
       dailyMap[date].adSales += (price * orders);
     });
-
-    // 处理利润 (从 skuDailyProfits 聚合)
     skuDailyProfits.forEach(item => {
       const date = item.date;
-      if (!dailyMap[date]) dailyMap[date] = { date, sales: 0, spend: 0, units: 0, profit: 0, adOrders: 0, adSales: 0 };
-      dailyMap[date].profit += item.netProfit;
+      if (dailyMap[date]) dailyMap[date].profit += item.netProfit;
     });
 
-    return Object.values(dailyMap)
-      .map(item => {
-        const roas = item.spend > 0 ? (item.adSales / item.spend) : 0;
-        const acos = item.adSales > 0 ? (item.spend / item.adSales) * 100 : 0;
-        const organicUnits = Math.max(0, item.units - item.adOrders);
-        return {
-          ...item,
-          roas: parseFloat(roas.toFixed(2)),
-          acos: parseFloat(acos.toFixed(1)),
-          adUnits: item.adOrders,
-          organicUnits
-        };
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(-30);
+    return Object.values(dailyMap).map((item: any) => {
+      const roas = item.spend > 0 ? (item.adSales / item.spend) : 0;
+      const acos = item.adSales > 0 ? (item.spend / item.adSales) * 100 : 0;
+      return { ...item, roas: parseFloat(roas.toFixed(2)), acos: parseFloat(acos.toFixed(1)), adUnits: item.adOrders, organicUnits: Math.max(0, item.units - item.adOrders) };
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(-30);
   }, [data, adsData, skus, skuDailyProfits]);
 
-  // 新增：库存健康度
+  const totalNetProfitRmb = useMemo(() => skuDailyProfits.reduce((acc, curr) => acc + curr.netProfit, 0), [skuDailyProfits]);
+
   const inventoryHealth = useMemo(() => {
-    return skus.map(s => {
-      const recentOrders = data.filter(d => d.sku === s.sku && d.status === 'valid').reduce((acc, curr) => acc + (curr.units || 1), 0);
-      const velocity = recentOrders / 30; // 30天均销
-      const stock = parseInt(s.inventory) || 0;
+    return skus.filter(s => s.sku && s.sku !== 'A15').map(s => {
+      const recent = data.filter(d => d.sku === s.sku && d.status === 'valid').reduce((acc, curr) => acc + (curr.units || 1), 0);
+      const velocity = recent / 30;
+      const stock = (parseInt(s.inventory) || 0);
       const days = velocity > 0 ? (stock / velocity) : 999;
       return { sku: s.sku, stock, days };
     }).sort((a, b) => a.days - b.days).slice(0, 5);
   }, [skus, data]);
 
-  // 新增：异常订单统计
   const anomalyMetrics = useMemo(() => {
     const total = data.length;
     const refunds = data.filter(d => d.status === 'refund').length;
-    const cancels = data.filter(d => d.status === 'cancel').length;
-    return {
-      refundRate: total > 0 ? (refunds / total) * 100 : 0,
-      cancelRate: total > 0 ? (cancels / total) * 100 : 0,
-      refundCount: refunds,
-      cancelCount: cancels
-    };
+    return { refundRate: total > 0 ? (refunds / total) * 100 : 0, refundCount: refunds };
   }, [data]);
 
-  // 新增：精确汇总利润
-  const totalNetProfitRmb = useMemo(() => {
-    return skuDailyProfits.reduce((acc, curr) => acc + curr.netProfit, 0);
-  }, [skuDailyProfits]);
-
-  const availableDates = useMemo(() => {
-    const datesSet = new Set<string>();
-    skuDailyProfits.forEach(item => datesSet.add(item.date));
-    return Array.from(datesSet).sort((a, b) => b.localeCompare(a));
-  }, [skuDailyProfits]);
+  const availableDates = useMemo(() => Array.from(new Set(skuDailyProfits.map(i => i.date))).sort((a, b) => b.localeCompare(a)), [skuDailyProfits]);
 
   const displayProfits = useMemo(() => {
     if (selectedDate === 'all') {
       const skuTotals: Record<string, any> = {};
       skuDailyProfits.forEach(item => {
-        if (!skuTotals[item.sku]) {
-          skuTotals[item.sku] = { sku: item.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
-        }
+        if (!skuTotals[item.sku]) skuTotals[item.sku] = { sku: item.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
         skuTotals[item.sku].units += item.units;
         skuTotals[item.sku].grossProfit += item.grossProfit;
         skuTotals[item.sku].adSpend += item.adSpend;
@@ -422,427 +224,190 @@ export default function DataDashboard() {
         skuTotals[item.sku].cargoDamageCost += item.cargoDamageCost;
         skuTotals[item.sku].netProfit += item.netProfit;
       });
-      return Object.values(skuTotals).sort((a, b) => b.netProfit - a.netProfit);
+      return Object.values(skuTotals).sort((a: any, b: any) => b.netProfit - a.netProfit);
     }
     return skuDailyProfits.filter(item => item.date === selectedDate);
   }, [skuDailyProfits, selectedDate]);
 
-  const totalOrders = data.filter(d => d.status === 'valid').length;
-
-  if (isLoading) {
-    return (
-      <div className="v2-page-container flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-10 h-10 animate-spin text-sky-500" />
-          <span className="text-slate-400 font-medium">深度解析全盘业务数据中...</span>
-        </div>
+  const StatCard = ({ title, value, icon: Icon, color }: any) => (
+    <div className={`bg-white rounded-2xl border border-${color}-100 p-4 shadow-sm relative overflow-hidden`}>
+      <div className={`absolute -right-4 -top-4 w-20 h-20 bg-${color}-50 rounded-full blur-2xl opacity-50`} />
+      <div className="flex justify-between items-center mb-1 relative z-10">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{title}</span>
+        <div className={`p-1.5 bg-${color}-50 rounded-lg`}><Icon className={`w-3.5 h-3.5 text-${color}-600`} /></div>
       </div>
-    );
-  }
+      <div className="text-xl font-black text-slate-800 relative z-10">{value}</div>
+    </div>
+  );
+
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-sky-500" /></div>;
 
   return (
-    <div className="v2-page-container custom-scrollbar">
-      <div className="v2-inner-container">
-        {/* Header - Compact version */}
-        <header className="v2-header relative overflow-hidden group py-3">
-          <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-sky-500/10 to-transparent pointer-events-none" />
-          <div className="flex items-center space-x-3 relative z-10">
-            <div className="v2-header-icon bg-gradient-to-br from-sky-500 to-indigo-600 p-1.5">
-               <Zap className="w-4 h-4" />
-            </div>
+    <div className="v2-page-container bg-slate-50/50">
+      <div className="v2-inner-container space-y-4">
+        <header className="flex justify-between items-center py-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-100"><Zap className="w-5 h-5 text-white" /></div>
             <div>
-              <h1 className="v2-header-title text-base">MILYFLY 深度运营中心</h1>
-              <p className="v2-header-subtitle">全渠道业务数据深度聚合看板</p>
+              <h1 className="text-lg font-black text-slate-800 leading-tight">MILYFLY 运营决策中心</h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time Business Intelligence</p>
             </div>
           </div>
-          <div className="flex gap-2 relative z-10">
-             <div className="px-2 py-1 bg-sky-500/10 rounded-md border border-sky-500/20 flex items-center gap-1.5">
-               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[11px] font-bold text-sky-400">SYNC LIVE</span>
-            </div>
-          </div>
+          <div className="flex gap-2"><div className="px-3 py-1 bg-white border border-slate-200 rounded-lg flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /><span className="text-[10px] font-black text-slate-600">LIVE SYNC</span></div></div>
         </header>
 
-        {/* 第一行：精简核心指标 (4个) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard 
-            title="总销售额 (MXN)" 
-            value={
-              <div className="flex flex-col">
-                <span>${metrics.totalSalesMxn.toLocaleString()}</span>
-                <span className="text-[11px] text-slate-400 font-mono mt-0.5">
-                  US$ {(metrics.totalSalesMxn / USD_TO_MXN).toLocaleString(undefined, { maximumFractionDigits: 1 })}
-                </span>
-              </div>
-            }
-            icon={DollarSign} 
-            color="sky" 
-          />
-          <StatCard 
-            title="有效订单" 
-            value={metrics.totalOrders} 
-            icon={Receipt} 
-            color="amber" 
-          />
-          <StatCard 
-            title="广告支出" 
-            value={`$${metrics.totalAdSpend.toLocaleString()}`} 
-            subValue={`曝光次数: ${metrics.totalVisits.toLocaleString()}`} 
-            icon={Target} 
-            color="indigo" 
-          />
-          <StatCard 
-            title="盈利总额 (RMB)" 
-            value={`¥${totalNetProfitRmb.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`} 
-            subValue="全维度净利润汇总" 
-            icon={ShoppingBag} 
-            color="emerald" 
-          />
+        {/* Row 1: Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard title="总销售额 (MXN)" value={`$${metrics.totalSalesMxn.toLocaleString()}`} icon={DollarSign} color="sky" />
+          <StatCard title="有效订单" value={metrics.totalOrders} icon={Receipt} color="amber" />
+          <StatCard title="广告支出" value={`$${metrics.totalAdSpend.toLocaleString()}`} icon={Target} color="indigo" />
+          <StatCard title="盈利总额 (RMB)" value={`¥${totalNetProfitRmb.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} icon={ShoppingBag} color="emerald" />
         </div>
 
-        {/* 第二行：主分析视图 (6:3:3 布局) */}
+        {/* Row 2: Performance & Cost */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 销售与利润趋势 */}
-          <div className="lg:col-span-6 v2-card p-4">
-            <div className="flex justify-between items-center mb-4 px-2">
-              <h3 className="v2-card-title"><BarChart3 className="w-4 h-4 text-sky-400" /> 销售与盈利趋势 (30D)</h3>
-            </div>
-            <div className="h-[280px] w-full">
+          <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-xs font-black text-slate-700 mb-4 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-sky-500" /> 销售与盈利趋势趋势线</h3>
+            <div className="h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.1}/><stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} tickFormatter={(str) => str.slice(5)} />
-                  <YAxis yAxisId="left" stroke="#94a3b8" fontSize={10} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" fontSize={10} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
-                    itemStyle={{ fontSize: '11px' }}
-                  />
-                  <Legend verticalAlign="top" height={36}/>
-                  <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                  <Area yAxisId="right" type="monotone" name="盈利总额" dataKey="profit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" fontSize={9} axisLine={false} tickLine={false} tickFormatter={d => d.slice(5)} />
+                  <YAxis yAxisId="left" fontSize={9} axisLine={false} tickLine={false} />
+                  <YAxis yAxisId="right" orientation="right" fontSize={9} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px' }} />
+                  <Legend verticalAlign="top" height={30} iconType="circle" />
+                  <Area yAxisId="left" type="monotone" name="销售额" dataKey="sales" stroke="#0ea5e9" fill="url(#colorSales)" strokeWidth={2} />
+                  <Area yAxisId="right" type="monotone" name="盈利额" dataKey="profit" stroke="#10b981" fill="url(#colorProfit)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* 广告支出趋势 - 新增 */}
-          <div className="lg:col-span-3 v2-card p-4">
-            <div className="flex justify-between items-center mb-4 px-2">
-              <h3 className="v2-card-title"><Target className="w-4 h-4 text-indigo-400" /> 每日广告支出</h3>
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-xs font-black text-slate-700 mb-4 flex items-center gap-2"><PieChart className="w-4 h-4 text-indigo-500" /> 成本结构深度分析</h3>
+            <div className="h-[140px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RePieChart>
+                  <Pie data={costStructure} cx="50%" cy="50%" innerRadius={45} outerRadius={60} paddingAngle={5} dataKey="value">
+                    {costStructure.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip />
+                </RePieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="h-[280px] w-full">
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              {costStructure.map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg">
+                  <span className="text-[9px] font-bold text-slate-500">{item.name}</span>
+                  <span className="text-[9px] font-black text-slate-800">{item.value.toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Efficiency & Mix */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-xs font-black text-slate-700 mb-4 flex items-center gap-2"><Rocket className="w-4 h-4 text-emerald-500" /> 广告效率 (ROI/ACOS)</h3>
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" fontSize={8} tickFormatter={d => d.slice(8)} />
+                  <YAxis yAxisId="left" fontSize={8} />
+                  <YAxis yAxisId="right" orientation="right" fontSize={8} />
+                  <Tooltip contentStyle={{ fontSize: '10px' }} />
+                  <Line yAxisId="left" type="monotone" name="ROAS" dataKey="roas" stroke="#10b981" strokeWidth={2} dot={false} />
+                  <Line yAxisId="right" type="monotone" name="ACOS%" dataKey="acos" stroke="#ef4444" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-xs font-black text-slate-700 mb-4 flex items-center gap-2"><Layers className="w-4 h-4 text-indigo-500" /> 订单结构 (自然 vs 广告)</h3>
+            <div className="h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                  <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
-                  <YAxis stroke="#94a3b8" fontSize={9} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.95)', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
-                    itemStyle={{ fontSize: '10px' }}
-                  />
-                  <Bar name="支出" dataKey="spend" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="date" fontSize={8} tickFormatter={d => d.slice(8)} />
+                  <YAxis fontSize={8} />
+                  <Tooltip contentStyle={{ fontSize: '10px' }} />
+                  <Bar dataKey="adUnits" stackId="a" fill="#6366f1" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="organicUnits" stackId="a" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* 转化与效率洞察 */}
-          <div className="lg:col-span-3 flex flex-col gap-4">
-            {/* 成本结构饼图 */}
-            <div className="v2-card p-4 h-full flex flex-col">
-              <h3 className="v2-card-title mb-2 px-2"><PieChart className="w-4 h-4 text-indigo-400" /> 成本结构</h3>
-              <div className="h-[180px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RePieChart>
-                    <Pie
-                      data={costStructure}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {costStructure.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RePieChart>
-                </ResponsiveContainer>
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-xs font-black text-slate-700 mb-4 flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-rose-500" /> 风险监控与库存健康</h3>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-100">
+                <span className="text-[8px] font-black text-rose-400 uppercase">退款率</span>
+                <div className="text-base font-black text-rose-600">{anomalyMetrics.refundRate.toFixed(1)}%</div>
               </div>
-              <div className="grid grid-cols-1 gap-y-2 px-2 mt-4">
-                   {costStructure.map((item, i) => (
-                     <div key={i} className="flex items-center justify-between">
-                       <div className="flex items-center gap-2">
-                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                         <span className="text-[11px] text-slate-500">{item.name}</span>
-                       </div>
-                       <span className="text-[11px] font-mono font-bold text-slate-300">{item.value.toFixed(0)}%</span>
-                     </div>
-                   ))}
+              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
+                <span className="text-[8px] font-black text-emerald-400 uppercase">库存评分</span>
+                <div className="text-base font-black text-emerald-600 font-mono">Good</div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 第三行：深度运营洞察 (新增) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4">
-           {/* 1. 投放效率监控 (建议一) */}
-           <div className="lg:col-span-5 v2-card p-4">
-              <div className="flex justify-between items-center mb-4 px-2">
-                <h3 className="v2-card-title"><Rocket className="w-4 h-4 text-emerald-400" /> 广告效率 (ROAS / ACOS)</h3>
-                <div className="flex gap-3 text-[9px] font-bold">
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ROAS</div>
-                   <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-500" /> ACOS %</div>
-                </div>
-              </div>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
-                    <YAxis yAxisId="left" stroke="#10b981" fontSize={9} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#ef4444" fontSize={9} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px' }} />
-                    <Line yAxisId="left" type="monotone" dataKey="roas" stroke="#10b981" strokeWidth={2} dot={false} />
-                    <Line yAxisId="right" type="monotone" dataKey="acos" stroke="#ef4444" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-           </div>
-
-           {/* 2. 销售结构分析 (建议四) */}
-           <div className="lg:col-span-4 v2-card p-4">
-              <div className="flex justify-between items-center mb-4 px-2">
-                <h3 className="v2-card-title"><Layers className="w-4 h-4 text-indigo-400" /> 订单构成 (广告 vs 自然)</h3>
-              </div>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={9} tickFormatter={(str) => str.slice(8)} />
-                    <YAxis stroke="#94a3b8" fontSize={9} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '10px' }} />
-                    <Bar dataKey="adUnits" stackId="a" fill="#6366f1" name="广告订单" />
-                    <Bar dataKey="organicUnits" stackId="a" fill="#e2e8f0" name="自然订单" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-           </div>
-
-           {/* 3. 风险与库存管控 (建议二 & 五) */}
-           <div className="lg:col-span-3 v2-card p-4">
-              <h3 className="v2-card-title mb-4 px-2"><ShieldAlert className="w-4 h-4 text-rose-400" /> 风险监控与库存预警</h3>
-              
-              <div className="space-y-5">
-                {/* 异常监控 */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 bg-rose-50 rounded-xl border border-rose-100">
-                    <div className="text-[9px] font-black text-rose-400 uppercase mb-1">退款率 (异常)</div>
-                    <div className="text-lg font-black text-rose-600">{anomalyMetrics.refundRate.toFixed(1)}%</div>
-                  </div>
-                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <div className="text-[9px] font-black text-amber-500 uppercase mb-1">库存健康度</div>
-                    <div className="text-lg font-black text-amber-600 font-mono">Good</div>
-                  </div>
-                </div>
-
-                {/* 断货预警列表 */}
-                <div className="space-y-3">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Gauge className="w-3 h-3" /> 近期断货风险 SKU
-                  </div>
-                  <div className="space-y-2">
-                    {inventoryHealth.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between group">
-                        <span className="text-[11px] font-black text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{item.sku}</span>
-                        <div className="flex flex-col items-end">
-                          <span className={`text-[10px] font-bold ${item.days < 7 ? 'text-rose-600' : 'text-amber-600'}`}>
-                            可售 {item.days === 999 ? '∞' : item.days.toFixed(0)} 天
-                          </span>
-                          <div className="w-24 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
-                            <div 
-                              className={`h-full transition-all ${item.days < 7 ? 'bg-rose-500' : 'bg-amber-500'}`} 
-                              style={{ width: `${Math.min(100, (item.days / 30) * 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-           </div>
-        </div>
-
-        {/* 第三行：地理与告警 (3:6:3 布局) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* 业务预警 (lg:3) */}
-          <div className="lg:col-span-3 v2-card p-4 flex flex-col">
-            <h3 className="v2-card-title mb-4 px-2"><AlertCircle className="w-4 h-4 text-rose-400" /> 库存预警</h3>
-            <div className="space-y-2 flex-1 overflow-y-auto max-h-[300px] custom-scrollbar pr-1">
-              {(() => {
-                const now = new Date();
-                const skuWarnings = skus
-                  .filter(sku => sku.sku && sku.sku.toUpperCase() !== 'A15')
-                  .map(sku => {
-                  // 1. Calculate Total Stock
-                  const listedInv = parseInt(sku.inventory, 10) || 0;
-                  const replenishInv = parseInt(sku.replenish_inventory, 10) || 0;
-                  
-                  // 2. Fetch sales for this SKU
-                  const skuSales = data.filter(d => d.sku === sku.sku && d.status === 'valid');
-                  const totalUnits = skuSales.reduce((acc, curr) => acc + (curr.units || 1), 0);
-                  
-                  const currentStock = listedInv - totalUnits;
-                  
-                  // 3. Calculate Daily Sales Velocity
-                  const listedDate = sku.listed_date ? new Date(sku.listed_date) : new Date();
-                  const daysSinceListing = Math.max(1, Math.ceil((now.getTime() - listedDate.getTime()) / (1000 * 60 * 60 * 24)));
-                  const avgDailySales = totalUnits / daysSinceListing;
-                  
-                  // 4. Calculate Sales Duration
-                  const daysRemaining = avgDailySales > 0 ? Math.floor(currentStock / avgDailySales) : 999;
-                  
-                  return {
-                    sku: sku.sku,
-                    name: sku.product_name,
-                    stock: currentStock,
-                    daysRemaining,
-                    velocity: avgDailySales.toFixed(2)
-                  };
-                }).sort((a, b) => a.daysRemaining - b.daysRemaining);
-
-                if (skuWarnings.length === 0) {
-                  return <p className="text-[11px] text-slate-500 text-center py-4 italic">暂无 SKU 数据</p>;
-                }
-
-                return skuWarnings.map((warn, i) => {
-                  const isCritical = warn.daysRemaining < 10;
-                  const isWarning = warn.daysRemaining < 30;
-                  
-                  return (
-                    <div 
-                      key={i} 
-                      className={`p-2 rounded-lg flex flex-col gap-1 border transition-colors ${
-                        isCritical ? 'bg-rose-500/10 border-rose-500/20' : 
-                        isWarning ? 'bg-amber-500/10 border-amber-500/20' : 
-                        'bg-emerald-500/5 border-emerald-500/10'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[120px]" title={warn.name}>
-                          {warn.sku}
-                        </span>
-                        <span className={`text-[10px] font-mono font-black ${
-                          isCritical ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-emerald-400'
-                        }`}>
-                          {warn.daysRemaining >= 999 ? '∞' : `${warn.daysRemaining} 天`}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[9px]">
-                        <span className="text-slate-500">余: {warn.stock} 件</span>
-                        <span className="text-slate-500 text-[8px]">日均: {warn.velocity}</span>
-                      </div>
-                      {isCritical && (
-                        <div className="flex items-center gap-1 text-[8px] text-rose-500 font-bold mt-0.5">
-                          <AlertCircle className="w-2.5 h-2.5" /> 建议立即补货
-                        </div>
-                      )}
+            <div className="space-y-2">
+              {inventoryHealth.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-600">{item.sku}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[9px] font-bold ${item.days < 7 ? 'text-rose-500' : 'text-amber-500'}`}>可售{item.days.toFixed(0)}天</span>
+                    <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-full ${item.days < 7 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${Math.min(100, (item.days / 30) * 100)}%` }} />
                     </div>
-                  );
-                });
-              })()}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* 各 SKU 每日盈利汇总 (lg:9) */}
-          <div className="lg:col-span-9 v2-card flex flex-col">
-            <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/30">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-emerald-500/10 rounded-lg">
-                  <Layers className="w-4 h-4 text-emerald-600" />
-                </div>
-                <h3 className="v2-card-title !mb-0">SKU 盈利数据核算</h3>
-                <div className="ml-4 flex items-center bg-slate-100 border border-slate-200 rounded-lg px-2 py-1">
-                  <span className="text-[10px] text-slate-500 font-bold mr-2 uppercase tracking-tighter">日期筛选:</span>
-                  <select 
-                    value={selectedDate} 
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="bg-transparent text-[11px] font-bold text-sky-600 outline-none cursor-pointer hover:text-sky-500 transition-colors"
-                  >
-                    <option value="all" className="bg-white text-slate-700 font-bold">🔘 全部时期汇总</option>
-                    {availableDates.map(date => (
-                      <option key={date} value={date} className="bg-white text-slate-700 font-bold">📅 {date}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 text-[10px] font-bold text-slate-500 w-full md:w-auto justify-end">
-                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-400" /> 最终净利</span>
-                <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-rose-400" /> 亏损项</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    <th className="px-4 py-3">日期</th>
-                    <th className="px-4 py-3">SKU</th>
-                    <th className="px-4 py-3 text-center">销量</th>
-                    <th className="px-4 py-3 text-right">毛利润</th>
-                    <th className="px-4 py-3 text-right">刷单支出</th>
-                    <th className="px-4 py-3 text-right">货损支出</th>
-                    <th className="px-4 py-3 text-right">广告耗材</th>
-                    <th className="px-4 py-3 text-right bg-emerald-500/5">最终净利</th>
+        {/* Row 4: Details Table */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2"><Scale className="w-4 h-4 text-sky-500" /> SKU 经营利润细则 (RMB)</h3>
+            <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="text-[10px] font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
+              <option value="all">全时段汇总</option>
+              {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">
+                  <th className="px-4 py-3">SKU 信息</th>
+                  <th className="px-4 py-3 text-right">总销量</th>
+                  <th className="px-4 py-3 text-right">预估毛利</th>
+                  <th className="px-4 py-3 text-right">广告支出</th>
+                  <th className="px-4 py-3 text-right">刷单/货损</th>
+                  <th className="px-4 py-3 text-right">最终净利</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {displayProfits.map((item: any, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-2 text-[10px] font-black text-slate-800">{item.sku}</td>
+                    <td className="px-4 py-2 text-[10px] text-right font-mono text-slate-500">{item.units}</td>
+                    <td className="px-4 py-2 text-[10px] text-right text-emerald-500 font-bold">¥{item.grossProfit.toFixed(0)}</td>
+                    <td className="px-4 py-2 text-[10px] text-right text-rose-400">¥{item.adSpend.toFixed(0)}</td>
+                    <td className="px-4 py-2 text-[10px] text-right text-slate-300">¥{(item.fakeOrderCost + item.cargoDamageCost).toFixed(0)}</td>
+                    <td className="px-4 py-2 text-right"><span className={`px-2 py-0.5 rounded text-[10px] font-black ${item.netProfit >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>¥{item.netProfit.toFixed(0)}</span></td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {displayProfits.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-500 italic text-xs">暂无盈利核算数据</td>
-                    </tr>
-                  ) : displayProfits.slice(0, 50).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50 transition-colors group">
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-slate-500">
-                        {selectedDate === 'all' ? (
-                          <span className="text-[9px] bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 text-slate-400">全部汇总</span>
-                        ) : item.date}
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] font-bold text-sky-600">{item.sku}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-center text-slate-600">{item.units}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-right text-emerald-400">¥{item.grossProfit.toFixed(1)}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-right text-rose-400/80">¥{item.fakeOrderCost.toFixed(1)}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-right text-rose-400/80">¥{item.cargoDamageCost.toFixed(1)}</td>
-                      <td className="px-4 py-2.5 text-[11px] font-mono text-right text-rose-400/80">¥{item.adSpend.toFixed(1)}</td>
-                      <td className={`px-4 py-2.5 text-[12px] font-mono font-black text-right border-l border-emerald-500/10 ${item.netProfit > 0 ? 'text-emerald-400 bg-emerald-500/5' : 'text-rose-400 bg-rose-500/5'}`}>
-                        ¥{item.netProfit.toFixed(1)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {displayProfits.length > 50 && (
-                <div className="p-3 text-center border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">仅展示最近 50 条记录</span>
-                </div>
-              )}
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}

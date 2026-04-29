@@ -30,7 +30,8 @@ export default function SkuCostManagement() {
 
       const { data: priceData, error: priceError } = await supabase
         .from('sku_pricing')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: true }); // 正序排列，这样在 forEach 循环中，最新的记录（后生成的）会覆盖旧记录
       if (priceError) throw priceError;
 
       const priceMap = {};
@@ -64,7 +65,9 @@ export default function SkuCostManagement() {
           productWeight: p?.product_weight || 0,
           logisticsMode: p?.logistics_mode || '海运',
           seaFreightUnitPrice: p?.sea_freight_unit_price || 0,
-          airFreightUnitPrice: p?.air_freight_unit_price || 0
+          airFreightUnitPrice: p?.air_freight_unit_price || 0,
+          boxCount: p?.box_count || 0,
+          purchaseLogistics: p?.purchase_logistics || ''
         };
       });
       setEditedData(initialEdited);
@@ -132,7 +135,8 @@ export default function SkuCostManagement() {
     const payoutMxn = f.sellingPriceMxn - totalFeesMxn;
     const payoutCny = payoutMxn * f.exchangeRate;
 
-    const boxCount = f.packCount > 0 ? (f.replenishmentQty / f.packCount) : 0;
+    const replenishmentQty = f.boxCount * f.packCount;
+    const boxCount = f.boxCount;
     const singleBoxVolumeM3 = (f.boxLength * f.boxWidth * f.boxHeight) / 1000000;
     const singleBoxVolumetricWeight = (f.boxLength * f.boxWidth * f.boxHeight) / 6000;
     const singleBoxChargeableWeight = Math.max(f.boxWeight, singleBoxVolumetricWeight);
@@ -141,15 +145,15 @@ export default function SkuCostManagement() {
     const totalChargeableWeight = singleBoxChargeableWeight * boxCount;
 
     const seaFreightTotal = totalVolume * f.seaFreightUnitPrice;
-    const seaFreightPerUnit = f.replenishmentQty > 0 ? (seaFreightTotal / f.replenishmentQty) : 0;
+    const seaFreightPerUnit = replenishmentQty > 0 ? (seaFreightTotal / replenishmentQty) : 0;
     
     const airFreightTotal = totalChargeableWeight * f.airFreightUnitPrice;
-    const airFreightPerUnit = f.replenishmentQty > 0 ? (airFreightTotal / f.replenishmentQty) : 0;
+    const airFreightPerUnit = replenishmentQty > 0 ? (airFreightTotal / replenishmentQty) : 0;
 
     const currentFreightPerUnit = f.logisticsMode === '空运' ? airFreightPerUnit : seaFreightPerUnit;
 
     const unitProfitCny = payoutCny - f.purchasePriceCny - currentFreightPerUnit;
-    const totalGrossProfitRmb = unitProfitCny * f.replenishmentQty;
+    const totalGrossProfitRmb = unitProfitCny * replenishmentQty;
     const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;
 
     const commissionCny = commissionMxn * f.exchangeRate;
@@ -185,7 +189,7 @@ export default function SkuCostManagement() {
       const saveData = {
         sku: skuKey,
         purchase_price_cny: f.purchasePriceCny,
-        replenishment_qty: f.replenishmentQty,
+        replenishment_qty: f.boxCount * f.packCount,
         selling_price_mxn: f.sellingPriceMxn,
         exchange_rate: f.exchangeRate,
         commission_rate: f.commissionRate,
@@ -209,8 +213,15 @@ export default function SkuCostManagement() {
         margin: m.margin * 100,
         roi: (f.purchasePriceCny + m.freightPerUnit) > 0 ? (m.unitProfitCny / (f.purchasePriceCny + m.freightPerUnit)) : 0,
         unit_profit_cny: m.unitProfitCny,
+        box_count: f.boxCount,
+        purchase_logistics: f.purchaseLogistics,
         status: 'priced'
       };
+
+      await supabase.from('skus').update({
+        cost_rmb: f.purchasePriceCny,
+        price_mxn: f.sellingPriceMxn
+      }).eq('sku', skuKey);
 
       await supabase.from('sku_pricing').delete().eq('sku', skuKey);
       
@@ -219,7 +230,7 @@ export default function SkuCostManagement() {
         .insert([saveData]);
 
       if (error) throw error;
-      alert(`SKU ${sku} 数据同步成功`);
+      alert(`SKU ${sku} 数据同步成功，主表基础价已更新`);
     } catch (err) {
       console.error('Error saving data:', err);
       alert('保存失败: ' + err.message);
@@ -372,8 +383,10 @@ export default function SkuCostManagement() {
                                             </div>
                                           </div>
                                           <div><label className={labelCls}>采购价 (CNY)</label><input type="number" step="0.1" value={f.purchasePriceCny} onChange={e => handleInputChange(skuItem.sku, 'purchasePriceCny', parseFloat(e.target.value))} className={inputCls} /></div>
-                                          <div><label className={labelCls}>本批补货量</label><input type="number" value={f.replenishmentQty} onChange={e => handleInputChange(skuItem.sku, 'replenishmentQty', parseInt(e.target.value))} className={inputCls} /></div>
-                                       </div>
+                                          <div><label className={labelCls}>箱数</label><input type="number" value={f.boxCount} onChange={e => handleInputChange(skuItem.sku, 'boxCount', parseInt(e.target.value))} className={inputCls} /></div>
+                                          <div><label className={labelCls}>装箱数</label><input type="number" value={f.packCount} onChange={e => handleInputChange(skuItem.sku, 'packCount', parseInt(e.target.value))} className={inputCls} /></div>
+                                          <div><label className={labelCls}>采购物流</label><input type="text" value={f.purchaseLogistics} onChange={e => handleInputChange(skuItem.sku, 'purchaseLogistics', e.target.value)} className={inputCls} placeholder="如：顺丰" /></div>
+                                        </div>
                                        <div className="p-4 bg-sky-50 border border-sky-100 rounded-2xl mt-6 shadow-sm">
                                           <div className="text-[10px] font-black text-sky-600 uppercase mb-1 flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> 最终回款预估 (CNY)</div>
                                           <div className="text-2xl font-mono font-black text-slate-900">¥{m.payoutCny.toLocaleString()}</div>

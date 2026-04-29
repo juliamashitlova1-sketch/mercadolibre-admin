@@ -33,13 +33,15 @@ export default function Pricing() {
     taxRate: 0.0905,
     boxLength: 40, boxWidth: 30, boxHeight: 30, 
     packCount: 100,
+    boxCount: 1,
     boxWeight: 15,
     unitLength: 10, unitWidth: 5, unitHeight: 5, productWeight: 0.15,
     logisticsProvider: '顺丰美线',
     seaFreightUnitPrice: 3100,
     airFreightUnitPrice: 95,
     auditor: '',
-    logisticsMode: '海运'
+    logisticsMode: '海运',
+    purchaseLogistics: ''
   });
 
   const [records, setRecords] = useState<any[]>([]);
@@ -174,12 +176,19 @@ export default function Pricing() {
         unit_length: form.unitLength, unit_width: form.unitWidth, unit_height: form.unitHeight, product_weight: form.productWeight,
         logistics_mode: form.logisticsMode, sea_freight_unit_price: form.seaFreightUnitPrice, air_freight_unit_price: form.airFreightUnitPrice,
         fixed_fee: form.fixedFee, last_mile_fee: form.lastMileFee, margin: (form.logisticsMode === '空运' ? metrics.marginAir : metrics.marginSea) * 100,
-        roi: form.logisticsMode === '空运' ? metrics.roiAir : metrics.roiSea, status: 'priced'
+        roi: form.logisticsMode === '空运' ? metrics.roiAir : metrics.roiSea, status: 'priced',
+        box_count: form.boxCount, purchase_logistics: form.purchaseLogistics
       };
+      
+      await supabase.from('skus').update({
+        cost_rmb: form.purchasePriceCny,
+        price_mxn: form.sellingPriceMxn
+      }).eq('sku', syncData.sku);
+
       await supabase.from('sku_pricing').delete().eq('sku', syncData.sku);
       const { error } = await supabase.from('sku_pricing').insert([syncData]);
       if (error) throw error;
-      alert(`已成功同步到 ${selectedSyncSku}`);
+      alert(`已成功同步到 ${selectedSyncSku}，主表基础价已更新`);
     } catch (err: any) { alert('同步失败: ' + err.message); }
     finally { setIsSyncing(false); }
   };
@@ -365,17 +374,37 @@ export default function Pricing() {
                           <input className={inputCls} type="number" placeholder="箱高" value={form.boxHeight} onChange={e=>setForm({...form, boxHeight: Number(e.target.value)})} />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                           <div><label className={labelCls}>装箱数</label><input className={inputCls} type="number" value={form.packCount} onChange={e=>setForm({...form, packCount: Number(e.target.value)})} /></div>
+                           <div><label className={labelCls}>装箱数</label><input className={inputCls} type="number" value={form.packCount} onChange={e=>{
+                             const val = Number(e.target.value);
+                             setForm({...form, packCount: val, replenishmentQty: val * form.boxCount});
+                           }} /></div>
+                           <div><label className={labelCls}>箱数</label><input className={`${inputCls} bg-amber-50 border-amber-200`} type="number" value={form.boxCount} onChange={e=>{
+                             const val = Number(e.target.value);
+                             setForm({...form, boxCount: val, replenishmentQty: val * form.packCount});
+                           }} /></div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
                            <div><label className={labelCls}>整箱重</label><input className={inputCls} type="number" value={form.boxWeight} onChange={e=>setForm({...form, boxWeight: Number(e.target.value)})} /></div>
+                           <div><label className={labelCls}>采购物流</label><input className={inputCls} placeholder="如：顺丰" value={form.purchaseLogistics} onChange={e=>setForm({...form, purchaseLogistics: e.target.value})} /></div>
                         </div>
                      </div>
 
                      <div className="space-y-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
-                        <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Truck className="w-3.5 h-3.5" /> 实时物流分摊</h4>
-                        <div className="space-y-3">
+                        <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Truck className="w-3.5 h-3.5" /> 物流分摊与单价</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                           <div>
+                             <label className={labelCls}>海运单价</label>
+                             <input className={`${inputCls} h-8 text-[10px]`} type="number" value={form.seaFreightUnitPrice} onChange={e=>setForm({...form, seaFreightUnitPrice: Number(e.target.value)})} />
+                           </div>
+                           <div>
+                             <label className={labelCls}>空运单价</label>
+                             <input className={`${inputCls} h-8 text-[10px]`} type="number" value={form.airFreightUnitPrice} onChange={e=>setForm({...form, airFreightUnitPrice: Number(e.target.value)})} />
+                           </div>
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-slate-200">
                            <div className="flex justify-between items-center text-xs font-bold"><span className="text-slate-500">海运分摊:</span> <span className="text-indigo-600 font-mono">¥{metrics.seaFreightPerUnit.toFixed(2)}</span></div>
                            <div className="flex justify-between items-center text-xs font-bold"><span className="text-slate-500">空运分摊:</span> <span className="text-sky-600 font-mono">¥{metrics.airFreightPerUnit.toFixed(2)}</span></div>
-                           <div className="pt-2 border-t border-slate-200 flex justify-between text-[10px] font-black uppercase text-slate-400"><span>总批次方数:</span> <span>{metrics.totalVolume.toFixed(3)} m³</span></div>
+                           <div className="pt-2 flex justify-between text-[10px] font-black uppercase text-slate-400"><span>总批次方数:</span> <span>{metrics.totalVolume.toFixed(3)} m³</span></div>
                         </div>
                      </div>
                   </div>

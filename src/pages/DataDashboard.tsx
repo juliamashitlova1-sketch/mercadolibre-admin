@@ -236,6 +236,23 @@ export default function DataDashboard() {
     return { chartItems, skus: Array.from(skuSet) };
   }, [skuDailyProfits, selectedSku]);
 
+  const skuTotalMetrics = useMemo(() => {
+    const skuMap: Record<string, any> = {};
+    skuDailyProfits.forEach(item => {
+      const sku = item.sku;
+      if (!skuMap[sku]) {
+        skuMap[sku] = { sku, units: 0, fakeOrderCost: 0, cargoDamageCost: 0, adSpend: 0, netProfit: 0, baseProfit: 0 };
+      }
+      skuMap[sku].units += item.units;
+      skuMap[sku].fakeOrderCost += (item.fakeOrderCost || 0);
+      skuMap[sku].cargoDamageCost += (item.cargoDamageCost || 0);
+      skuMap[sku].adSpend += (item.adSpend || 0);
+      skuMap[sku].netProfit += item.netProfit;
+      skuMap[sku].baseProfit += item.baseProfit;
+    });
+    return Object.values(skuMap).sort((a: any, b: any) => b.netProfit - a.netProfit);
+  }, [skuDailyProfits]);
+
   const handleLegendClick = (o: any) => {
     const { value } = o;
     if (selectedSku === value) {
@@ -588,6 +605,55 @@ export default function DataDashboard() {
                 )}
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Row 6: SKU Total Performance Table */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-5 mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
+              <Scale className="w-4 h-4 text-indigo-500" /> SKU 经营效果汇总排行榜
+            </h3>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">按净利润降序排列</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-slate-50">
+                  <th className="text-left py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">SKU 信息</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">累计销量</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider">预估总毛利</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-rose-400">广告支出</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-rose-400">刷单实际成本</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-rose-400">货损总支出</th>
+                  <th className="text-right py-3 px-4 text-[10px] font-black text-slate-400 uppercase tracking-wider text-sky-500">累计净利润</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {skuTotalMetrics.map((item, index) => (
+                  <tr key={item.sku} className="group hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${index < 3 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400'}`}>
+                          {index + 1}
+                        </div>
+                        <span className="text-sm font-black text-slate-700">{item.sku}</span>
+                      </div>
+                    </td>
+                    <td className="text-right py-4 px-4 font-mono font-bold text-slate-600">{item.units.toLocaleString()} PCS</td>
+                    <td className="text-right py-4 px-4 font-mono font-bold text-emerald-600">¥{item.baseProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="text-right py-4 px-4 font-mono font-bold text-slate-400">¥{item.adSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="text-right py-4 px-4 font-mono font-bold text-slate-400">¥{item.fakeOrderCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="text-right py-4 px-4 font-mono font-bold text-slate-400">¥{item.cargoDamageCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="text-right py-4 px-4">
+                      <span className={`text-sm font-black ${item.netProfit >= 0 ? 'text-sky-600' : 'text-rose-500'}`}>
+                        ¥{item.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

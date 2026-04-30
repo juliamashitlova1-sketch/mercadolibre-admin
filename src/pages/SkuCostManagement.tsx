@@ -196,6 +196,7 @@ export default function SkuCostManagement() {
         last_mile_fee: m.lastMileFee,
         margin: m.margin * 100,
         roi: (f.purchasePriceCny + m.freightPerUnit) > 0 ? (m.unitProfitCny / (f.purchasePriceCny + m.freightPerUnit)) : 0,
+        unit_profit_cny: m.unitProfitCny,
         logistics_provider: f.purchaseLogistics,
         status: 'priced'
       };

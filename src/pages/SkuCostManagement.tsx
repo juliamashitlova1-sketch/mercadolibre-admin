@@ -420,7 +420,7 @@ export default function SkuCostManagement() {
                                                 <option value="">-- 选择待核价记录进行同步 --</option>
                                                 {allPricingRecords[skuKey]?.filter(r => r.status === 'priced').map(r => (
                                                    <option key={r.id} value={r.id}>
-                                                      [待核价] {r.created_at.slice(0,16)} | ¥{r.purchase_price_cny} -> ${r.selling_price_mxn} | {r.auditor || '系统'}
+                                                      [待核价] {r.created_at.slice(0,16)} | ¥{r.purchase_price_cny} → ${r.selling_price_mxn} | {r.auditor || '系统'}
                                                    </option>
                                                 ))}
                                              </select>

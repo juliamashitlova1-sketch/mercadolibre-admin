@@ -712,7 +712,10 @@ export default function SkuManagement() {
                                                   sku: item.sku,
                                                   orders: e.unitsCount,
                                                   sales: e.unitsCount * (parseFloat(item.priceMXN) || 0),
-                                                  stock: 0 // Historical stock snapshot not available in this view
+                                                  adSpend: e.adSpend * USD_TO_MXN, // Convert USD to MXN for AI context consistency
+                                                  clicks: e.clicks,
+                                                  visits: e.visits,
+                                                  stock: 0 
                                                 }))}
                                                 operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
                                               />

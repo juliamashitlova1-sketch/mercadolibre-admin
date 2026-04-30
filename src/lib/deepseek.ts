@@ -21,7 +21,7 @@ export async function analyzeStoreData(
     const dailySequence = skuStats
       .filter(s => s.sku === selectedSku)
       .sort((a, b) => a.date.localeCompare(b.date))
-      .map(s => `[${s.date}] 销量:${s.orders}, 销售额(MXN):${s.sales}, 广告费(MXN):${s.adSpend}, 库存:${s.stock}, 转化率:${((s.orders / (s.clicks || 1)) * 100).toFixed(2)}%`)
+      .map(s => `[${s.date}] 销量:${s.orders}, 销售额(MXN):${s.sales.toFixed(2)}, 广告费(MXN):${s.adSpend.toFixed(2)}, 曝光:${s.impressions || 0}, 点击:${s.clicks || 0}, 访客:${s.visits || 0}, 转化率:${((s.orders / (s.clicks || s.visits || 1)) * 100).toFixed(2)}%`)
       .join('\n');
     
     dataContext = `### 目标 SKU: ${selectedSku} (${skuStats.find(s => s.sku === selectedSku)?.skuName || '未知名称'}) 的每日流水：\n${dailySequence}`;

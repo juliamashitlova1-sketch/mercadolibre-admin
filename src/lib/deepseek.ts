@@ -21,7 +21,7 @@ export async function analyzeStoreData(
     const dailySequence = skuStats
       .filter(s => s.sku === selectedSku)
       .sort((a, b) => a.date.localeCompare(b.date))
-      .map(s => `[${s.date}] 销量:${s.orders}, 销售额(MXN):${s.sales.toFixed(2)}, 广告费(MXN):${s.adSpend.toFixed(2)}, 刷单成本(CNY):${(s.fakeOrderCost || 0).toFixed(2)}, 货损(CNY):${(s.damageCost || 0).toFixed(2)}, 曝光:${s.impressions || 0}, 点击:${s.clicks || 0}, 访客:${s.visits || 0}, 转化率:${((s.orders / (s.clicks || s.visits || 1)) * 100).toFixed(2)}%`)
+      .map(s => `[${s.date}] 销量:${s.orders}PCS, 销售额:${s.sales.toFixed(2)}MXN, 广告费:${s.adSpend.toFixed(2)}MXN, 刷单成本:${(s.fakeOrderCost || 0).toFixed(2)}CNY, 货损:${(s.damageCost || 0).toFixed(2)}CNY, 曝光:${s.impressions || 0}, 点击:${s.clicks || 0}, 访客:${s.visits || 0}, 转化率:${((s.orders / (s.clicks || s.visits || 1)) * 100).toFixed(2)}%`)
       .join('\n');
     
     const pricing = skuStats[0]?.costConfig;
@@ -61,6 +61,14 @@ export async function analyzeStoreData(
 
   const systemPrompt = `你是一位顶级的跨境电商（美客多/MercadoLibre）高级数据分析师和运营策略专家。
 你的任务是根据提供的 SKU 销售流水和操作日志，进行复盘分析，并给出专业建议。
+
+**【强制货币单位执行准则 - 严禁混淆】：**
+在你的所有计算、复盘和建议中，必须严格遵守以下单位体系：
+1. **MXN (墨西哥比索)**: 仅用于【销售额】、【售价】、【单日广告费】。
+2. **CNY (人民币)**: 仅用于【采购价格】、【刷单成本】、【货损支出】。
+3. **PCS (件数)**: 用于所有【销量】、【库存】。
+* 汇率背景：1 MXN (比索) 约等于 0.38 - 0.42 CNY (人民币)。
+* 警告：严禁将广告费(MXN)与刷单费(CNY)直接相加，必须进行汇率换算后再统计总支出。
 
 **分析核心原则：**
 1. **时间相关性分析**：特别关注操作日志日期，观察在该操作发生后的 1-3 天内，点击量、转化率和销量是否有显著波动。

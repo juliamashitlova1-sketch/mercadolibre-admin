@@ -193,41 +193,10 @@ export default function DataDashboard() {
   const availableDates = useMemo(() => Array.from(new Set(skuDailyProfits.map(i => i.date))).sort((a, b) => b.localeCompare(a)), [skuDailyProfits]);
 
   const displayProfits = useMemo(() => {
-    const pricingMap: Record<string, any> = {};
-    pricing.forEach(p => { if (p.sku) pricingMap[p.sku.toUpperCase()] = p; });
-
     if (selectedDate === 'all') {
       const skuTotals: Record<string, any> = {};
-      
-      // Initialize all SKUs from pricing table so they always appear in the dashboard list
-      pricing.forEach(p => {
-        if (!p.sku) return;
-        const skuKey = p.sku.toUpperCase();
-        skuTotals[skuKey] = {
-          sku: skuKey,
-          units: 0,
-          baseProfit: 0,
-          unitProfit: p.unit_profit_cny || 0,
-          adSpend: 0,
-          fakeOrderCost: 0,
-          cargoDamageCost: 0,
-          netProfit: 0
-        };
-      });
-
       skuDailyProfits.forEach(item => {
-        if (!skuTotals[item.sku]) {
-          skuTotals[item.sku] = { 
-            sku: item.sku, 
-            units: 0, 
-            baseProfit: 0, 
-            unitProfit: pricingMap[item.sku]?.unit_profit_cny || 0, 
-            adSpend: 0, 
-            fakeOrderCost: 0, 
-            cargoDamageCost: 0, 
-            netProfit: 0 
-          };
-        }
+        if (!skuTotals[item.sku]) skuTotals[item.sku] = { sku: item.sku, units: 0, baseProfit: 0, unitProfit: item.unitProfit, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
         skuTotals[item.sku].units += item.units;
         skuTotals[item.sku].baseProfit += item.baseProfit;
         skuTotals[item.sku].adSpend += item.adSpend;
@@ -237,12 +206,8 @@ export default function DataDashboard() {
       });
       return Object.values(skuTotals).sort((a: any, b: any) => b.netProfit - a.netProfit);
     }
-    
-    return skuDailyProfits.filter(item => item.date === selectedDate).map(item => ({
-      ...item,
-      unitProfit: pricingMap[item.sku]?.unit_profit_cny || 0
-    }));
-  }, [skuDailyProfits, selectedDate, pricing]);
+    return skuDailyProfits.filter(item => item.date === selectedDate);
+  }, [skuDailyProfits, selectedDate]);
 
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
     <div className={`bg-white rounded-2xl border border-${color}-100 p-4 shadow-sm relative overflow-hidden`}>

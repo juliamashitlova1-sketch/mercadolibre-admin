@@ -241,7 +241,17 @@ export default function DataDashboard() {
     skuDailyProfits.forEach(item => {
       const sku = item.sku;
       if (!skuMap[sku]) {
-        skuMap[sku] = { sku, units: 0, fakeOrderCost: 0, cargoDamageCost: 0, adSpend: 0, netProfit: 0, baseProfit: 0 };
+        const skuInfo = skus.find(s => s.sku === sku);
+        skuMap[sku] = { 
+          sku, 
+          name: skuInfo?.name || skuInfo?.skuName || '未知产品',
+          units: 0, 
+          fakeOrderCost: 0, 
+          cargoDamageCost: 0, 
+          adSpend: 0, 
+          netProfit: 0, 
+          baseProfit: 0 
+        };
       }
       skuMap[sku].units += item.units;
       skuMap[sku].fakeOrderCost += (item.fakeOrderCost || 0);
@@ -251,7 +261,7 @@ export default function DataDashboard() {
       skuMap[sku].baseProfit += item.baseProfit;
     });
     return Object.values(skuMap).sort((a: any, b: any) => b.netProfit - a.netProfit);
-  }, [skuDailyProfits]);
+  }, [skuDailyProfits, skus]);
 
   const handleLegendClick = (o: any) => {
     const { value } = o;
@@ -637,7 +647,10 @@ export default function DataDashboard() {
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${index < 3 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400'}`}>
                           {index + 1}
                         </div>
-                        <span className="text-sm font-black text-slate-700">{item.sku}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-black text-slate-700">{item.sku}</span>
+                          <span className="text-[10px] text-slate-400 font-bold truncate max-w-[150px]">{item.name}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="text-right py-4 px-4 font-mono font-bold text-slate-600">{item.units.toLocaleString()} PCS</td>

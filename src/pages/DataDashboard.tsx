@@ -31,6 +31,7 @@ export default function DataDashboard() {
   const [pricing, setPricing] = useState<any[]>([]);
   const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
   const [cargoDamageData, setCargoDamageData] = useState<any[]>([]);
+  const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -205,6 +206,7 @@ export default function DataDashboard() {
 
     skuDailyProfits.forEach(item => {
       const { date, sku, netProfit } = item;
+      if (selectedSku && sku !== selectedSku) return;
       if (!dailyMap[date]) dailyMap[date] = { date };
       dailyMap[date][sku] = Number(netProfit.toFixed(2));
       skuSet.add(sku);
@@ -212,7 +214,16 @@ export default function DataDashboard() {
 
     const chartItems = Object.values(dailyMap).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return { chartItems, skus: Array.from(skuSet) };
-  }, [skuDailyProfits]);
+  }, [skuDailyProfits, selectedSku]);
+
+  const handleLegendClick = (o: any) => {
+    const { value } = o;
+    if (selectedSku === value) {
+      setSelectedSku(null);
+    } else {
+      setSelectedSku(value);
+    }
+  };
 
   const getSkuColor = (index: number) => {
     const colors = [
@@ -456,11 +467,22 @@ export default function DataDashboard() {
         {/* Row 5: SKU Profit Breakdown Chart */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-5 mt-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-sky-500" /> SKU 利润细分分析 (单日/单SKU)
-            </h3>
+            <div className="flex flex-col">
+              <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-sky-500" /> 
+                {selectedSku ? `SKU 利润趋势: ${selectedSku}` : 'SKU 利润细分分析 (单日/单SKU)'}
+              </h3>
+              {selectedSku && (
+                <button 
+                  onClick={() => setSelectedSku(null)}
+                  className="text-[10px] text-sky-500 font-bold hover:underline mt-1 flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" /> 重置查看全量
+                </button>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold">
-              * 仅统计已核价且有销售的 SKU
+              {selectedSku ? '* 点击下方图例 SKU 名称可切换或重置' : '* 点击下方图例可筛选特定 SKU'}
             </div>
           </div>
           <div className="h-[300px]">
@@ -473,10 +495,20 @@ export default function DataDashboard() {
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '12px' }}
                   formatter={(value: number) => `¥${value.toFixed(2)}`}
                 />
-                <Legend verticalAlign="top" height={36} iconType="rect" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '10px' }} />
-                {skuProfitBreakdown.skus.map((sku, index) => (
-                  <Bar key={sku} dataKey={sku} name={sku} stackId="a" fill={getSkuColor(index)} />
-                ))}
+                <Legend 
+                  verticalAlign="top" 
+                  height={36} 
+                  iconType="rect" 
+                  wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '10px', cursor: 'pointer' }}
+                  onClick={handleLegendClick}
+                />
+                {selectedSku ? (
+                  <Bar dataKey={selectedSku} name={selectedSku} fill={getSkuColor(0)} radius={[4, 4, 0, 0]} />
+                ) : (
+                  skuProfitBreakdown.skus.map((sku, index) => (
+                    <Bar key={sku} dataKey={sku} name={sku} stackId="a" fill={getSkuColor(index)} />
+                  ))
+                )}
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -244,7 +244,7 @@ export default function DataDashboard() {
         const skuInfo = skus.find(s => s.sku === sku);
         skuMap[sku] = { 
           sku, 
-          name: skuInfo?.name || skuInfo?.skuName || '未知产品',
+          name: skuInfo?.product_name || skuInfo?.name || skuInfo?.skuName || '未知产品',
           units: 0, 
           fakeOrderCost: 0, 
           cargoDamageCost: 0, 

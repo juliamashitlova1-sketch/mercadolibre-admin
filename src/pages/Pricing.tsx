@@ -145,6 +145,10 @@ export default function Pricing() {
   }, [path]);
 
   const handleSave = async () => {
+    if (!form.name.trim()) {
+      alert('请输入产品品名后再提交！');
+      return;
+    }
     setSaving(true);
     const saveData = {
       sku: form.name || 'NEW_PRODUCT',
@@ -251,9 +255,13 @@ export default function Pricing() {
   };
 
   const deleteRecord = async (id: string) => {
-    if (confirm('确定删除？')) {
+    if (confirm('确定要删除这条核价记录吗？')) {
       const { error } = await supabase.from('sku_pricing').delete().eq('id', id);
-      if (!error) fetchRecords();
+      if (!error) {
+        fetchRecords();
+      } else {
+        alert('删除失败: ' + error.message);
+      }
     }
   };
 
@@ -499,31 +507,50 @@ export default function Pricing() {
             </motion.div>
           ) : (
             <>
-              {isSuccessView && (
-                <div className="v2-card bg-white/50 p-3 flex items-center gap-3 mb-6 shadow-sm border-slate-100">
-                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
-                    <Filter className="w-4 h-4" /> 快速排序:
+              {(isSuccessView || isListView) && (
+                <div className="v2-card bg-white/50 p-3 flex items-center justify-between mb-6 shadow-sm border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-2">
+                      <Filter className="w-4 h-4" /> 快速排序:
+                    </div>
+                    {[
+                      { label: '核价时间', key: 'created_at' },
+                      { label: '毛利率', key: 'margin' },
+                      { label: '采购总额', key: 'total_purchase' }
+                    ].map(sort => (
+                      <button
+                        key={sort.key}
+                        onClick={() => setSortConfig({ 
+                          key: sort.key, 
+                          order: sortConfig.key === sort.key && sortConfig.order === 'desc' ? 'asc' : 'desc' 
+                        })}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                          sortConfig.key === sort.key 
+                            ? 'bg-sky-600 text-white shadow-md' 
+                            : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
+                        }`}
+                      >
+                        {sort.label} {sortConfig.key === sort.key && (sortConfig.order === 'desc' ? '↓' : '↑')}
+                      </button>
+                    ))}
                   </div>
-                  {[
-                    { label: '核价时间', key: 'created_at' },
-                    { label: '毛利率', key: 'margin' },
-                    { label: '采购总额', key: 'total_purchase' }
-                  ].map(sort => (
-                    <button
-                      key={sort.key}
-                      onClick={() => setSortConfig({ 
-                        key: sort.key, 
-                        order: sortConfig.key === sort.key && sortConfig.order === 'desc' ? 'asc' : 'desc' 
-                      })}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                        sortConfig.key === sort.key 
-                          ? 'bg-sky-600 text-white shadow-md' 
-                          : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
-                      }`}
-                    >
-                      {sort.label} {sortConfig.key === sort.key && (sortConfig.order === 'desc' ? '↓' : '↑')}
-                    </button>
-                  ))}
+
+                  <button
+                    onClick={async () => {
+                      if (confirm('将自动清理所有没有名称的无效核价记录，是否继续？')) {
+                        const { error } = await supabase.from('sku_pricing').delete().or('name.is.null,name.eq.""');
+                        if (!error) {
+                          alert('无效记录已清理完成');
+                          fetchRecords();
+                        } else {
+                          alert('清理失败: ' + error.message);
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-black transition-all border border-rose-100"
+                  >
+                    <Trash2 className="w-4 h-4" /> 一键清理空记录
+                  </button>
                 </div>
               )}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="v2-card shadow-xl overflow-hidden">

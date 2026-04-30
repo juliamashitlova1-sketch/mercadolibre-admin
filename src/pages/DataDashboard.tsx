@@ -12,6 +12,7 @@ import {
   BarChart, Bar
 } from 'recharts';
 import { supabase } from '../lib/supabase';
+import { calculatePlatformFees } from '../utils/calculator';
 
 interface CleanedOrder {
   order_id: string;
@@ -103,41 +104,22 @@ export default function DataDashboard() {
 
   const calculateUnitProfit = (p: any) => {
     if (!p) return 0;
-    const singleUnitVolumetricWeight = ((p.unit_length || 0) * (p.unit_width || 0) * (p.unit_height || 0)) / 6000;
-    const ar59Weight = Math.max(p.product_weight || 0, singleUnitVolumetricWeight);
-    
     const sp = p.selling_price_mxn || 0;
     
-    // Detailed Fixed Fee Calculation
-    let calculatedFixed = 0;
-    if (sp < 299 && sp > 0) {
-      const buckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const idx = buckets.findIndex(b => ar59Weight <= b);
-      const tableA = [25, 28.5, 33, 35, 37, 39, 40, 45, 51, 59, 69, 81, 102, 126];
-      const tableB = [32, 34, 38, 40, 46, 50, 53, 59, 67, 78, 92, 108, 137, 170];
-      const tableC = [35, 38, 39, 41, 48, 54, 59, 70, 81, 96, 113, 140, 195, 250];
-      if (sp < 99) calculatedFixed = tableA[idx];
-      else if (sp < 199) calculatedFixed = tableB[idx];
-      else calculatedFixed = tableC[idx];
-    }
-
-    // Detailed Last Mile Fee Calculation
-    let calculatedLastMile = 0;
-    if (sp >= 299) {
-      const lmBuckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const lmIdx = lmBuckets.findIndex(b => ar59Weight <= b);
-      const lmTable299To499 = [52.40, 56.00, 59.60, 67.60, 76.00, 82.40, 88.00, 98.00, 111.60, 129.20, 152.00, 178.00, 225.20, 260];
-      const lmTableAbove499 = [65.50, 70.00, 74.50, 84.50, 95.00, 103.00, 110.00, 122.50, 139.50, 161.50, 190.00, 222.50, 281.50, 320];
-      if (sp <= 499) calculatedLastMile = lmTable299To499[lmIdx];
-      else calculatedLastMile = lmTableAbove499[lmIdx];
-    }
+    const { fixedFee, lastMileFee } = calculatePlatformFees(
+      sp,
+      p.product_weight || 0,
+      p.unit_length || 0,
+      p.unit_width || 0,
+      p.unit_height || 0
+    );
 
     const commission = sp * (p.commission_rate || 0.175);
     const ret = sp * (p.return_rate || 0.02);
     const tax = sp * (p.tax_rate || 0.0905);
     
     // 注意：这里不再扣除预估 ad_rate，因为大盘最后会减去实际 adSpend
-    const payoutCny = (sp - commission - calculatedFixed - calculatedLastMile - ret - tax) * (p.exchange_rate || MXN_TO_CNY);
+    const payoutCny = (sp - commission - fixedFee - lastMileFee - ret - tax) * (p.exchange_rate || MXN_TO_CNY);
     
     const vol = ((p.box_length || 0) * (p.box_width || 0) * (p.box_height || 0)) / 1000000;
     const boxWeight = Math.max(p.box_weight || 0, (p.box_length * p.box_width * p.box_height) / 6000);

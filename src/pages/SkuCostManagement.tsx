@@ -5,6 +5,7 @@ import {
   Box, Ruler, Scale, ChevronDown, ChevronUp, Package, Truck, Plane, CreditCard, Info, Clock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { calculatePlatformFees } from '../utils/calculator';
 
 export default function SkuCostManagement() {
   const [skus, setSkus] = useState([]);
@@ -101,30 +102,13 @@ export default function SkuCostManagement() {
     const f = editedData[skuKey];
     if (!f) return null;
 
-    const singleUnitVolumetricWeight = (f.unitLength * f.unitWidth * f.unitHeight) / 6000;
-    const ar59Weight = Math.max(f.productWeight, singleUnitVolumetricWeight);
-    
-    let calculatedFixed = 0;
-    if (f.sellingPriceMxn < 299) {
-      const buckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const idx = buckets.findIndex(b => ar59Weight <= b);
-      const tableA = [25, 28.5, 33, 35, 37, 39, 40, 45, 51, 59, 69, 81, 102, 126];
-      const tableB = [32, 34, 38, 40, 46, 50, 53, 59, 67, 78, 92, 108, 137, 170];
-      const tableC = [35, 38, 39, 41, 48, 54, 59, 70, 81, 96, 113, 140, 195, 250];
-      if (f.sellingPriceMxn < 99) calculatedFixed = tableA[idx];
-      else if (f.sellingPriceMxn < 199) calculatedFixed = tableB[idx];
-      else calculatedFixed = tableC[idx];
-    }
-
-    let calculatedLastMile = 0;
-    if (f.sellingPriceMxn >= 299) {
-      const lmBuckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const lmIdx = lmBuckets.findIndex(b => ar59Weight <= b);
-      const lmTable299To499 = [52.40, 56.00, 59.60, 67.60, 76.00, 82.40, 88.00, 98.00, 111.60, 129.20, 152.00, 178.00, 225.20, 260];
-      const lmTableAbove499 = [65.50, 70.00, 74.50, 84.50, 95.00, 103.00, 110.00, 122.50, 139.50, 161.50, 190.00, 222.50, 281.50, 320];
-      if (f.sellingPriceMxn <= 499) calculatedLastMile = lmTable299To499[lmIdx];
-      else calculatedLastMile = lmTableAbove499[lmIdx];
-    }
+    const { fixedFee: calculatedFixed, lastMileFee: calculatedLastMile, volumetricWeight: singleUnitVolumetricWeight, ar59Weight } = calculatePlatformFees(
+      f.sellingPriceMxn,
+      f.productWeight,
+      f.unitLength,
+      f.unitWidth,
+      f.unitHeight
+    );
 
     const commissionMxn = f.sellingPriceMxn * f.commissionRate;
     const adFeeMxn = f.sellingPriceMxn * f.adRate;

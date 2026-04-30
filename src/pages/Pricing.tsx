@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Save, History, Box, Truck, BarChart3, AlertCircle, Trash2, ExternalLink, CheckCircle, Inbox, PlusCircle, Filter, Ruler, Scale, DollarSign, Wallet, Package, Search, Plane, ArrowLeftCircle, Info, X, RefreshCw, Clock, ChevronRight, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { calculatePlatformFees } from '../utils/calculator';
 
 export default function Pricing() {
   const location = useLocation();
@@ -26,8 +27,6 @@ export default function Pricing() {
     purchasePriceCny: 45,
     exchangeRate: 0.3891,
     commissionRate: 0.175,
-    fixedFee: 0,
-    lastMileFee: 85,
     adRate: 0.08,
     returnRate: 0.02,
     taxRate: 0.0905,
@@ -69,11 +68,19 @@ export default function Pricing() {
     const airFreightTotal = totalChargeableWeight * f.airFreightUnitPrice;
     const airFreightPerUnit = f.replenishmentQty > 0 ? (airFreightTotal / f.replenishmentQty) : 0;
 
+    const { fixedFee, lastMileFee, volumetricWeight } = calculatePlatformFees(
+      f.sellingPriceMxn,
+      f.productWeight,
+      f.unitLength,
+      f.unitWidth,
+      f.unitHeight
+    );
+
     const commissionMxn = f.sellingPriceMxn * f.commissionRate;
     const adFeeMxn = f.sellingPriceMxn * f.adRate;
     const returnFeeMxn = f.sellingPriceMxn * f.returnRate;
     const taxMxn = f.sellingPriceMxn * f.taxRate;
-    const totalFeesMxn = commissionMxn + f.fixedFee + f.lastMileFee + adFeeMxn + returnFeeMxn + taxMxn;
+    const totalFeesMxn = commissionMxn + fixedFee + lastMileFee + adFeeMxn + returnFeeMxn + taxMxn;
     const payoutMxn = f.sellingPriceMxn - totalFeesMxn;
     const payoutCny = payoutMxn * f.exchangeRate;
 
@@ -85,11 +92,11 @@ export default function Pricing() {
     const marginAir = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (profitAirUnit / (f.sellingPriceMxn * f.exchangeRate)) : 0;
     const roiAir = (f.purchasePriceCny + airFreightPerUnit) > 0 ? (profitAirUnit / (f.purchasePriceCny + airFreightPerUnit)) : 0;
 
-    const singleUnitVolumetricWeight = (f.unitLength * f.unitWidth * f.unitHeight) / 6000;
+    const singleUnitVolumetricWeight = volumetricWeight;
     const feeRateSum = f.commissionRate + f.adRate + f.returnRate + f.taxRate;
     const costCny = f.purchasePriceCny + seaFreightPerUnit;
     const breakEvenSellingMxn = (1 - feeRateSum) > 0 
-      ? ( (costCny / f.exchangeRate) + f.fixedFee + f.lastMileFee ) / (1 - feeRateSum)
+      ? ( (costCny / f.exchangeRate) + fixedFee + lastMileFee ) / (1 - feeRateSum)
       : 0;
 
     return {
@@ -97,7 +104,7 @@ export default function Pricing() {
       seaFreightTotal, seaFreightPerUnit, airFreightTotal, airFreightPerUnit,
       commissionMxn, adFeeMxn, taxMxn, totalFeesMxn, payoutMxn, payoutCny,
       profitSeaUnit, marginSea, roiSea, profitAirUnit, marginAir, roiAir,
-      singleUnitVolumetricWeight, breakEvenSellingMxn
+      singleUnitVolumetricWeight, breakEvenSellingMxn, fixedFee, lastMileFee
     };
   }, [form]);
 
@@ -144,7 +151,7 @@ export default function Pricing() {
       name: form.name, model: form.model, replenishment_qty: form.replenishmentQty, purchase_link: form.purchaseLink, 
       competitor_link: form.competitorLink, competitor_price: form.competitorPriceMxn, image_url: form.imageUrl,
       selling_price_mxn: form.sellingPriceMxn, purchase_price_cny: form.purchasePriceCny, exchange_rate: form.exchangeRate,
-      commission_rate: form.commissionRate, fixed_fee: form.fixedFee, last_mile_fee: form.lastMileFee, ad_rate: form.adRate, 
+      commission_rate: form.commissionRate, fixed_fee: metrics.fixedFee, last_mile_fee: metrics.lastMileFee, ad_rate: form.adRate, 
       return_rate: form.returnRate, tax_rate: form.taxRate, box_length: form.boxLength, box_width: form.boxWidth, 
       box_height: form.boxHeight, pack_count: form.packCount, box_weight: form.boxWeight,
       logistics_provider: form.logisticsProvider, sea_freight_unit_price: form.seaFreightUnitPrice, air_freight_unit_price: form.airFreightUnitPrice,
@@ -175,7 +182,7 @@ export default function Pricing() {
         box_width: form.boxWidth, box_height: form.boxHeight, pack_count: form.packCount, box_weight: form.boxWeight,
         unit_length: form.unitLength, unit_width: form.unitWidth, unit_height: form.unitHeight, product_weight: form.productWeight,
         logistics_mode: form.logisticsMode, sea_freight_unit_price: form.seaFreightUnitPrice, air_freight_unit_price: form.airFreightUnitPrice,
-        fixed_fee: form.fixedFee, last_mile_fee: form.lastMileFee, margin: (form.logisticsMode === '空运' ? metrics.marginAir : metrics.marginSea) * 100,
+        fixed_fee: metrics.fixedFee, last_mile_fee: metrics.lastMileFee, margin: (form.logisticsMode === '空运' ? metrics.marginAir : metrics.marginSea) * 100,
         roi: form.logisticsMode === '空运' ? metrics.roiAir : metrics.roiSea, status: 'priced',
         logistics_provider: form.purchaseLogistics
       };
@@ -193,35 +200,6 @@ export default function Pricing() {
     finally { setIsSyncing(false); }
   };
 
-  useEffect(() => {
-    const price = form.sellingPriceMxn;
-    const unitActualWeight = form.productWeight || 0;
-    const unitVolumetricWeight = (form.unitLength * form.unitWidth * form.unitHeight) / 6000;
-    const ar59Weight = Math.max(unitActualWeight, unitVolumetricWeight);
-    let calculatedFixed = 0;
-    if (price < 299) {
-      const buckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const idx = buckets.findIndex(b => ar59Weight <= b);
-      const tableA = [25, 28.5, 33, 35, 37, 39, 40, 45, 51, 59, 69, 81, 102, 126];
-      const tableB = [32, 34, 38, 40, 46, 50, 53, 59, 67, 78, 92, 108, 137, 170];
-      const tableC = [35, 38, 39, 41, 48, 54, 59, 70, 81, 96, 113, 140, 195, 250];
-      if (price < 99) calculatedFixed = tableA[idx];
-      else if (price < 199) calculatedFixed = tableB[idx];
-      else calculatedFixed = tableC[idx];
-    }
-    if (form.fixedFee !== calculatedFixed) setForm(prev => ({ ...prev, fixedFee: calculatedFixed }));
-    let calculatedLastMile = 0;
-    if (price >= 299) {
-      const lmBuckets = [0.3, 0.5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, Infinity];
-      const lmIdx = lmBuckets.findIndex(b => ar59Weight <= b);
-      const lmTable299To499 = [52.40, 56.00, 59.60, 67.60, 76.00, 82.40, 88.00, 98.00, 111.60, 129.20, 152.00, 178.00, 225.20, 260];
-      const lmTableAbove499 = [65.50, 70.00, 74.50, 84.50, 95.00, 103.00, 110.00, 122.50, 139.50, 161.50, 190.00, 222.50, 281.50, 320];
-      if (price <= 499) calculatedLastMile = lmTable299To499[lmIdx];
-      else calculatedLastMile = lmTableAbove499[lmIdx];
-    }
-    if (form.lastMileFee !== calculatedLastMile) setForm(prev => ({ ...prev, lastMileFee: calculatedLastMile }));
-  }, [form.sellingPriceMxn, form.productWeight, form.unitLength, form.unitWidth, form.unitHeight, form.fixedFee, form.lastMileFee]);
-
   const [detailRecord, setDetailRecord] = useState<any>(null);
 
   const handleRollback = async (rec: any) => {
@@ -238,8 +216,6 @@ export default function Pricing() {
       purchasePriceCny: rec.purchase_price_cny || 0,
       exchangeRate: rec.exchange_rate || 0.3891,
       commissionRate: rec.commission_rate || 0.175,
-      fixedFee: rec.fixed_fee || 0,
-      lastMileFee: rec.last_mile_fee || 0,
       adRate: rec.ad_rate || 0.08,
       returnRate: rec.return_rate || 0.02,
       taxRate: rec.tax_rate || 0.0905,
@@ -247,11 +223,13 @@ export default function Pricing() {
       boxWidth: rec.box_width || 0, 
       boxHeight: rec.box_height || 0, 
       packCount: rec.pack_count || 1, 
+      boxCount: (rec.replenishment_qty > 0 && rec.pack_count > 0) ? Math.ceil(rec.replenishment_qty / rec.pack_count) : 1,
       boxWeight: rec.box_weight || 0,
       unitLength: rec.unit_length || 10,
       unitWidth: rec.unit_width || 5,
       unitHeight: rec.unit_height || 5,
       productWeight: rec.product_weight || 0,
+      purchaseLogistics: rec.logistics_provider || '',
       logisticsProvider: rec.logistics_provider || '',
       logisticsMode: rec.logistics_mode || '海运',
       seaFreightUnitPrice: rec.sea_freight_unit_price || 3100,
@@ -412,18 +390,26 @@ export default function Pricing() {
                   <div className="mt-8 grid grid-cols-2 lg:grid-cols-6 gap-4 pt-8 border-t border-slate-50">
                      {['佣金 %', '固定费', '尾程费', '广告 %', '退货 %', '税率 %'].map((l, i) => {
                        const fields = ['commissionRate', 'fixedFee', 'lastMileFee', 'adRate', 'returnRate', 'taxRate'];
-                       const field = fields[i] as keyof typeof form;
+                       const field = fields[i];
                        const isRate = l.includes('%');
                        const isAuto = l === '固定费' || l === '尾程费';
+                       const value = isAuto 
+                         ? (field === 'fixedFee' ? metrics.fixedFee : metrics.lastMileFee)
+                         : (isRate ? (form[field as keyof typeof form] as number)*100 : form[field as keyof typeof form]);
+
                        return (
                          <div key={l}>
                             <label className={labelCls}>{l} {isAuto && '(联动)'}</label>
                             <input 
                               className={`${inputCls} ${isAuto ? 'bg-slate-100 border-transparent text-slate-400 font-bold shadow-none' : ''}`} 
                               type="number" 
-                              value={isRate ? (form[field] as number)*100 : form[field]} 
+                              value={value} 
                               readOnly={isAuto}
-                              onChange={e=>setForm({...form, [field]: isRate ? Number(e.target.value)/100 : Number(e.target.value)})} 
+                              onChange={e=>{
+                                if (!isAuto) {
+                                  setForm({...form, [field]: isRate ? Number(e.target.value)/100 : Number(e.target.value)});
+                                }
+                              }} 
                             />
                          </div>
                        );

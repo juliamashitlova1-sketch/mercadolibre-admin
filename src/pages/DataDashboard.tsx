@@ -179,6 +179,7 @@ export default function DataDashboard() {
     let totalGross = 0;
     let totalFake = 0;
     let totalDamage = 0;
+    let totalAdSpend = 0;
     let totalNet = 0;
 
     skuDailyProfits.forEach(item => {

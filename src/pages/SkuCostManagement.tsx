@@ -254,8 +254,6 @@ export default function SkuCostManagement() {
         price_mxn: f.sellingPriceMxn
       }).eq('sku', skuKey);
 
-      await supabase.from('sku_pricing').delete().eq('sku', skuKey);
-      
       const { error } = await supabase
         .from('sku_pricing')
         .insert([saveData]);
@@ -414,10 +412,10 @@ export default function SkuCostManagement() {
                                                   if (record) handleInputChange(skuKey, 'all', record);
                                                }}
                                              >
-                                                <option value="">-- 选择核价记录进行同步 --</option>
-                                                {allPricingRecords[skuKey]?.map(r => (
+                                                <option value="">-- 选择待核价记录进行同步 --</option>
+                                                {allPricingRecords[skuKey]?.filter(r => r.status === 'priced').map(r => (
                                                    <option key={r.id} value={r.id}>
-                                                      [{r.status === 'priced' ? '待处理' : '已核价'}] {r.created_at.slice(0,16)} | ¥{r.purchase_price_cny} -> ${r.selling_price_mxn} | {r.auditor || '系统'}
+                                                      [待核价] {r.created_at.slice(0,16)} | ¥{r.purchase_price_cny} -> ${r.selling_price_mxn} | {r.auditor || '系统'}
                                                    </option>
                                                 ))}
                                              </select>

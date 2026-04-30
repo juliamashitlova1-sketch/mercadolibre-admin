@@ -150,7 +150,9 @@ export default function SkuCostManagement() {
       ...m,
       totalGrossProfitRmb: m.unitProfitCny * replenishmentQty,
       singleUnitVolumetricWeight: volumetricWeight,
-      ar59Weight: Math.max(f.productWeight, volumetricWeight)
+      ar59Weight: Math.max(f.productWeight, volumetricWeight),
+      commissionCny: f.sellingPriceMxn * f.commissionRate * f.exchangeRate,
+      taxCny: f.sellingPriceMxn * f.taxRate * f.exchangeRate
     };
   };
 

@@ -110,7 +110,8 @@ export default function DataDashboard() {
       if (!sku || sku === 'A15') return;
       const key = `${d.order_date}_${sku}`;
       const p = pricingMap[sku];
-      const unitProfit = p ? (p.unit_profit_cny || 0) : 0;
+      // unitProfitCny is calculated from margin since it's not saved in the DB
+      const unitProfit = p ? ((p.margin || 0) / 100) * (p.selling_price_mxn || 0) * (p.exchange_rate || 0.3891) : 0;
       if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].units += (d.units || 1);
       dailyMap[key].baseProfit += (unitProfit * (d.units || 1));

@@ -220,8 +220,8 @@ export default function SkuCostManagement() {
     );
   }, [skus, searchTerm]);
 
-  const inputCls = "w-full bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-[11px] font-mono text-slate-900 outline-none focus:border-sky-500 focus:bg-white transition-all";
-  const labelCls = "block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-0.5";
+  const inputCls = "w-full bg-slate-50 border border-slate-200 rounded px-2.5 py-2 text-[12px] font-mono text-slate-900 outline-none focus:border-sky-500 focus:bg-white transition-all";
+  const labelCls = "block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5 px-0.5";
 
   return (
     <div className="v2-page-container">
@@ -319,7 +319,7 @@ export default function SkuCostManagement() {
                               <div className={`text-sm font-black ${m.unitProfitCny > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                 ¥{m.unitProfitCny.toFixed(1)}
                               </div>
-                              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">
+                              <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-0.5">
                                 Margin: {(m.margin * 100).toFixed(1)}%
                               </div>
                            </div>
@@ -353,7 +353,7 @@ export default function SkuCostManagement() {
                                              <Clock className="w-6 h-6" />
                                           </div>
                                           <div>
-                                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">加载新品核价库记录</div>
+                                             <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest">加载新品核价库记录</div>
                                              <select 
                                                className="text-sm font-black text-slate-900 bg-transparent outline-none cursor-pointer mt-0.5"
                                                onChange={(e) => {
@@ -373,7 +373,7 @@ export default function SkuCostManagement() {
                                        </div>
                                        <div className="flex items-center gap-4">
                                           <div className="v2-stat-card bg-slate-50 border-slate-200/60 px-4 py-2 flex flex-col items-center min-w-[100px]">
-                                             <span className="text-[8px] font-bold text-slate-400 uppercase">当前汇率</span>
+                                             <span className="text-[10px] font-bold text-slate-500 uppercase">当前汇率</span>
                                              <input type="number" step="0.0001" value={f.exchangeRate} onChange={e=>handleInputChange(skuItem.sku, 'exchangeRate', Number(e.target.value))} className="text-sm font-mono font-black text-indigo-600 outline-none w-full text-center bg-transparent mt-0.5" />
                                           </div>
                                        </div>
@@ -438,8 +438,8 @@ export default function SkuCostManagement() {
                                                 <div className="space-y-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
                                                    <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Truck className="w-3.5 h-3.5" /> 运费成本单价</h4>
                                                    <div className="flex gap-1 mb-3 bg-white p-1 rounded-lg border border-slate-100">
-                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '海运')} className={`flex-1 py-1 rounded text-[9px] font-black transition-all ${f.logisticsMode === '海运' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}>海运</button>
-                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '空运')} className={`flex-1 py-1 rounded text-[9px] font-black transition-all ${f.logisticsMode === '空运' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-400'}`}>空运</button>
+                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '海运')} className={`flex-1 py-1 rounded text-[10px] font-black transition-all ${f.logisticsMode === '海运' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500'}`}>海运</button>
+                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '空运')} className={`flex-1 py-1 rounded text-[10px] font-black transition-all ${f.logisticsMode === '空运' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-500'}`}>空运</button>
                                                    </div>
                                                    <div className="grid grid-cols-2 gap-2">
                                                       <div>
@@ -499,7 +499,7 @@ export default function SkuCostManagement() {
                                                 <button onClick={() => handleSave(skuItem.sku)} disabled={isSaving} className="w-full py-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
                                                    <Save className="w-5 h-5" /> {isSaving ? '正在保存...' : '确认同步到全局'}
                                                 </button>
-                                                <p className="text-[9px] text-slate-500 font-bold text-center mt-3 uppercase tracking-widest">保存后将自动更新 SKU 档案的基础成本和售价</p>
+                                                                                                 <p className="text-[10px] text-slate-400 font-bold text-center mt-3 uppercase tracking-widest">保存后将自动更新 SKU 档案的基础成本和售价</p>
                                              </div>
                                           </div>
                                        </div>
@@ -512,15 +512,15 @@ export default function SkuCostManagement() {
                                                 
                                                 <div className="space-y-8">
                                                    <div className="space-y-2">
-                                                      <span className="text-[10px] font-black text-slate-500 uppercase">预计单品净利 (CNY)</span>
+                                                      <span className="text-[11px] font-black text-indigo-300 uppercase">预计单品净利 (CNY)</span>
                                                       <div className={`text-5xl font-mono font-black tracking-tighter ${m.unitProfitCny > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>¥{m.unitProfitCny.toFixed(1)}</div>
                                                       <div className="flex items-center gap-3 mt-2">
                                                          <span className="text-[10px] font-black px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-lg italic">ROI: {(m.roi*100).toFixed(0)}%</span>
-                                                         <span className="text-[10px] font-bold text-slate-500">{(m.margin*100).toFixed(1)}% 净利率</span>
+                                                         <span className="text-[10px] font-bold text-indigo-200">{(m.margin*100).toFixed(1)}% 净利率</span>
                                                       </div>
                                                    </div>
                                                    <div className="space-y-2">
-                                                      <span className="text-[10px] font-black text-slate-500 uppercase">批次预估总收益 (CNY)</span>
+                                                      <span className="text-[11px] font-black text-indigo-300 uppercase">批次预估总收益 (CNY)</span>
                                                       <div className="text-3xl font-mono font-black text-white tracking-tighter">¥{m.totalGrossProfitRmb.toLocaleString()}</div>
                                                    </div>
                                                 </div>

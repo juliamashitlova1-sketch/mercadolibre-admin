@@ -115,7 +115,6 @@ export default function DataDashboard() {
       
       let unitProfit = 0;
       if (p) {
-        // Calculate unit profit on the fly based on stored parameters
         const m = calculateSkuProfitMetrics({
           purchasePriceCny: p.purchase_price_cny || 0,
           sellingPriceMxn: p.selling_price_mxn || 0,
@@ -129,7 +128,7 @@ export default function DataDashboard() {
           boxHeight: p.box_height || 0,
           boxWeight: p.box_weight || 0,
           packCount: p.pack_count || 1,
-          boxCount: 1, // Assume 1 box for per-unit calculation context
+          boxCount: 1,
           unitLength: p.unit_length || 0,
           unitWidth: p.unit_width || 0,
           unitHeight: p.unit_height || 0,
@@ -141,14 +140,17 @@ export default function DataDashboard() {
         unitProfit = m.unitProfitCny;
       }
 
-      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, fakeOrderCost: 0, cargoDamageCost: 0 };
+      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, fakeOrderCost: 0, cargoDamageCost: 0, adSpend: 0 };
       dailyMap[key].units += (d.units || 1);
       dailyMap[key].baseProfit += (unitProfit * (d.units || 1));
     });
 
     fakeOrdersData.forEach(f => {
       const key = `${f.date}_${f.sku?.toUpperCase()}`;
-      if (dailyMap[key]) dailyMap[key].fakeOrderCost += Number(f.review_fee_cny || 0);
+      const actualCost = Number(f.review_fee_cny || 0) - (Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY);
+      if (dailyMap[key]) {
+        dailyMap[key].fakeOrderCost += actualCost;
+      }
     });
 
     cargoDamageData.forEach(c => {
@@ -156,11 +158,21 @@ export default function DataDashboard() {
       if (dailyMap[key]) dailyMap[key].cargoDamageCost += Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
     });
 
+    adsData.forEach(a => {
+      const sku = a.sku?.toUpperCase();
+      const key = `${a.date}_${sku}`;
+      const spendCny = (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
+      if (!dailyMap[key] && sku) {
+        dailyMap[key] = { date: a.date, sku, units: 0, baseProfit: 0, unitProfit: 0, fakeOrderCost: 0, cargoDamageCost: 0, adSpend: 0 };
+      }
+      if (dailyMap[key]) dailyMap[key].adSpend += spendCny;
+    });
+
     return Object.values(dailyMap).map((item: any) => ({
       ...item,
-      netProfit: item.baseProfit - item.fakeOrderCost - item.cargoDamageCost
+      netProfit: item.baseProfit - (item.fakeOrderCost || 0) - (item.cargoDamageCost || 0) - (item.adSpend || 0)
     })).sort((a, b) => b.date.localeCompare(a.date));
-  }, [data, pricing, fakeOrdersData, cargoDamageData]);
+  }, [data, pricing, fakeOrdersData, cargoDamageData, adsData]);
 
   const profitSummaryData = useMemo(() => {
     const dailyMap: Record<string, any> = {};
@@ -171,20 +183,22 @@ export default function DataDashboard() {
 
     skuDailyProfits.forEach(item => {
       const date = item.date;
-      if (!dailyMap[date]) dailyMap[date] = { date, grossProfit: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0, expenses: 0 };
+      if (!dailyMap[date]) dailyMap[date] = { date, grossProfit: 0, fakeOrderCost: 0, cargoDamageCost: 0, adSpend: 0, netProfit: 0, expenses: 0 };
       dailyMap[date].grossProfit += item.baseProfit;
       dailyMap[date].fakeOrderCost += item.fakeOrderCost;
       dailyMap[date].cargoDamageCost += item.cargoDamageCost;
+      dailyMap[date].adSpend += (item.adSpend || 0);
       dailyMap[date].netProfit += item.netProfit;
       
       totalGross += item.baseProfit;
       totalFake += item.fakeOrderCost;
       totalDamage += item.cargoDamageCost;
+      totalAdSpend += (item.adSpend || 0);
       totalNet += item.netProfit;
     });
 
     Object.values(dailyMap).forEach((item: any) => {
-      item.expenses = item.fakeOrderCost + item.cargoDamageCost;
+      item.expenses = item.fakeOrderCost + item.cargoDamageCost + item.adSpend;
     });
 
     const chartItems = Object.values(dailyMap).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -195,6 +209,7 @@ export default function DataDashboard() {
         grossProfit: totalGross,
         fakeOrderCost: totalFake,
         cargoDamageCost: totalDamage,
+        adSpend: totalAdSpend,
         netProfit: totalNet
       }
     };
@@ -205,14 +220,13 @@ export default function DataDashboard() {
     const skuSet = new Set<string>();
 
     skuDailyProfits.forEach(item => {
-      const { date, sku, netProfit, baseProfit, fakeOrderCost, cargoDamageCost, units } = item;
+      const { date, sku, netProfit, baseProfit, fakeOrderCost, cargoDamageCost, adSpend, units } = item;
       if (selectedSku && sku !== selectedSku) return;
       if (!dailyMap[date]) dailyMap[date] = { date };
       dailyMap[date][sku] = Number(netProfit.toFixed(2));
       
-      // 当选中特定 SKU 时，存入明细用于 Tooltip 展示
       if (selectedSku === sku) {
-        dailyMap[date]._details = { units, baseProfit, fakeOrderCost, cargoDamageCost, netProfit };
+        dailyMap[date]._details = { units, baseProfit, fakeOrderCost, cargoDamageCost, adSpend, netProfit };
       }
       skuSet.add(sku);
     });
@@ -266,6 +280,10 @@ export default function DataDashboard() {
               <div className="flex justify-between items-center text-[11px]">
                 <span className="text-slate-400 font-bold">批次货损支出:</span>
                 <span className="font-mono font-black text-rose-400">-¥{d.cargoDamageCost.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 font-bold">广告流量支出:</span>
+                <span className="font-mono font-black text-rose-400">-¥{d.adSpend.toFixed(2)}</span>
               </div>
               <div className="h-px bg-slate-800 my-1" />
               <div className="flex justify-between items-center pt-1">

@@ -598,12 +598,6 @@ export default function SkuCostManagement() {
                                           </div>
                                        </div>
                                     </div>
-                                 </div>                                           <p className="text-[10px] text-amber-700 font-bold leading-tight uppercase tracking-tight">
-                                               参数已实时重算。确认无误后点击同步，即可更新全局统计仪表盘。
-                                             </p>
-                                          </div>
-                                       </div>
-                                    </div>
                                  </div>
                                </motion.div>
                             </td>

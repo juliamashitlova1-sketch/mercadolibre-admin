@@ -395,7 +395,12 @@ export default function SkuCostManagement() {
                           <tr>
                             <td colSpan={7} className="p-0 border-none bg-slate-50/50">
                                <motion.div 
-                                 initi                                 <div className="p-8 space-y-8">
+                                 initial={{ height: 0, opacity: 0 }} 
+                                 animate={{ height: 'auto', opacity: 1 }} 
+                                 exit={{ height: 0, opacity: 0 }}
+                                 className="overflow-hidden"
+                               >
+                                 <div className="p-8 space-y-8">
                                     {/* 0. 待核价记录选择 */}
                                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
                                        <div className="flex items-center gap-4">

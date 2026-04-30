@@ -9,7 +9,7 @@ import { MXN_TO_CNY, USD_TO_MXN } from '../constants';
 import { 
   LineChart, Line, AreaChart, Area, PieChart as RePieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar
+  BarChart, Bar, ComposedChart
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 
@@ -31,7 +31,6 @@ export default function DataDashboard() {
   const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
   const [cargoDamageData, setCargoDamageData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -112,17 +111,9 @@ export default function DataDashboard() {
       const key = `${d.order_date}_${sku}`;
       const p = pricingMap[sku];
       const unitProfit = p ? (p.unit_profit_cny || 0) : 0;
-      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
+      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].units += (d.units || 1);
       dailyMap[key].baseProfit += (unitProfit * (d.units || 1));
-    });
-
-    adsData.forEach(a => {
-      const sku = a.sku?.toUpperCase();
-      if (!sku || sku === 'A15') return;
-      const key = `${a.date}_${sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku, units: 0, baseProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
-      dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
     fakeOrdersData.forEach(f => {
@@ -137,9 +128,47 @@ export default function DataDashboard() {
 
     return Object.values(dailyMap).map((item: any) => ({
       ...item,
-      netProfit: item.baseProfit - item.adSpend - item.fakeOrderCost - item.cargoDamageCost
+      netProfit: item.baseProfit - item.fakeOrderCost - item.cargoDamageCost
     })).sort((a, b) => b.date.localeCompare(a.date));
-  }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
+  }, [data, pricing, fakeOrdersData, cargoDamageData]);
+
+  const profitSummaryData = useMemo(() => {
+    const dailyMap: Record<string, any> = {};
+    let totalGross = 0;
+    let totalFake = 0;
+    let totalDamage = 0;
+    let totalNet = 0;
+
+    skuDailyProfits.forEach(item => {
+      const date = item.date;
+      if (!dailyMap[date]) dailyMap[date] = { date, grossProfit: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0, expenses: 0 };
+      dailyMap[date].grossProfit += item.baseProfit;
+      dailyMap[date].fakeOrderCost += item.fakeOrderCost;
+      dailyMap[date].cargoDamageCost += item.cargoDamageCost;
+      dailyMap[date].netProfit += item.netProfit;
+      
+      totalGross += item.baseProfit;
+      totalFake += item.fakeOrderCost;
+      totalDamage += item.cargoDamageCost;
+      totalNet += item.netProfit;
+    });
+
+    Object.values(dailyMap).forEach((item: any) => {
+      item.expenses = item.fakeOrderCost + item.cargoDamageCost;
+    });
+
+    const chartItems = Object.values(dailyMap).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return {
+      chartItems,
+      totals: {
+        grossProfit: totalGross,
+        fakeOrderCost: totalFake,
+        cargoDamageCost: totalDamage,
+        netProfit: totalNet
+      }
+    };
+  }, [skuDailyProfits]);
 
   const chartData = useMemo(() => {
     const dailyMap: Record<string, any> = {};
@@ -189,25 +218,6 @@ export default function DataDashboard() {
     const refunds = data.filter(d => d.status === 'refund').length;
     return { refundRate: total > 0 ? (refunds / total) * 100 : 0, refundCount: refunds };
   }, [data]);
-
-  const availableDates = useMemo(() => Array.from(new Set(skuDailyProfits.map(i => i.date))).sort((a, b) => b.localeCompare(a)), [skuDailyProfits]);
-
-  const displayProfits = useMemo(() => {
-    if (selectedDate === 'all') {
-      const skuTotals: Record<string, any> = {};
-      skuDailyProfits.forEach(item => {
-        if (!skuTotals[item.sku]) skuTotals[item.sku] = { sku: item.sku, units: 0, baseProfit: 0, unitProfit: item.unitProfit, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
-        skuTotals[item.sku].units += item.units;
-        skuTotals[item.sku].baseProfit += item.baseProfit;
-        skuTotals[item.sku].adSpend += item.adSpend;
-        skuTotals[item.sku].fakeOrderCost += item.fakeOrderCost;
-        skuTotals[item.sku].cargoDamageCost += item.cargoDamageCost;
-        skuTotals[item.sku].netProfit += item.netProfit;
-      });
-      return Object.values(skuTotals).sort((a: any, b: any) => b.netProfit - a.netProfit);
-    }
-    return skuDailyProfits.filter(item => item.date === selectedDate);
-  }, [skuDailyProfits, selectedDate]);
 
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
     <div className={`bg-white rounded-2xl border border-${color}-100 p-4 shadow-sm relative overflow-hidden`}>
@@ -351,40 +361,43 @@ export default function DataDashboard() {
           </div>
         </div>
 
-        {/* Row 4: Details Table */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2"><Scale className="w-4 h-4 text-sky-500" /> SKU 经营利润细则 (RMB)</h3>
-            <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="text-[10px] font-bold bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none">
-              <option value="all">全时段汇总</option>
-              {availableDates.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
+        {/* Row 4: Profit Summary Chart */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-5">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-500" /> 利润汇总分析 (RMB)
+            </h3>
+            <div className="flex gap-6">
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-slate-400 uppercase">总毛利</div>
+                <div className="text-sm font-black text-emerald-600">¥{profitSummaryData.totals.grossProfit.toFixed(0)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-slate-400 uppercase">刷单/货损支出</div>
+                <div className="text-sm font-black text-rose-500">¥{profitSummaryData.totals.fakeOrderCost + profitSummaryData.totals.cargoDamageCost > 0 ? '-' : ''}{(profitSummaryData.totals.fakeOrderCost + profitSummaryData.totals.cargoDamageCost).toFixed(0)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-slate-400 uppercase">总纯利</div>
+                <div className="text-sm font-black text-sky-600">¥{profitSummaryData.totals.netProfit.toFixed(0)}</div>
+              </div>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">
-                  <th className="px-4 py-3">SKU 信息</th>
-                  <th className="px-4 py-3 text-right">单品预估盈利</th>
-                  <th className="px-4 py-3 text-right">总销量</th>
-                  <th className="px-4 py-3 text-right">广告支出</th>
-                  <th className="px-4 py-3 text-right">刷单/货损</th>
-                  <th className="px-4 py-3 text-right">最终净利</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {displayProfits.map((item: any, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-2 text-[10px] font-black text-slate-800">{item.sku}</td>
-                    <td className="px-4 py-2 text-[10px] text-right text-emerald-500 font-bold">¥{(item.unitProfit || 0).toFixed(1)}</td>
-                    <td className="px-4 py-2 text-[10px] text-right font-mono text-slate-500">{item.units}</td>
-                    <td className="px-4 py-2 text-[10px] text-right text-rose-400">¥{item.adSpend.toFixed(0)}</td>
-                    <td className="px-4 py-2 text-[10px] text-right text-slate-300">¥{(item.fakeOrderCost + item.cargoDamageCost).toFixed(0)}</td>
-                    <td className="px-4 py-2 text-right"><span className={`px-2 py-0.5 rounded text-[10px] font-black ${item.netProfit >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>¥{item.netProfit.toFixed(0)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={profitSummaryData.chartItems}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="date" fontSize={10} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '12px' }}
+                  formatter={(value: number) => `¥${value.toFixed(2)}`}
+                />
+                <Legend verticalAlign="top" height={30} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                <Bar dataKey="grossProfit" name="毛利 (Gross Profit)" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="expenses" name="刷单/货损支出 (Expenses)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Line type="monotone" dataKey="netProfit" name="纯利 (Net Profit)" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#0ea5e9' }} activeDot={{ r: 6 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>

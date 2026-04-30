@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, Search, RefreshCw, Calculator, Save, 
-  Box, Ruler, Scale, ChevronDown, ChevronUp, Package, Truck, Plane, CreditCard, Info, Clock
+  Box, Ruler, Scale, ChevronDown, ChevronUp, Package, Truck, Plane, CreditCard, Info, Clock,
+  BarChart3
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { calculatePlatformFees } from '../utils/calculator';
@@ -10,6 +11,7 @@ import { calculatePlatformFees } from '../utils/calculator';
 export default function SkuCostManagement() {
   const [skus, setSkus] = useState([]);
   const [pricingRecords, setPricingRecords] = useState({});
+  const [allPricingRecords, setAllPricingRecords] = useState({}); // sku -> records[]
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,16 +34,23 @@ export default function SkuCostManagement() {
       const { data: priceData, error: priceError } = await supabase
         .from('sku_pricing')
         .select('*')
-        .order('created_at', { ascending: true }); // 正序排列，这样在 forEach 循环中，最新的记录（后生成的）会覆盖旧记录
+        .order('created_at', { ascending: false }); // 最新记录在前
       if (priceError) throw priceError;
 
       const priceMap = {};
+      const fullPriceMap = {};
       priceData.forEach(item => {
-        if (item.sku) priceMap[item.sku.toUpperCase()] = item;
+        const skuKey = item.sku?.toUpperCase();
+        if (skuKey) {
+          if (!fullPriceMap[skuKey]) fullPriceMap[skuKey] = [];
+          fullPriceMap[skuKey].push(item);
+          if (!priceMap[skuKey]) priceMap[skuKey] = item;
+        }
       });
 
       setSkus(skuData || []);
       setPricingRecords(priceMap);
+      setAllPricingRecords(fullPriceMap);
       
       const initialEdited = {};
       skuData.forEach(s => {
@@ -82,13 +91,45 @@ export default function SkuCostManagement() {
 
   const handleInputChange = (sku, field, value) => {
     const skuKey = sku.toUpperCase();
-    setEditedData(prev => ({
-      ...prev,
-      [skuKey]: {
-        ...prev[skuKey],
-        [field]: value
-      }
-    }));
+    if (field === 'all') {
+      const record = value;
+      setEditedData(prev => ({
+        ...prev,
+        [skuKey]: {
+          ...prev[skuKey],
+          purchasePriceCny: record.purchase_price_cny || 0,
+          replenishmentQty: record.replenishment_qty || 100,
+          sellingPriceMxn: record.selling_price_mxn || 0,
+          exchangeRate: record.exchange_rate || 0.3891,
+          commissionRate: record.commission_rate || 0.175,
+          adRate: record.ad_rate || 0.08,
+          returnRate: record.return_rate || 0.02,
+          taxRate: record.tax_rate || 0.0905,
+          boxLength: record.box_length || 40,
+          boxWidth: record.box_width || 30,
+          boxHeight: record.box_height || 30,
+          packCount: record.pack_count || 100,
+          boxWeight: record.box_weight || 15,
+          unitLength: record.unit_length || 10,
+          unitWidth: record.unit_width || 5,
+          unitHeight: record.unit_height || 5,
+          productWeight: record.product_weight || 0.15,
+          logisticsMode: record.logistics_mode || '海运',
+          seaFreightUnitPrice: record.sea_freight_unit_price || 3100,
+          airFreightUnitPrice: record.air_freight_unit_price || 95,
+          boxCount: (record.replenishment_qty > 0 && record.pack_count > 0) ? Math.ceil(record.replenishment_qty / record.pack_count) : 1,
+          purchaseLogistics: record.logistics_provider || ''
+        }
+      }));
+    } else {
+      setEditedData(prev => ({
+        ...prev,
+        [skuKey]: {
+          ...prev[skuKey],
+          [field]: value
+        }
+      }));
+    }
   };
 
   const toggleExpand = (sku) => {
@@ -102,7 +143,7 @@ export default function SkuCostManagement() {
     const f = editedData[skuKey];
     if (!f) return null;
 
-    const { fixedFee: calculatedFixed, lastMileFee: calculatedLastMile, volumetricWeight: singleUnitVolumetricWeight, ar59Weight } = calculatePlatformFees(
+    const { fixedFee, lastMileFee, volumetricWeight, ar59Weight } = calculatePlatformFees(
       f.sellingPriceMxn,
       f.productWeight,
       f.unitLength,
@@ -114,7 +155,7 @@ export default function SkuCostManagement() {
     const adFeeMxn = f.sellingPriceMxn * f.adRate;
     const returnFeeMxn = f.sellingPriceMxn * f.returnRate;
     const taxMxn = f.sellingPriceMxn * f.taxRate;
-    const totalFeesMxn = commissionMxn + calculatedFixed + calculatedLastMile + adFeeMxn + returnFeeMxn + taxMxn;
+    const totalFeesMxn = commissionMxn + fixedFee + lastMileFee + adFeeMxn + returnFeeMxn + taxMxn;
     
     const payoutMxn = f.sellingPriceMxn - totalFeesMxn;
     const payoutCny = payoutMxn * f.exchangeRate;
@@ -137,28 +178,35 @@ export default function SkuCostManagement() {
     const currentFreightPerUnit = f.logisticsMode === '空运' ? airFreightPerUnit : seaFreightPerUnit;
 
     const unitProfitCny = payoutCny - f.purchasePriceCny - currentFreightPerUnit;
-    const totalGrossProfitRmb = unitProfitCny * replenishmentQty;
     const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;
+    const roi = (f.purchasePriceCny + currentFreightPerUnit) > 0 ? (unitProfitCny / (f.purchasePriceCny + currentFreightPerUnit)) : 0;
 
-    const commissionCny = commissionMxn * f.exchangeRate;
-    const taxCny = taxMxn * f.exchangeRate;
+    const feeRateSum = f.commissionRate + f.adRate + f.returnRate + f.taxRate;
+    const breakEvenSellingMxn = (1 - feeRateSum) > 0 
+      ? ( ( (f.purchasePriceCny + currentFreightPerUnit) / f.exchangeRate) + fixedFee + lastMileFee ) / (1 - feeRateSum)
+      : 0;
 
     return {
-      fixedFee: calculatedFixed,
-      lastMileFee: calculatedLastMile,
-      singleUnitVolumetricWeight,
+      fixedFee,
+      lastMileFee,
+      singleUnitVolumetricWeight: volumetricWeight,
       ar59Weight,
       commissionMxn,
-      commissionCny,
+      commissionCny: commissionMxn * f.exchangeRate,
       adFeeMxn,
       taxMxn,
-      taxCny,
+      taxCny: taxMxn * f.exchangeRate,
       totalFeesMxn,
       payoutCny,
       freightPerUnit: currentFreightPerUnit,
       unitProfitCny,
-      totalGrossProfitRmb,
-      margin
+      totalGrossProfitRmb: unitProfitCny * replenishmentQty,
+      margin,
+      roi,
+      breakEvenSellingMxn,
+      totalVolume,
+      seaFreightPerUnit,
+      airFreightPerUnit
     };
   };
 
@@ -349,90 +397,205 @@ export default function SkuCostManagement() {
                           <tr>
                             <td colSpan={7} className="p-0 border-none bg-slate-50/50">
                                <motion.div 
-                                 initial={{ height: 0, opacity: 0 }} 
-                                 animate={{ height: 'auto', opacity: 1 }} 
-                                 exit={{ height: 0, opacity: 0 }}
-                                 className="overflow-hidden"
-                               >
-                                 <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-10">
-                                    {/* Column 1: Core Params */}
-                                    <div className="space-y-5">
-                                       <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2 mb-4 tracking-[0.1em] border-b border-slate-100 pb-2"><TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> 核心定标参数</h4>
-                                       <div className="grid grid-cols-1 gap-4">
-                                          <div>
-                                            <label className={labelCls}>售价 (MXN)</label>
-                                            <div className="relative">
-                                              <input type="number" step="0.1" value={f.sellingPriceMxn} onChange={e => handleInputChange(skuItem.sku, 'sellingPriceMxn', parseFloat(e.target.value))} className={`${inputCls} border-emerald-200 text-emerald-700 font-black bg-emerald-50/30`} />
-                                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-emerald-600/50">$</span>
-                                            </div>
+                                 initi                                 <div className="p-8 space-y-8">
+                                    {/* 0. 待核价记录选择 */}
+                                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+                                       <div className="flex items-center gap-4">
+                                          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shadow-sm">
+                                             <Clock className="w-6 h-6" />
                                           </div>
-                                          <div><label className={labelCls}>采购价 (CNY)</label><input type="number" step="0.1" value={f.purchasePriceCny} onChange={e => handleInputChange(skuItem.sku, 'purchasePriceCny', parseFloat(e.target.value))} className={inputCls} /></div>
-                                          <div><label className={labelCls}>箱数</label><input type="number" value={f.boxCount} onChange={e => handleInputChange(skuItem.sku, 'boxCount', parseInt(e.target.value))} className={inputCls} /></div>
-                                          <div><label className={labelCls}>装箱数</label><input type="number" value={f.packCount} onChange={e => handleInputChange(skuItem.sku, 'packCount', parseInt(e.target.value))} className={inputCls} /></div>
-                                          <div><label className={labelCls}>采购物流</label><input type="text" value={f.purchaseLogistics} onChange={e => handleInputChange(skuItem.sku, 'purchaseLogistics', e.target.value)} className={inputCls} placeholder="如：顺丰" /></div>
-                                        </div>
-                                       <div className="p-4 bg-sky-50 border border-sky-100 rounded-2xl mt-6 shadow-sm">
-                                          <div className="text-[10px] font-black text-sky-600 uppercase mb-1 flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> 最终回款预估 (CNY)</div>
-                                          <div className="text-2xl font-mono font-black text-slate-900">¥{m.payoutCny.toLocaleString()}</div>
+                                          <div>
+                                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">加载新品核价库记录</div>
+                                             <select 
+                                               className="text-sm font-black text-slate-900 bg-transparent outline-none cursor-pointer mt-0.5"
+                                               onChange={(e) => {
+                                                  const selectedId = e.target.value;
+                                                  const record = allPricingRecords[skuKey]?.find(r => r.id === selectedId);
+                                                  if (record) handleInputChange(skuKey, 'all', record);
+                                               }}
+                                             >
+                                                <option value="">-- 选择核价记录进行同步 --</option>
+                                                {allPricingRecords[skuKey]?.map(r => (
+                                                   <option key={r.id} value={r.id}>
+                                                      [{r.status === 'priced' ? '待处理' : '已核价'}] {r.created_at.slice(0,16)} | ¥{r.purchase_price_cny} -> ${r.selling_price_mxn} | {r.auditor || '系统'}
+                                                   </option>
+                                                ))}
+                                             </select>
+                                          </div>
+                                       </div>
+                                       <div className="flex items-center gap-4">
+                                          <div className="v2-stat-card bg-slate-50 border-slate-200/60 px-4 py-2 flex flex-col items-center min-w-[100px]">
+                                             <span className="text-[8px] font-bold text-slate-400 uppercase">当前汇率</span>
+                                             <input type="number" step="0.0001" value={f.exchangeRate} onChange={e=>handleInputChange(skuItem.sku, 'exchangeRate', Number(e.target.value))} className="text-sm font-mono font-black text-indigo-600 outline-none w-full text-center bg-transparent mt-0.5" />
+                                          </div>
                                        </div>
                                     </div>
 
-                                    {/* Column 2: Logistics */}
-                                    <div className="space-y-5">
-                                       <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2 mb-4 tracking-[0.1em] border-b border-slate-100 pb-2"><Truck className="w-3.5 h-3.5 text-sky-500" /> 物流分摊详情</h4>
-                                       <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
-                                          <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '海运')} className={`flex-1 py-2 rounded-lg text-[10px] font-black transition-all ${f.logisticsMode === '海运' ? 'bg-sky-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>海运</button>
-                                          <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '空运')} className={`flex-1 py-2 rounded-lg text-[10px] font-black transition-all ${f.logisticsMode === '空运' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>空运</button>
-                                       </div>
-                                       <div className="grid grid-cols-2 gap-4">
-                                          <div><label className={labelCls}>运费单价</label><input type="number" value={f.logisticsMode === '海运' ? f.seaFreightUnitPrice : f.airFreightUnitPrice} onChange={e=>handleInputChange(skuItem.sku, f.logisticsMode==='海运'?'seaFreightUnitPrice':'airFreightUnitPrice', parseFloat(e.target.value))} className={inputCls} /></div>
-                                          <div><label className={labelCls}>实重(KG)</label><input type="number" step="0.01" value={f.productWeight} onChange={e=>handleInputChange(skuItem.sku, 'productWeight', parseFloat(e.target.value))} className={inputCls} /></div>
-                                       </div>
-                                       <div className="grid grid-cols-3 gap-2">
-                                          {['unitLength', 'unitWidth', 'unitHeight'].map((field, i) => (
-                                            <div key={field}><label className={labelCls}>{['长','宽','高'][i]}</label><input type="number" value={f[field]} onChange={e=>handleInputChange(skuItem.sku, field, parseInt(e.target.value))} className={inputCls} /></div>
-                                          ))}
-                                       </div>
-                                    </div>
-
-                                    {/* Column 3: Fees */}
-                                    <div className="space-y-5">
-                                       <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2 mb-4 tracking-[0.1em] border-b border-slate-100 pb-2"><Calculator className="w-3.5 h-3.5 text-rose-500" /> 平台费率设置</h4>
-                                       <div className="grid grid-cols-2 gap-4">
-                                          {['commissionRate', 'adRate', 'returnRate', 'taxRate'].map((fName, i) => (
-                                            <div key={fName}>
-                                               <label className={labelCls}>{['佣金 %', '广告 %', '退货 %', '税率 %'][i]}</label>
-                                               <input type="number" value={(f[fName]*100).toFixed(1)} onChange={e=>handleInputChange(skuItem.sku, fName, parseFloat(e.target.value)/100)} className={inputCls} />
-                                            </div>
-                                          ))}
-                                       </div>
-                                       <div className="p-4 bg-white border border-slate-100 rounded-2xl space-y-2.5 shadow-sm">
-                                          <div className="flex justify-between text-[11px] font-bold"><span className="text-slate-400 uppercase">Fixed Fee:</span> <span className="text-rose-600 font-mono">-${m.fixedFee.toFixed(1)}</span></div>
-                                          <div className="flex justify-between text-[11px] font-bold"><span className="text-slate-400 uppercase">Last Mile:</span> <span className="text-rose-600 font-mono">-${m.lastMileFee.toFixed(1)}</span></div>
-                                          <div className="flex justify-between text-[11px] font-black border-t border-slate-50 pt-2.5"><span className="text-slate-900 uppercase">物流分摊:</span> <span className="text-sky-600 font-mono">¥{m.freightPerUnit.toFixed(1)}</span></div>
-                                       </div>
-                                    </div>
-
-                                    {/* Column 4: Summary */}
-                                    <div className="bg-white border border-slate-200 rounded-[2rem] p-6 flex flex-col justify-between shadow-xl shadow-slate-200/50 relative overflow-hidden">
-                                       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16" />
-                                       <div className="relative z-10">
-                                          <h4 className="text-[11px] font-black text-indigo-500 uppercase flex items-center gap-2 mb-4 tracking-widest"><TrendingUp className="w-4 h-4" /> 批次盈利总览</h4>
-                                          <div className="space-y-4">
-                                             <div className="text-4xl font-mono font-black text-slate-900 tracking-tighter">¥{m.totalGrossProfitRmb.toLocaleString()}</div>
-                                             <div className="flex flex-col gap-2">
-                                                <div className="flex items-center gap-2">
-                                                   <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg text-[10px] font-black uppercase">ROI: {((m.unitProfitCny / (f.purchasePriceCny + m.freightPerUnit)) * 100).toFixed(0)}%</span>
-                                                   <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-[10px] font-black uppercase">Margin: {(m.margin * 100).toFixed(1)}%</span>
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                       {/* 1. Core Params & Logistics Specs */}
+                                       <div className="lg:col-span-8 space-y-6">
+                                          <div className="v2-card p-6 bg-white border-slate-100 shadow-lg">
+                                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                                <div>
+                                                   <label className={labelCls}>采购价 (¥)</label>
+                                                   <input className={`${inputCls} bg-sky-50 font-black border-sky-200 text-sky-700 h-10`} type="number" step="0.1" value={f.purchasePriceCny} onChange={e=>handleInputChange(skuItem.sku, 'purchasePriceCny', parseFloat(e.target.value))} />
                                                 </div>
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-2">ESTIMATED BATCH NET PROFIT</span>
+                                                <div>
+                                                   <label className={labelCls}>墨西哥售价 ($)</label>
+                                                   <input className={`${inputCls} bg-emerald-50 font-black border-emerald-200 text-emerald-700 h-10`} type="number" step="0.1" value={f.sellingPriceMxn} onChange={e=>handleInputChange(skuItem.sku, 'sellingPriceMxn', parseFloat(e.target.value))} />
+                                                </div>
+                                                <div>
+                                                   <label className={labelCls}>装箱数</label>
+                                                   <input className={`${inputCls} h-10`} type="number" value={f.packCount} onChange={e=>{
+                                                      const val = parseInt(e.target.value);
+                                                      handleInputChange(skuItem.sku, 'packCount', val);
+                                                   }} />
+                                                </div>
+                                                <div>
+                                                   <label className={labelCls}>箱数</label>
+                                                   <input className={`${inputCls} bg-amber-50 border-amber-200 h-10`} type="number" value={f.boxCount} onChange={e=>{
+                                                      const val = parseInt(e.target.value);
+                                                      handleInputChange(skuItem.sku, 'boxCount', val);
+                                                   }} />
+                                                </div>
+                                             </div>
+
+                                             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8 border-t border-slate-50">
+                                                <div className="space-y-4">
+                                                   <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Package className="w-3.5 h-3.5" /> 产品实物规格</h4>
+                                                   <div className="grid grid-cols-3 gap-2">
+                                                      <input className={inputCls} type="number" placeholder="长" value={f.unitLength} onChange={e=>handleInputChange(skuItem.sku, 'unitLength', parseInt(e.target.value))} />
+                                                      <input className={inputCls} type="number" placeholder="宽" value={f.unitWidth} onChange={e=>handleInputChange(skuItem.sku, 'unitWidth', parseInt(e.target.value))} />
+                                                      <input className={inputCls} type="number" placeholder="高" value={f.unitHeight} onChange={e=>handleInputChange(skuItem.sku, 'unitHeight', parseInt(e.target.value))} />
+                                                   </div>
+                                                   <div className="grid grid-cols-2 gap-2 mt-2">
+                                                      <div><label className={labelCls}>重量 (KG)</label><input className={inputCls} type="number" step="0.01" value={f.productWeight} onChange={e=>handleInputChange(skuItem.sku, 'productWeight', parseFloat(e.target.value))} /></div>
+                                                      <div><label className={labelCls}>抛重体积</label><div className="px-3 py-2 bg-slate-50 rounded text-xs font-mono font-bold text-slate-500 border border-slate-100 h-8 flex items-center">{m.singleUnitVolumetricWeight.toFixed(2)}</div></div>
+                                                   </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                   <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Box className="w-3.5 h-3.5" /> 物流打包规格</h4>
+                                                   <div className="grid grid-cols-3 gap-2">
+                                                      <input className={inputCls} type="number" placeholder="箱长" value={f.boxLength} onChange={e=>handleInputChange(skuItem.sku, 'boxLength', parseInt(e.target.value))} />
+                                                      <input className={inputCls} type="number" placeholder="箱宽" value={f.boxWidth} onChange={e=>handleInputChange(skuItem.sku, 'boxWidth', parseInt(e.target.value))} />
+                                                      <input className={inputCls} type="number" placeholder="箱高" value={f.boxHeight} onChange={e=>handleInputChange(skuItem.sku, 'boxHeight', parseInt(e.target.value))} />
+                                                   </div>
+                                                   <div className="grid grid-cols-2 gap-2 mt-2">
+                                                      <div><label className={labelCls}>整箱重</label><input className={inputCls} type="number" value={f.boxWeight} onChange={e=>handleInputChange(skuItem.sku, 'boxWeight', parseFloat(e.target.value))} /></div>
+                                                      <div><label className={labelCls}>采购物流</label><input className={inputCls} placeholder="如：顺丰" value={f.purchaseLogistics} onChange={e=>handleInputChange(skuItem.sku, 'purchaseLogistics', e.target.value)} /></div>
+                                                   </div>
+                                                </div>
+
+                                                <div className="space-y-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                                   <h4 className="text-[11px] font-black text-slate-400 uppercase flex items-center gap-2"><Truck className="w-3.5 h-3.5" /> 运费成本单价</h4>
+                                                   <div className="flex gap-1 mb-3 bg-white p-1 rounded-lg border border-slate-100">
+                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '海运')} className={`flex-1 py-1 rounded text-[9px] font-black transition-all ${f.logisticsMode === '海运' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400'}`}>海运</button>
+                                                      <button onClick={()=>handleInputChange(skuItem.sku, 'logisticsMode', '空运')} className={`flex-1 py-1 rounded text-[9px] font-black transition-all ${f.logisticsMode === '空运' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-400'}`}>空运</button>
+                                                   </div>
+                                                   <div className="grid grid-cols-2 gap-2">
+                                                      <div>
+                                                         <label className={labelCls}>单价</label>
+                                                         <input className={`${inputCls} h-8 text-[10px]`} type="number" value={f.logisticsMode === '海运' ? f.seaFreightUnitPrice : f.airFreightUnitPrice} onChange={e=>handleInputChange(skuItem.sku, f.logisticsMode==='海运'?'seaFreightUnitPrice':'airFreightUnitPrice', parseFloat(e.target.value))} />
+                                                      </div>
+                                                      <div>
+                                                         <label className={labelCls}>单品分摊</label>
+                                                         <div className="px-3 py-2 bg-white rounded text-xs font-mono font-bold text-indigo-600 border border-slate-100 h-8 flex items-center">¥{m.freightPerUnit.toFixed(2)}</div>
+                                                      </div>
+                                                   </div>
+                                                </div>
+                                             </div>
+
+                                             <div className="mt-8 grid grid-cols-2 lg:grid-cols-6 gap-4 pt-8 border-t border-slate-50">
+                                                {['佣金 %', '固定费', '尾程费', '广告 %', '退货 %', '税率 %'].map((l, i) => {
+                                                   const fields = ['commissionRate', 'fixedFee', 'lastMileFee', 'adRate', 'returnRate', 'taxRate'];
+                                                   const field = fields[i];
+                                                   const isRate = l.includes('%');
+                                                   const isAuto = l === '固定费' || l === '尾程费';
+                                                   const value = isAuto 
+                                                   ? (field === 'fixedFee' ? m.fixedFee : m.lastMileFee)
+                                                   : (isRate ? (f[field as keyof typeof f] as number)*100 : f[field as keyof typeof f]);
+
+                                                   return (
+                                                   <div key={l}>
+                                                      <label className={labelCls}>{l} {isAuto && '(联动)'}</label>
+                                                      <input 
+                                                         className={`${inputCls} ${isAuto ? 'bg-slate-100 border-transparent text-slate-400 font-bold shadow-none' : ''}`} 
+                                                         type="number" 
+                                                         value={value} 
+                                                         readOnly={isAuto}
+                                                         onChange={e=>{
+                                                            if (!isAuto) {
+                                                            handleInputChange(skuItem.sku, field, isRate ? Number(e.target.value)/100 : Number(e.target.value));
+                                                            }
+                                                         }} 
+                                                      />
+                                                   </div>
+                                                   );
+                                                })}
+                                             </div>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                             <div className="v2-card p-6 bg-white border-slate-100 shadow-md">
+                                                <div className="flex items-center gap-3 mb-6">
+                                                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-sm"><TrendingUp className="w-6 h-6" /></div>
+                                                   <h4 className="text-xs font-black text-emerald-700 uppercase tracking-widest">盈亏建议</h4>
+                                                </div>
+                                                <div className="flex justify-between items-center bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                                                   <span className="text-xs font-black text-emerald-700">建议盈亏平衡价 (MXN)</span>
+                                                   <span className="text-3xl font-mono font-black text-emerald-600">${m.breakEvenSellingMxn.toFixed(0)}</span>
+                                                </div>
+                                             </div>
+                                             <div className="v2-card p-6 bg-slate-900 border-none shadow-xl flex flex-col justify-center">
+                                                <button onClick={() => handleSave(skuItem.sku)} disabled={isSaving} className="w-full py-4 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-black text-sm flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
+                                                   <Save className="w-5 h-5" /> {isSaving ? '正在保存...' : '确认同步到全局'}
+                                                </button>
+                                                <p className="text-[9px] text-slate-500 font-bold text-center mt-3 uppercase tracking-widest">保存后将自动更新 SKU 档案的基础成本和售价</p>
                                              </div>
                                           </div>
                                        </div>
-                                       <div className="mt-8 relative z-10">
-                                          <div className="flex items-start gap-2.5 p-3.5 bg-amber-50 border border-amber-100 rounded-2xl">
-                                             <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                             <p className="text-[10px] text-amber-700 font-bold leading-tight uppercase tracking-tight">
+
+                                       {/* 2. Analysis Dashboard Sidebar */}
+                                       <div className="lg:col-span-4 space-y-6">
+                                          <div className="v2-card bg-slate-900 p-8 text-white relative overflow-hidden shadow-2xl border-none">
+                                             <div className="relative z-10 space-y-10">
+                                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-3"><BarChart3 className="w-6 h-6" /> 利润分析看板</h3>
+                                                
+                                                <div className="space-y-8">
+                                                   <div className="space-y-2">
+                                                      <span className="text-[10px] font-black text-slate-500 uppercase">预计单品净利 (CNY)</span>
+                                                      <div className={`text-5xl font-mono font-black tracking-tighter ${m.unitProfitCny > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>¥{m.unitProfitCny.toFixed(1)}</div>
+                                                      <div className="flex items-center gap-3 mt-2">
+                                                         <span className="text-[10px] font-black px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-lg italic">ROI: {(m.roi*100).toFixed(0)}%</span>
+                                                         <span className="text-[10px] font-bold text-slate-500">{(m.margin*100).toFixed(1)}% 净利率</span>
+                                                      </div>
+                                                   </div>
+                                                   <div className="space-y-2">
+                                                      <span className="text-[10px] font-black text-slate-500 uppercase">批次预估总收益 (CNY)</span>
+                                                      <div className="text-3xl font-mono font-black text-white tracking-tighter">¥{m.totalGrossProfitRmb.toLocaleString()}</div>
+                                                   </div>
+                                                </div>
+
+                                                <div className="pt-10 border-t border-slate-800 space-y-6">
+                                                   <div className="flex justify-between items-center p-5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                                                      <span className="text-xs font-black text-indigo-300 flex items-center gap-2">总结汇回款 (CNY)</span>
+                                                      <span className="text-3xl font-mono font-black text-white">¥{m.payoutCny.toFixed(2)}</span>
+                                                   </div>
+                                                </div>
+                                             </div>
+                                             <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20" />
+                                          </div>
+                                          
+                                          <div className="v2-card p-5 border-amber-100 bg-amber-50/50 shadow-sm">
+                                             <div className="flex items-start gap-3">
+                                                <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                                <p className="text-[10px] text-amber-700 font-bold leading-relaxed uppercase">此处的参数修改将影响全局利润看板的计算。您可以选择核价历史记录进行快速填充，也可以在此直接调整实时测算。</p>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </div>                                           <p className="text-[10px] text-amber-700 font-bold leading-tight uppercase tracking-tight">
                                                参数已实时重算。确认无误后点击同步，即可更新全局统计仪表盘。
                                              </p>
                                           </div>

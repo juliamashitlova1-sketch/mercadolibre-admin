@@ -12,7 +12,6 @@ import {
   BarChart, Bar
 } from 'recharts';
 import { supabase } from '../lib/supabase';
-import { calculatePlatformFees } from '../utils/calculator';
 
 interface CleanedOrder {
   order_id: string;
@@ -102,53 +101,27 @@ export default function DataDashboard() {
     ];
   }, [pricing]);
 
-  const calculateUnitProfit = (p: any) => {
-    if (!p) return 0;
-    const sp = p.selling_price_mxn || 0;
-    
-    const { fixedFee, lastMileFee } = calculatePlatformFees(
-      sp,
-      p.product_weight || 0,
-      p.unit_length || 0,
-      p.unit_width || 0,
-      p.unit_height || 0
-    );
-
-    const commission = sp * (p.commission_rate || 0.175);
-    const ret = sp * (p.return_rate || 0.02);
-    const tax = sp * (p.tax_rate || 0.0905);
-    
-    // 注意：这里不再扣除预估 ad_rate，因为大盘最后会减去实际 adSpend
-    const payoutCny = (sp - commission - fixedFee - lastMileFee - ret - tax) * (p.exchange_rate || MXN_TO_CNY);
-    
-    const vol = ((p.box_length || 0) * (p.box_width || 0) * (p.box_height || 0)) / 1000000;
-    const boxWeight = Math.max(p.box_weight || 0, (p.box_length * p.box_width * p.box_height) / 6000);
-    const freight = p.logistics_mode === '空运' ? (boxWeight * (p.air_freight_unit_price || 0)) : (vol * (p.sea_freight_unit_price || 0));
-    const freightPerUnit = p.replenishment_qty > 0 ? (freight / p.replenishment_qty) : 0;
-    
-    return payoutCny - (p.purchase_price_cny || 0) - freightPerUnit;
-  };
-
   const skuDailyProfits = useMemo(() => {
     const dailyMap: Record<string, any> = {};
-    const pricingMap = {};
+    const pricingMap: Record<string, any> = {};
     pricing.forEach(p => { if (p.sku) pricingMap[p.sku.toUpperCase()] = p; });
 
     data.filter(d => d.status === 'valid').forEach(d => {
       const sku = d.sku?.toUpperCase();
       if (!sku || sku === 'A15') return;
       const key = `${d.order_date}_${sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
+      if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].units += (d.units || 1);
-      const profit = calculateUnitProfit(pricingMap[sku]);
-      dailyMap[key].grossProfit += (profit * (d.units || 1));
+      const p = pricingMap[sku];
+      const unitProfit = p ? (p.unit_profit_cny || 0) : 0;
+      dailyMap[key].baseProfit += (unitProfit * (d.units || 1));
     });
 
     adsData.forEach(a => {
       const sku = a.sku?.toUpperCase();
       if (!sku || sku === 'A15') return;
       const key = `${a.date}_${sku}`;
-      if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
+      if (!dailyMap[key]) dailyMap[key] = { date: a.date, sku, units: 0, baseProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].adSpend += (parseFloat(a.ad_spend) || 0) * USD_TO_MXN * MXN_TO_CNY;
     });
 
@@ -164,7 +137,7 @@ export default function DataDashboard() {
 
     return Object.values(dailyMap).map((item: any) => ({
       ...item,
-      netProfit: item.grossProfit - item.adSpend - item.fakeOrderCost - item.cargoDamageCost
+      netProfit: item.baseProfit - item.adSpend - item.fakeOrderCost - item.cargoDamageCost
     })).sort((a, b) => b.date.localeCompare(a.date));
   }, [data, pricing, adsData, fakeOrdersData, cargoDamageData]);
 
@@ -223,9 +196,9 @@ export default function DataDashboard() {
     if (selectedDate === 'all') {
       const skuTotals: Record<string, any> = {};
       skuDailyProfits.forEach(item => {
-        if (!skuTotals[item.sku]) skuTotals[item.sku] = { sku: item.sku, units: 0, grossProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
+        if (!skuTotals[item.sku]) skuTotals[item.sku] = { sku: item.sku, units: 0, baseProfit: 0, adSpend: 0, fakeOrderCost: 0, cargoDamageCost: 0, netProfit: 0 };
         skuTotals[item.sku].units += item.units;
-        skuTotals[item.sku].grossProfit += item.grossProfit;
+        skuTotals[item.sku].baseProfit += item.baseProfit;
         skuTotals[item.sku].adSpend += item.adSpend;
         skuTotals[item.sku].fakeOrderCost += item.fakeOrderCost;
         skuTotals[item.sku].cargoDamageCost += item.cargoDamageCost;
@@ -393,7 +366,7 @@ export default function DataDashboard() {
                 <tr className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-50">
                   <th className="px-4 py-3">SKU 信息</th>
                   <th className="px-4 py-3 text-right">总销量</th>
-                  <th className="px-4 py-3 text-right">预估毛利</th>
+                  <th className="px-4 py-3 text-right">单品盈利总计</th>
                   <th className="px-4 py-3 text-right">广告支出</th>
                   <th className="px-4 py-3 text-right">刷单/货损</th>
                   <th className="px-4 py-3 text-right">最终净利</th>
@@ -404,7 +377,7 @@ export default function DataDashboard() {
                   <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-2 text-[10px] font-black text-slate-800">{item.sku}</td>
                     <td className="px-4 py-2 text-[10px] text-right font-mono text-slate-500">{item.units}</td>
-                    <td className="px-4 py-2 text-[10px] text-right text-emerald-500 font-bold">¥{item.grossProfit.toFixed(0)}</td>
+                    <td className="px-4 py-2 text-[10px] text-right text-emerald-500 font-bold">¥{item.baseProfit.toFixed(0)}</td>
                     <td className="px-4 py-2 text-[10px] text-right text-rose-400">¥{item.adSpend.toFixed(0)}</td>
                     <td className="px-4 py-2 text-[10px] text-right text-slate-300">¥{(item.fakeOrderCost + item.cargoDamageCost).toFixed(0)}</td>
                     <td className="px-4 py-2 text-right"><span className={`px-2 py-0.5 rounded text-[10px] font-black ${item.netProfit >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>¥{item.netProfit.toFixed(0)}</span></td>

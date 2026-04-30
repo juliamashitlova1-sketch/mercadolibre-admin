@@ -707,7 +707,13 @@ export default function SkuManagement() {
                                               <SkuAiAnalysis 
                                                 sku={item.sku} 
                                                 skuName={item.productName} 
-                                                skuStats={analytics}
+                                                skuStats={enrichedAnalytics.map(e => ({
+                                                  ...e,
+                                                  sku: item.sku,
+                                                  orders: e.unitsCount,
+                                                  sales: e.unitsCount * (parseFloat(item.priceMXN) || 0),
+                                                  stock: 0 // Historical stock snapshot not available in this view
+                                                }))}
                                                 operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
                                               />
                                             </div>

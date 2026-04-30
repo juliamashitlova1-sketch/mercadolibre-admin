@@ -105,15 +105,14 @@ export function calculateSkuProfitMetrics(
   const payoutMxn = f.sellingPriceMxn * (1 - totalFeesRate) - fixedFee - lastMileFee;
   const payoutCny = payoutMxn * f.exchangeRate;
 
-  const totalVolume = (f.boxLength * f.boxWidth * f.boxHeight) / 1000000;
+  const singleBoxVolume = (f.boxLength * f.boxWidth * f.boxHeight) / 1000000;
   const volumetricWeight = (f.boxLength * f.boxWidth * f.boxHeight) / 6000;
-  const chargeableWeight = Math.max(f.boxWeight, volumetricWeight);
+  const chargeableWeightPerBox = Math.max(f.boxWeight, volumetricWeight);
   
-  const seaFreightTotal = totalVolume * f.seaFreightUnitPrice;
-  const airFreightTotal = chargeableWeight * f.airFreightUnitPrice;
+  const seaFreightPerUnit = f.packCount > 0 ? (singleBoxVolume * f.seaFreightUnitPrice) / f.packCount : 0;
+  const airFreightPerUnit = f.packCount > 0 ? (chargeableWeightPerBox * f.airFreightUnitPrice) / f.packCount : 0;
   
-  const totalUnits = f.packCount * (f.boxCount || 1);
-  const freightPerUnit = totalUnits > 0 ? (f.logisticsMode === '空运' ? airFreightTotal : seaFreightTotal) / totalUnits : 0;
+  const freightPerUnit = f.logisticsMode === '空运' ? airFreightPerUnit : seaFreightPerUnit;
 
   const unitProfitCny = payoutCny - f.purchasePriceCny - freightPerUnit;
   const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;

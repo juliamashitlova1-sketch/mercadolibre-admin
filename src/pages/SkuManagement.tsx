@@ -23,6 +23,9 @@ export default function SkuManagement() {
 
   const [skus, setSkus] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pricingData, setPricingData] = useState<any[]>([]);
+  const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
+  const [damageData, setDamageData] = useState<any[]>([]);
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
@@ -116,7 +119,18 @@ export default function SkuManagement() {
       });
       setAdsHistory(adsObj);
 
-      // 4. Operations are now handled by operationLogs from context
+      // 4. Fetch Costs, Fake Orders and Damage for AI
+      const [pricing, fake, damage] = await Promise.all([
+        supabase.from('sku_pricing').select('*'),
+        supabase.from('fake_orders').select('*'),
+        supabase.from('cargo_damage').select('*')
+      ]);
+      
+      setPricingData(pricing.data || []);
+      setFakeOrdersData(fake.data || []);
+      setDamageData(damage.data || []);
+
+      // 5. Operations are now handled by operationLogs from context
       setOpsData([]); // Clear local opsData as we use the context one
 
     } catch (err) {
@@ -707,16 +721,26 @@ export default function SkuManagement() {
                                               <SkuAiAnalysis 
                                                 sku={item.sku} 
                                                 skuName={item.productName} 
-                                                skuStats={enrichedAnalytics.map(e => ({
-                                                  ...e,
-                                                  sku: item.sku,
-                                                  orders: e.unitsCount,
-                                                  sales: e.unitsCount * (parseFloat(item.priceMXN) || 0),
-                                                  adSpend: e.adSpend * USD_TO_MXN, // Convert USD to MXN for AI context consistency
-                                                  clicks: e.clicks,
-                                                  visits: e.visits,
-                                                  stock: 0 
-                                                }))}
+                                                skuStats={enrichedAnalytics.map(e => {
+                                                  const skuPricing = pricingData.find(p => p.sku === item.sku);
+                                                  const dayFake = fakeOrdersData.filter(f => f.sku === item.sku && f.date === e.date);
+                                                  const fakeCost = dayFake.reduce((acc, curr) => {
+                                                    return acc + (Number(curr.review_fee_cny || 0) - (Number(curr.refund_amount_usd || 0) * USD_TO_MXN * 0.38));
+                                                  }, 0);
+                                                  const dayDamage = damageData.filter(d => d.sku === item.sku && d.date === e.date).reduce((acc, curr) => acc + (Number(curr.quantity || 0) * Number(curr.sku_value_cny || 0)), 0);
+
+                                                  return {
+                                                    ...e,
+                                                    sku: item.sku,
+                                                    orders: e.unitsCount,
+                                                    sales: e.unitsCount * (parseFloat(item.priceMXN) || 0),
+                                                    adSpend: e.adSpend * USD_TO_MXN,
+                                                    fakeOrderCost: fakeCost,
+                                                    damageCost: dayDamage,
+                                                    costConfig: skuPricing,
+                                                    stock: 0 
+                                                  };
+                                                })}
                                                 operationLogs={operationLogs.filter((op: any) => op.sku === item.sku)}
                                               />
                                             </div>

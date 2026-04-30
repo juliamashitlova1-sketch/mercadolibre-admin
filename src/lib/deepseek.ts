@@ -21,10 +21,13 @@ export async function analyzeStoreData(
     const dailySequence = skuStats
       .filter(s => s.sku === selectedSku)
       .sort((a, b) => a.date.localeCompare(b.date))
-      .map(s => `[${s.date}] 销量:${s.orders}, 销售额(MXN):${s.sales.toFixed(2)}, 广告费(MXN):${s.adSpend.toFixed(2)}, 曝光:${s.impressions || 0}, 点击:${s.clicks || 0}, 访客:${s.visits || 0}, 转化率:${((s.orders / (s.clicks || s.visits || 1)) * 100).toFixed(2)}%`)
+      .map(s => `[${s.date}] 销量:${s.orders}, 销售额(MXN):${s.sales.toFixed(2)}, 广告费(MXN):${s.adSpend.toFixed(2)}, 刷单成本(CNY):${(s.fakeOrderCost || 0).toFixed(2)}, 货损(CNY):${(s.damageCost || 0).toFixed(2)}, 曝光:${s.impressions || 0}, 点击:${s.clicks || 0}, 访客:${s.visits || 0}, 转化率:${((s.orders / (s.clicks || s.visits || 1)) * 100).toFixed(2)}%`)
       .join('\n');
     
-    dataContext = `### 目标 SKU: ${selectedSku} (${skuStats.find(s => s.sku === selectedSku)?.skuName || '未知名称'}) 的每日流水：\n${dailySequence}`;
+    const pricing = skuStats[0]?.costConfig;
+    const pricingContext = pricing ? `\n【成本配置信息】: 采购价:${pricing.purchase_price_cny}CNY, 物流模式:${pricing.logistics_mode}, 佣金率:${pricing.commission_rate}%, 税率:${pricing.tax_rate}%, 售价:${pricing.selling_price_mxn}MXN` : '';
+
+    dataContext = `### 目标 SKU: ${selectedSku} (${skuStats.find(s => s.sku === selectedSku)?.skuName || '未知名称'}) 的每日流水：\n${dailySequence}${pricingContext}`;
   } else {
     // Multi SKU Overview: Provide Summary
     const skuSummary = skuStats.reduce((acc, curr) => {

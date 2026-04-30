@@ -199,6 +199,29 @@ export default function DataDashboard() {
     };
   }, [skuDailyProfits]);
 
+  const skuProfitBreakdown = useMemo(() => {
+    const dailyMap: Record<string, any> = {};
+    const skuSet = new Set<string>();
+
+    skuDailyProfits.forEach(item => {
+      const { date, sku, netProfit } = item;
+      if (!dailyMap[date]) dailyMap[date] = { date };
+      dailyMap[date][sku] = Number(netProfit.toFixed(2));
+      skuSet.add(sku);
+    });
+
+    const chartItems = Object.values(dailyMap).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return { chartItems, skus: Array.from(skuSet) };
+  }, [skuDailyProfits]);
+
+  const getSkuColor = (index: number) => {
+    const colors = [
+      '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', 
+      '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#f97316'
+    ];
+    return colors[index % colors.length];
+  };
+
   const chartData = useMemo(() => {
     const dailyMap: Record<string, any> = {};
     data.filter(d => d.status === 'valid').forEach(d => {
@@ -426,6 +449,35 @@ export default function DataDashboard() {
                 <Bar dataKey="expenses" name="刷单/货损支出 (Expenses)" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 <Line type="monotone" dataKey="netProfit" name="纯利 (Net Profit)" stroke="#0ea5e9" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#0ea5e9' }} activeDot={{ r: 6 }} />
               </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Row 5: SKU Profit Breakdown Chart */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-5 mt-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h3 className="text-xs font-black text-slate-700 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-sky-500" /> SKU 利润细分分析 (单日/单SKU)
+            </h3>
+            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold">
+              * 仅统计已核价且有销售的 SKU
+            </div>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={skuProfitBreakdown.chartItems}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="date" fontSize={10} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
+                <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '12px' }}
+                  formatter={(value: number) => `¥${value.toFixed(2)}`}
+                />
+                <Legend verticalAlign="top" height={36} iconType="rect" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '10px' }} />
+                {skuProfitBreakdown.skus.map((sku, index) => (
+                  <Bar key={sku} dataKey={sku} name={sku} stackId="a" fill={getSkuColor(index)} />
+                ))}
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>

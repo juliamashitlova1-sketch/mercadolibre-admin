@@ -12,6 +12,7 @@ import {
   BarChart, Bar, ComposedChart
 } from 'recharts';
 import { supabase } from '../lib/supabase';
+import { calculateSkuProfitMetrics } from '../utils/calculator';
 
 interface CleanedOrder {
   order_id: string;
@@ -110,7 +111,35 @@ export default function DataDashboard() {
       if (!sku || sku === 'A15') return;
       const key = `${d.order_date}_${sku}`;
       const p = pricingMap[sku];
-      const unitProfit = p ? (p.unit_profit_cny || 0) : 0;
+      
+      let unitProfit = 0;
+      if (p) {
+        // Calculate unit profit on the fly based on stored parameters
+        const m = calculateSkuProfitMetrics({
+          purchasePriceCny: p.purchase_price_cny || 0,
+          sellingPriceMxn: p.selling_price_mxn || 0,
+          exchangeRate: p.exchange_rate || 0.38,
+          commissionRate: p.commission_rate || 0,
+          adRate: p.ad_rate || 0,
+          returnRate: p.return_rate || 0,
+          taxRate: p.tax_rate || 0,
+          boxLength: p.box_length || 0,
+          boxWidth: p.box_width || 0,
+          boxHeight: p.box_height || 0,
+          boxWeight: p.box_weight || 0,
+          packCount: p.pack_count || 1,
+          boxCount: 1, // Assume 1 box for per-unit calculation context
+          unitLength: p.unit_length || 0,
+          unitWidth: p.unit_width || 0,
+          unitHeight: p.unit_height || 0,
+          productWeight: p.product_weight || 0,
+          logisticsMode: p.logistics_mode || '海运',
+          seaFreightUnitPrice: p.sea_freight_unit_price || 0,
+          airFreightUnitPrice: p.air_freight_unit_price || 0
+        });
+        unitProfit = m.unitProfitCny;
+      }
+
       if (!dailyMap[key]) dailyMap[key] = { date: d.order_date, sku, units: 0, baseProfit: 0, unitProfit, fakeOrderCost: 0, cargoDamageCost: 0 };
       dailyMap[key].units += (d.units || 1);
       dailyMap[key].baseProfit += (unitProfit * (d.units || 1));

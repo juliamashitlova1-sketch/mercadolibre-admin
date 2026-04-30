@@ -6,7 +6,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { calculatePlatformFees } from '../utils/calculator';
+import { calculatePlatformFees, calculateSkuProfitMetrics } from '../utils/calculator';
 
 export default function SkuCostManagement() {
   const [skus, setSkus] = useState([]);
@@ -142,71 +142,15 @@ export default function SkuCostManagement() {
   const calculateSkuMetrics = (skuKey) => {
     const f = editedData[skuKey];
     if (!f) return null;
-
-    const { fixedFee, lastMileFee, volumetricWeight, ar59Weight } = calculatePlatformFees(
-      f.sellingPriceMxn,
-      f.productWeight,
-      f.unitLength,
-      f.unitWidth,
-      f.unitHeight
-    );
-
-    const commissionMxn = f.sellingPriceMxn * f.commissionRate;
-    const adFeeMxn = f.sellingPriceMxn * f.adRate;
-    const returnFeeMxn = f.sellingPriceMxn * f.returnRate;
-    const taxMxn = f.sellingPriceMxn * f.taxRate;
-    const totalFeesMxn = commissionMxn + fixedFee + lastMileFee + adFeeMxn + returnFeeMxn + taxMxn;
-    
-    const payoutMxn = f.sellingPriceMxn - totalFeesMxn;
-    const payoutCny = payoutMxn * f.exchangeRate;
-
+    const m = calculateSkuProfitMetrics(f);
     const replenishmentQty = f.boxCount * f.packCount;
-    const boxCount = f.boxCount;
-    const singleBoxVolumeM3 = (f.boxLength * f.boxWidth * f.boxHeight) / 1000000;
-    const singleBoxVolumetricWeight = (f.boxLength * f.boxWidth * f.boxHeight) / 6000;
-    const singleBoxChargeableWeight = Math.max(f.boxWeight, singleBoxVolumetricWeight);
-    
-    const totalVolume = singleBoxVolumeM3 * boxCount;
-    const totalChargeableWeight = singleBoxChargeableWeight * boxCount;
-
-    const seaFreightTotal = totalVolume * f.seaFreightUnitPrice;
-    const seaFreightPerUnit = replenishmentQty > 0 ? (seaFreightTotal / replenishmentQty) : 0;
-    
-    const airFreightTotal = totalChargeableWeight * f.airFreightUnitPrice;
-    const airFreightPerUnit = replenishmentQty > 0 ? (airFreightTotal / replenishmentQty) : 0;
-
-    const currentFreightPerUnit = f.logisticsMode === '空运' ? airFreightPerUnit : seaFreightPerUnit;
-
-    const unitProfitCny = payoutCny - f.purchasePriceCny - currentFreightPerUnit;
-    const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;
-    const roi = (f.purchasePriceCny + currentFreightPerUnit) > 0 ? (unitProfitCny / (f.purchasePriceCny + currentFreightPerUnit)) : 0;
-
-    const feeRateSum = f.commissionRate + f.adRate + f.returnRate + f.taxRate;
-    const breakEvenSellingMxn = (1 - feeRateSum) > 0 
-      ? ( ( (f.purchasePriceCny + currentFreightPerUnit) / f.exchangeRate) + fixedFee + lastMileFee ) / (1 - feeRateSum)
-      : 0;
+    const volumetricWeight = (f.unitLength * f.unitWidth * f.unitHeight) / 6000;
 
     return {
-      fixedFee,
-      lastMileFee,
+      ...m,
+      totalGrossProfitRmb: m.unitProfitCny * replenishmentQty,
       singleUnitVolumetricWeight: volumetricWeight,
-      ar59Weight,
-      commissionMxn,
-      commissionCny: commissionMxn * f.exchangeRate,
-      adFeeMxn,
-      taxMxn,
-      taxCny: taxMxn * f.exchangeRate,
-      totalFeesMxn,
-      payoutCny,
-      freightPerUnit: currentFreightPerUnit,
-      unitProfitCny,
-      totalGrossProfitRmb: unitProfitCny * replenishmentQty,
-      margin,
-      roi,
-      breakEvenSellingMxn,
-      totalVolume,
-      seaFreightPerUnit,
-      airFreightPerUnit
+      ar59Weight: Math.max(f.productWeight, volumetricWeight)
     };
   };
 
@@ -243,8 +187,7 @@ export default function SkuCostManagement() {
         fixed_fee: m.fixedFee,
         last_mile_fee: m.lastMileFee,
         margin: m.margin * 100,
-        roi: (f.purchasePriceCny + m.freightPerUnit) > 0 ? (m.unitProfitCny / (f.purchasePriceCny + m.freightPerUnit)) : 0,
-        unit_profit_cny: m.unitProfitCny,
+        roi: m.roi,
         logistics_provider: f.purchaseLogistics,
         status: 'priced'
       };

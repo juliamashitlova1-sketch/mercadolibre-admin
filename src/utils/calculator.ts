@@ -57,3 +57,80 @@ export function calculatePlatformFees(
 
   return { fixedFee, lastMileFee, volumetricWeight, ar59Weight };
 }
+
+export interface SkuProfitMetrics {
+  fixedFee: number;
+  lastMileFee: number;
+  freightPerUnit: number;
+  unitProfitCny: number;
+  payoutCny: number;
+  margin: number;
+  roi: number;
+  breakEvenSellingMxn: number;
+}
+
+export function calculateSkuProfitMetrics(
+  f: {
+    purchasePriceCny: number;
+    sellingPriceMxn: number;
+    exchangeRate: number;
+    commissionRate: number;
+    adRate: number;
+    returnRate: number;
+    taxRate: number;
+    boxLength: number;
+    boxWidth: number;
+    boxHeight: number;
+    boxWeight: number;
+    packCount: number;
+    boxCount?: number;
+    unitLength: number;
+    unitWidth: number;
+    unitHeight: number;
+    productWeight: number;
+    logisticsMode: string;
+    seaFreightUnitPrice: number;
+    airFreightUnitPrice: number;
+  }
+): SkuProfitMetrics {
+  const { fixedFee, lastMileFee } = calculatePlatformFees(
+    f.sellingPriceMxn,
+    f.productWeight,
+    f.unitLength,
+    f.unitWidth,
+    f.unitHeight
+  );
+
+  const totalFeesRate = f.commissionRate + f.adRate + f.returnRate + f.taxRate;
+  const payoutMxn = f.sellingPriceMxn * (1 - totalFeesRate) - fixedFee - lastMileFee;
+  const payoutCny = payoutMxn * f.exchangeRate;
+
+  const totalVolume = (f.boxLength * f.boxWidth * f.boxHeight) / 1000000;
+  const volumetricWeight = (f.boxLength * f.boxWidth * f.boxHeight) / 6000;
+  const chargeableWeight = Math.max(f.boxWeight, volumetricWeight);
+  
+  const seaFreightTotal = totalVolume * f.seaFreightUnitPrice;
+  const airFreightTotal = chargeableWeight * f.airFreightUnitPrice;
+  
+  const totalUnits = f.packCount * (f.boxCount || 1);
+  const freightPerUnit = totalUnits > 0 ? (f.logisticsMode === '空运' ? airFreightTotal : seaFreightTotal) / totalUnits : 0;
+
+  const unitProfitCny = payoutCny - f.purchasePriceCny - freightPerUnit;
+  const margin = (f.sellingPriceMxn * f.exchangeRate) > 0 ? (unitProfitCny / (f.sellingPriceMxn * f.exchangeRate)) : 0;
+  const roi = (f.purchasePriceCny + freightPerUnit) > 0 ? (unitProfitCny / (f.purchasePriceCny + freightPerUnit)) : 0;
+
+  const breakEvenSellingMxn = (1 - totalFeesRate) > 0 
+    ? ( ( (f.purchasePriceCny + freightPerUnit) / f.exchangeRate) + fixedFee + lastMileFee ) / (1 - totalFeesRate)
+    : 0;
+
+  return {
+    fixedFee,
+    lastMileFee,
+    freightPerUnit,
+    unitProfitCny,
+    payoutCny,
+    margin,
+    roi,
+    breakEvenSellingMxn
+  };
+}

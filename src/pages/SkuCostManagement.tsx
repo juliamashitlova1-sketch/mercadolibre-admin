@@ -276,14 +276,15 @@ export default function SkuCostManagement() {
                   <th className="v2-table-th text-center">物流分摊</th>
                   <th className="v2-table-th text-center">预估佣金</th>
                   <th className="v2-table-th text-center">增值税</th>
-                  <th className="v2-table-th text-right">盈利与控制</th>
+                  <th className="v2-table-th text-center">盈利</th>
+                  <th className="v2-table-th text-right">控制</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {isLoading ? (
-                  <tr><td colSpan={6} className="px-4 py-32 text-center text-slate-400 font-bold italic text-sm">正在同步云端核价库...</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-32 text-center text-slate-400 font-bold italic text-sm">正在同步云端核价库...</td></tr>
                 ) : filteredSkus.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-32 text-center text-slate-400 font-bold italic text-sm">未找到匹配的 SKU 档案</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-32 text-center text-slate-400 font-bold italic text-sm">未找到匹配的 SKU 档案</td></tr>
                 ) : filteredSkus.map((skuItem) => {
                   const skuKey = skuItem.sku.toUpperCase();
                   const f = editedData[skuKey];
@@ -322,31 +323,31 @@ export default function SkuCostManagement() {
                         <td className="v2-table-td text-center">
                           <div className="text-xs font-mono font-black text-amber-600">¥{m.taxCny.toFixed(2)}</div>
                         </td>
+                        <td className="v2-table-td text-center">
+                           <div className="flex flex-col items-center justify-center">
+                              <div className={`text-sm font-black ${m.unitProfitCny > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                ¥{m.unitProfitCny.toFixed(1)}
+                              </div>
+                              <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">
+                                Margin: {(m.margin * 100).toFixed(1)}%
+                              </div>
+                           </div>
+                        </td>
                         <td className="v2-table-td text-right">
-                          <div className="flex items-center justify-end gap-5">
-                             <div className="text-right">
-                                <div className={`text-sm font-black ${m.unitProfitCny > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                  ¥{m.unitProfitCny.toFixed(1)}
-                                </div>
-                                <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">
-                                  Profit Margin: {(m.margin * 100).toFixed(1)}%
-                                </div>
-                             </div>
-                             <button 
-                              onClick={(e) => { e.stopPropagation(); handleSave(skuItem.sku); }} 
-                              disabled={isSaving}
-                              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-[11px] font-black text-white rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
-                             >
-                                {isSaving ? '...' : '保存修改'}
-                             </button>
-                          </div>
+                           <button 
+                            onClick={(e) => { e.stopPropagation(); handleSave(skuItem.sku); }} 
+                            disabled={isSaving}
+                            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-[11px] font-black text-white rounded-xl transition-all shadow-lg active:scale-95 disabled:opacity-50 inline-block"
+                           >
+                              {isSaving ? '...' : '保存修改'}
+                           </button>
                         </td>
                       </tr>
                       
                       <AnimatePresence>
                         {isExpanded && (
                           <tr>
-                            <td colSpan={6} className="p-0 border-none bg-slate-50/50">
+                            <td colSpan={7} className="p-0 border-none bg-slate-50/50">
                                <motion.div 
                                  initial={{ height: 0, opacity: 0 }} 
                                  animate={{ height: 'auto', opacity: 1 }} 

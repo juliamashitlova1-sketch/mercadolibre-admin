@@ -205,10 +205,15 @@ export default function DataDashboard() {
     const skuSet = new Set<string>();
 
     skuDailyProfits.forEach(item => {
-      const { date, sku, netProfit } = item;
+      const { date, sku, netProfit, baseProfit, fakeOrderCost, cargoDamageCost, units } = item;
       if (selectedSku && sku !== selectedSku) return;
       if (!dailyMap[date]) dailyMap[date] = { date };
       dailyMap[date][sku] = Number(netProfit.toFixed(2));
+      
+      // 当选中特定 SKU 时，存入明细用于 Tooltip 展示
+      if (selectedSku === sku) {
+        dailyMap[date]._details = { units, baseProfit, fakeOrderCost, cargoDamageCost, netProfit };
+      }
       skuSet.add(sku);
     });
 
@@ -231,6 +236,62 @@ export default function DataDashboard() {
       '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6', '#f97316'
     ];
     return colors[index % colors.length];
+  };
+
+  const DetailTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      if (selectedSku && data._details) {
+        const d = data._details;
+        return (
+          <div className="bg-slate-900/95 backdrop-blur-xl text-white p-4 rounded-2xl shadow-2xl border border-slate-700/50 min-w-[200px]">
+            <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest border-b border-slate-800 pb-2">{label}</div>
+            <div className="text-[13px] font-black text-sky-400 mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+              {selectedSku} 利润演算细则
+            </div>
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 font-bold">每日销量:</span>
+                <span className="font-mono font-black bg-white/10 px-1.5 py-0.5 rounded text-white">{d.units} PCS</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 font-bold">预估毛利 (单件*数量):</span>
+                <span className="font-mono font-black text-emerald-400">¥{d.baseProfit.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 font-bold">刷单固定支出:</span>
+                <span className="font-mono font-black text-rose-400">-¥{d.fakeOrderCost.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px]">
+                <span className="text-slate-400 font-bold">批次货损支出:</span>
+                <span className="font-mono font-black text-rose-400">-¥{d.cargoDamageCost.toFixed(2)}</span>
+              </div>
+              <div className="h-px bg-slate-800 my-1" />
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-[11px] font-black text-white">当日净利润 (RMB):</span>
+                <span className="font-mono font-black text-sky-400 text-sm">¥{d.netProfit.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="bg-white p-3 rounded-xl shadow-lg border border-slate-100">
+          <div className="text-[10px] font-bold text-slate-400 mb-2">{label}</div>
+          <div className="space-y-1">
+            {payload.map((p: any) => (
+              <div key={p.name} className="flex items-center gap-3 text-[11px] font-black">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.fill }} />
+                <span className="text-slate-600">{p.name}:</span>
+                <span className="text-slate-900 ml-auto">¥{p.value.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   const chartData = useMemo(() => {
@@ -491,10 +552,7 @@ export default function DataDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" fontSize={10} tickFormatter={d => d.slice(5)} axisLine={false} tickLine={false} />
                 <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', fontSize: '12px' }}
-                  formatter={(value: number) => `¥${value.toFixed(2)}`}
-                />
+                <Tooltip content={<DetailTooltip />} />
                 <Legend 
                   verticalAlign="top" 
                   height={36} 

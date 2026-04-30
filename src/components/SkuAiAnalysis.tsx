@@ -166,16 +166,35 @@ export default function SkuAiAnalysis({ sku, skuName, skuStats, operationLogs }:
                 <span className="text-[9px] font-black text-purple-400 uppercase tracking-[0.2em]">智能诊断报告</span>
                 <button 
                   onClick={() => {
-                    const blob = new Blob([result], { type: 'text/markdown' });
+                    const header = `
+                      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                      <head><meta charset='utf-8'><style>
+                        body { font-family: 'SimSun', serif; line-height: 1.5; }
+                        h2 { color: #2563eb; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+                        h3 { color: #475569; }
+                        p { margin-bottom: 10px; }
+                      </style></head><body>
+                    `;
+                    const footer = "</body></html>";
+                    // Simple MD to HTML conversion for Word compatibility
+                    const htmlContent = result
+                      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                      .replace(/\n/g, '<br/>');
+                    
+                    const sourceHTML = header + htmlContent + footer;
+                    const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `AI_${sku}_Analysis.md`;
+                    a.download = `AI智能诊断报告_${sku}_${new Date().toISOString().split('T')[0]}.doc`;
                     a.click();
                   }}
-                  className="text-[9px] font-bold text-sky-400 flex items-center gap-1"
+                  className="text-[9px] font-bold text-sky-400 flex items-center gap-1 hover:text-sky-300 transition-colors"
                 >
-                  <Download className="w-3 h-3" /> 下载
+                  <Download className="w-3 h-3" /> 下载 Word 报告
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">

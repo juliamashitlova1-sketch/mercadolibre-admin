@@ -198,6 +198,23 @@ export default function DataDashboard() {
 
     if (selectedDate === 'all') {
       const skuTotals: Record<string, any> = {};
+      
+      // Initialize all SKUs from pricing table so they always appear in the dashboard list
+      pricing.forEach(p => {
+        if (!p.sku) return;
+        const skuKey = p.sku.toUpperCase();
+        skuTotals[skuKey] = {
+          sku: skuKey,
+          units: 0,
+          baseProfit: 0,
+          unitProfit: p.unit_profit_cny || 0,
+          adSpend: 0,
+          fakeOrderCost: 0,
+          cargoDamageCost: 0,
+          netProfit: 0
+        };
+      });
+
       skuDailyProfits.forEach(item => {
         if (!skuTotals[item.sku]) {
           skuTotals[item.sku] = { 
@@ -220,6 +237,7 @@ export default function DataDashboard() {
       });
       return Object.values(skuTotals).sort((a: any, b: any) => b.netProfit - a.netProfit);
     }
+    
     return skuDailyProfits.filter(item => item.date === selectedDate).map(item => ({
       ...item,
       unitProfit: pricingMap[item.sku]?.unit_profit_cny || 0

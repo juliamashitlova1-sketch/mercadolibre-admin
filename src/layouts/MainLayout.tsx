@@ -244,20 +244,20 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
       </AnimatePresence>
 
       {/* Check-in Card */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-sm">
-        <div className="flex items-center justify-between mb-2.5">
+      <div className="bg-white border border-slate-200/80 rounded-lg p-2.5 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">
               每日工作打卡
             </span>
           </div>
-          <span className="text-[9px] text-slate-400 font-mono">{today}</span>
+          <span className="text-[8px] text-slate-400 font-mono">{today}</span>
         </div>
 
-        <div className="text-[9px] text-slate-400 font-medium mb-2">
+        <div className="text-[8px] text-slate-400 font-medium mb-1.5">
           进度: {doneCount}/{CHECK_ITEMS.length}
-          <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="mt-0.5 h-1 bg-slate-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 allDone ? "bg-emerald-500" : "bg-sky-500"
@@ -267,21 +267,21 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
           </div>
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {CHECK_ITEMS.map((item) => {
             const done = checkins[item.id];
             return (
               <button
                 key={item.id}
                 onClick={() => handleToggle(item.id)}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+                className={`w-full flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-medium transition-all ${
                   done
                     ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
                     : "bg-slate-50 text-slate-500 border border-transparent hover:bg-sky-50 hover:text-sky-600"
                 }`}
               >
                 <div
-                  className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                  className={`w-3 h-3 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
                     done
                       ? "bg-emerald-500 border-emerald-500"
                       : "border-slate-300"
@@ -289,7 +289,7 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
                 >
                   {done && (
                     <svg
-                      className="w-2 h-2 text-white"
+                      className="w-1.5 h-1.5 text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -305,7 +305,7 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
                 </div>
                 <span className="truncate">{item.label}</span>
                 {done && (
-                  <span className="ml-auto text-[8px] text-emerald-500">✓</span>
+                  <span className="ml-auto text-[7px] text-emerald-500">✓</span>
                 )}
               </button>
             );
@@ -493,12 +493,12 @@ export default function MainLayout({
 
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
         <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
-          <div className="px-6 pt-8 pb-6 flex items-center gap-3 cursor-default group">
-            <div className="w-8 h-8 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
+          <div className="px-5 pt-4 pb-3 flex items-center gap-2.5 cursor-default group shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
               <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
             <div
-              className={`font-extrabold text-xl tracking-tight font-heading mt-1 ${uiVersion === "v2" ? "text-slate-900" : "text-slate-800"}`}
+              className={`font-extrabold text-base tracking-tight font-heading ${uiVersion === "v2" ? "text-slate-900" : "text-slate-800"}`}
             >
               MILYFLY
             </div>
@@ -510,7 +510,7 @@ export default function MainLayout({
                 return (
                   <div
                     key={Math.random()}
-                    className="border-t border-slate-200/60 my-2"
+                    className="border-t border-slate-200/60 my-1.5"
                   />
                 );
               }
@@ -525,7 +525,7 @@ export default function MainLayout({
                   <NavLink
                     to={item.children ? item.children[0].id : item.id}
                     className={() => `
-                      w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 group
+                      w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-300 group
                       ${
                         isActive
                           ? uiVersion === "v2"
@@ -537,9 +537,9 @@ export default function MainLayout({
                       }
                     `}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <Icon
-                        className={`w-[18px] h-[18px] opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ""}`}
+                        className={`w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ""}`}
                       />
                       <span>{item.label}</span>
                     </div>
@@ -553,7 +553,7 @@ export default function MainLayout({
                     (item.id === "/pricing"
                       ? isPricingActive
                       : location.pathname.startsWith(item.id)) && (
-                      <div className="flex flex-col gap-1 ml-6 mt-1 mb-2 border-l-2 border-slate-100 pl-2">
+                      <div className="flex flex-col gap-0.5 ml-5 mt-0.5 mb-1.5 border-l-2 border-slate-100 pl-1.5">
                         {item.children.map((child) => {
                           const ChildIcon = child.icon;
                           const isChildActive = location.pathname === child.id;
@@ -561,8 +561,7 @@ export default function MainLayout({
                             <NavLink
                               key={child.id}
                               to={child.id}
-                              className={() => `
-                              flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] font-medium transition-all
+                              className={`flex items-center gap-2 px-2 py-1 rounded text-[11px] font-medium transition-all
                               ${
                                 isChildActive
                                   ? uiVersion === "v2"
@@ -574,7 +573,7 @@ export default function MainLayout({
                               }
                             `}
                             >
-                              <ChildIcon className="w-3.5 h-3.5" />
+                              <ChildIcon className="w-3 h-3" />
                               <span>{child.label}</span>
                             </NavLink>
                           );
@@ -586,7 +585,7 @@ export default function MainLayout({
             })}
           </nav>
 
-          <div className="p-4 mt-auto space-y-3">
+          <div className="p-3 mt-auto shrink-0">
             {/* 每日工作打卡 */}
             <DailyCheckIn currentTime={currentTime} />
           </div>

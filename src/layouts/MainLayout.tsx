@@ -484,19 +484,8 @@ export default function MainLayout({
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-2 glass-panel shadow-none h-10 px-4 rounded-full text-sm text-slate-400 focus-within:text-slate-700 transition-colors cursor-text group w-[240px]">
-              <Search className="w-4 h-4 opacity-70 group-focus-within:opacity-100 group-focus-within:text-sky-500" />
-              <input
-                type="text"
-                placeholder="搜索 SKU 或 订单号..."
-                className="flex-1 text-xs bg-transparent outline-none placeholder:text-slate-400 text-slate-800"
-              />
-              <kbd className="hidden group-hover:flex items-center h-5 px-1.5 text-[10px] font-mono bg-slate-100 rounded font-medium text-slate-500 border border-slate-200">
-                ⌘K
-              </kbd>
-            </div>
-
-            <div className="relative">
+            {/* 通知按钮 - 更新日志 */}
+            <div className="relative" style={{ zIndex: 9999 }}>
               <button
                 onClick={() => {
                   setIsNotificationOpen(!isNotificationOpen);
@@ -522,68 +511,94 @@ export default function MainLayout({
                 {isNotificationOpen && (
                   <>
                     <div
-                      className="fixed inset-0 z-40"
+                      className="fixed inset-0"
+                      style={{ zIndex: 9998 }}
                       onClick={() => setIsNotificationOpen(false)}
                     />
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-3 w-[320px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-3 w-[380px] bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden"
+                      style={{ zIndex: 9999 }}
                     >
-                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                      <div className="p-5 border-b border-slate-100 bg-gradient-to-r from-sky-50 to-white">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <History className="w-4 h-4 text-sky-400" />
+                          <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                              <History className="w-4 h-4 text-sky-600" />
+                            </div>
                             应用更新日志
                           </h3>
-                          <span className="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full font-mono font-bold">
-                            LIVE v1.0.5
+                          <span className="text-[10px] font-bold bg-sky-500/10 text-sky-600 px-2.5 py-1 rounded-full font-mono border border-sky-200/50">
+                            v{appUpdates[0]?.version || "1.0.0"}
                           </span>
                         </div>
                       </div>
-                      <div className="max-h-[400px] overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                      <div className="max-h-[420px] overflow-y-auto p-3 space-y-2 custom-scrollbar">
                         {appUpdates.length === 0 ? (
-                          <div className="py-8 text-center text-slate-500 text-xs">
+                          <div className="py-10 text-center text-slate-400 text-xs font-medium">
                             暂无更新记录
                           </div>
                         ) : (
-                          appUpdates.map((update) => (
+                          appUpdates.slice(0, 3).map((update, idx) => (
                             <div
                               key={update.id}
-                              className="p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                              className={`p-4 rounded-xl transition-all duration-300 ${
+                                idx === 0
+                                  ? "bg-sky-50/80 border border-sky-200/60 shadow-sm"
+                                  : "bg-white border border-slate-100 hover:border-sky-200/40"
+                              }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
-                                <span
-                                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                    update.type === "feature"
-                                      ? "bg-emerald-500/10 text-emerald-400"
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                      update.type === "feature"
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : update.type === "fix"
+                                          ? "bg-rose-100 text-rose-700"
+                                          : "bg-sky-100 text-sky-700"
+                                    }`}
+                                  >
+                                    {update.type === "feature"
+                                      ? "✨ 新功能"
                                       : update.type === "fix"
-                                        ? "bg-rose-500/10 text-rose-400"
-                                        : "bg-sky-500/10 text-sky-400"
-                                  }`}
-                                >
-                                  {update.version}
-                                </span>
-                                <span className="text-[9px] text-slate-500 font-mono">
+                                        ? "🔧 修复"
+                                        : "📝 更新"}
+                                    <span className="font-mono">
+                                      {update.version}
+                                    </span>
+                                  </span>
+                                  {idx === 0 && (
+                                    <span className="text-[8px] font-bold text-sky-500 bg-sky-100 px-1.5 py-0.5 rounded-full">
+                                      最新
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[9px] text-slate-400 font-mono">
                                   {new Date(
                                     update.created_at,
-                                  ).toLocaleDateString()}
+                                  ).toLocaleDateString("zh-CN", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                  })}
                                 </span>
                               </div>
-                              <h4 className="text-xs font-bold text-slate-200 mb-1 group-hover:text-white transition-colors">
+                              <h4 className="text-xs font-bold text-slate-800 mb-1">
                                 {update.title}
                               </h4>
-                              <p className="text-[11px] text-slate-400 leading-relaxed whitespace-pre-line border-l-2 border-slate-800 pl-2 ml-1">
+                              <p className="text-[11px] text-slate-500 leading-relaxed whitespace-pre-line border-l-2 border-sky-200 pl-3 ml-0.5">
                                 {update.content}
                               </p>
                             </div>
                           ))
                         )}
                       </div>
-                      <div className="p-3 bg-slate-800/30 border-t border-slate-800 text-center">
-                        <p className="text-[10px] text-slate-500">
-                          MILYFLY 云端同步系统已就绪
+                      <div className="p-3 bg-slate-50/80 border-t border-slate-100 text-center">
+                        <p className="text-[9px] text-slate-400 font-medium">
+                          🔄 每次更新代码后自动记录
                         </p>
                       </div>
                     </motion.div>

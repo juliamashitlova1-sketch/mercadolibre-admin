@@ -115,9 +115,7 @@ export default function DataSources() {
         .eq("id", editingId);
       error = err;
     } else {
-      const { error: err } = await supabase
-        .from("data_sources")
-        .insert([form]);
+      const { error: err } = await supabase.from("data_sources").insert([form]);
       error = err;
     }
 
@@ -152,9 +150,7 @@ export default function DataSources() {
             </div>
             <div>
               <h1 className="v2-header-title">数据来源说明</h1>
-              <p className="v2-header-subtitle">
-                记录所有表格的下载来源与用途
-              </p>
+              <p className="v2-header-subtitle">记录所有表格的下载来源与用途</p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -184,17 +180,15 @@ export default function DataSources() {
               </span>
               <div className="v2-stat-value text-slate-900">{data.length}</div>
             </div>
-            <div className="v2-stat-card bg-emerald-500/5 border-emerald-500/20 shadow-lg">
+            <div className="v2-stat-card bg-white border-emerald-200/60 shadow-lg">
               <span className="v2-stat-label text-emerald-600 font-bold">
                 表格来源
               </span>
               <div className="v2-stat-value text-emerald-600">
-                {
-                  new Set(data.map((d) => d.table_name)).size
-                }
+                {new Set(data.map((d) => d.table_name)).size}
               </div>
             </div>
-            <div className="v2-stat-card bg-teal-500/5 border-teal-500/20 shadow-lg">
+            <div className="v2-stat-card bg-white border-teal-200/60 shadow-lg">
               <span className="v2-stat-label text-teal-600 font-bold">
                 覆盖板块
               </span>

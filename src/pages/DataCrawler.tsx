@@ -18,6 +18,41 @@ export default function DataCrawler() {
   const pasteRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
 
+  // Listen for postMessage from opened tab (Tampermonkey sends this)
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "TABLE_DATA_READY" && e.data?.data) {
+        const d = e.data.data;
+        if (d.columns) setColumns(d.columns);
+        if (d.rows) setRows(d.rows);
+        setLoading(false);
+        setOpened(false);
+        setError("");
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  // Auto-load from URL hash (bookmarklet sends this)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#data=")) {
+      try {
+        const raw = decodeURIComponent(hash.slice(6));
+        const d = JSON.parse(raw);
+        if (d.columns) setColumns(d.columns);
+        if (d.rows) setRows(d.rows);
+        if (d.rows?.length > 0) {
+          setTimeout(() => {
+            window.location.hash = "";
+            history.replaceState(null, "", window.location.pathname);
+          }, 500);
+        }
+      } catch {}
+    }
+  }, []);
+
   // Auto-listen for paste anywhere after opening URL
   useEffect(() => {
     const handler = async (e: ClipboardEvent) => {
@@ -190,8 +225,40 @@ export default function DataCrawler() {
               ) : (
                 <ExternalLink className="w-4 h-4" />
               )}
-              {loading ? "等待粘贴..." : "开始爬取"}
+              {loading ? "等待数据..." : "开始爬取"}
             </button>
+          </div>
+
+          {/* Tampermonkey / Bookmarklet 安装提示 */}
+          <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-200/60 rounded-xl">
+            <p className="text-[10px] font-bold text-emerald-700 mb-1.5">
+              🤖 全自动方案（推荐）
+            </p>
+            <p className="text-[9px] text-slate-500 leading-relaxed mb-2">
+              安装 Tampermonkey 扩展后，添加下方脚本。以后打开 Mercado Libre
+              页面时自动提取表格数据并传回本软件，无需手动复制粘贴。
+            </p>
+            <div className="flex gap-2 items-center">
+              <a
+                href="/auto-extract.user.js"
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition-all"
+              >
+                📥 下载自动脚本
+              </a>
+              <span className="text-[9px] text-slate-400">或</span>
+              <button
+                onClick={() => {
+                  const code = `javascript:(function(){const s=document.createElement('script');s.src='${window.location.origin}/auto-extract.user.js?'+Date.now();document.body.appendChild(s)})();`;
+                  navigator.clipboard.writeText(code);
+                  alert(
+                    "书签代码已复制！在浏览器书签栏新建书签，粘贴到网址栏即可。点击该书签即可自动提取当前页面的表格数据。",
+                  );
+                }}
+                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[10px] font-bold transition-all"
+              >
+                📋 复制书签代码
+              </button>
+            </div>
           </div>
         </div>
 

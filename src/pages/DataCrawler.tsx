@@ -136,8 +136,16 @@ export default function DataCrawler() {
     setLoading(true);
     setOpened(true);
     setError("");
-    window.open(url, "_blank", "noopener,noreferrer");
-    setTimeout(() => pasteRef.current?.focus(), 500);
+    setRows([]);
+
+    // Open with milyfly flag for the userscript to detect
+    var targetUrl = url;
+    if (targetUrl.indexOf("?") >= 0) {
+      targetUrl += "&milyfly=1";
+    } else {
+      targetUrl += "?milyfly=1";
+    }
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
   };
 
   const handlePasteManually = async () => {
@@ -264,56 +272,36 @@ export default function DataCrawler() {
 
         {/* Waiting state */}
         {loading && opened && (
-          <div className="v2-card bg-amber-50/80 border-2 border-amber-300 border-dashed rounded-xl p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-amber-500" />
-            <h3 className="text-sm font-bold text-amber-700 mb-2">
-              ⏳ 等待数据粘贴
+          <div className="v2-card bg-emerald-50/80 border-2 border-emerald-300 border-dashed rounded-xl p-8 text-center">
+            <div className="w-10 h-10 mx-auto mb-3 bg-emerald-100 rounded-full flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+            </div>
+            <h3 className="text-sm font-bold text-emerald-700 mb-2">
+              🤖 自动爬取中
             </h3>
-            <p className="text-xs text-amber-600 leading-relaxed max-w-md mx-auto">
-              已在浏览器新标签页打开目标网页。请在<b>新标签页中</b>选中表格数据
-              （Ctrl+A → Ctrl+C），然后回到本页面按 Ctrl+V
-              粘贴，系统将自动解析。
+            <p className="text-xs text-emerald-600 leading-relaxed max-w-md mx-auto">
+              已在新标签页打开目标网页。如果安装了 Tampermonkey 脚本，
+              数据将自动拦截并传回本页面。
             </p>
-            <div className="mt-4 flex justify-center gap-3">
-              <button
-                onClick={handlePasteManually}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-lg text-xs font-bold transition-all"
-              >
-                从剪贴板读取
-              </button>
-              <button
-                onClick={() => {
-                  setLoading(false);
-                  setOpened(false);
-                }}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 transition-all"
-              >
-                取消
-              </button>
-            </div>
-            <div className="mt-5">
-              <p className="text-[10px] text-amber-500 font-medium mb-2">
-                或者直接在这里 Ctrl+V 粘贴表格数据：
-              </p>
-              <textarea
-                ref={pasteRef}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val.includes("<table")) {
-                    parseHtmlTable(val);
-                    setOpened(false);
+            {rows.length === 0 && (
+              <div className="mt-4 flex justify-center gap-3">
+                <button
+                  onClick={handlePasteManually}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-xs font-bold transition-all"
+                >
+                  从剪贴板读取
+                </button>
+                <button
+                  onClick={() => {
                     setLoading(false);
-                  } else if (val.includes("\t")) {
-                    parseTabText(val);
                     setOpened(false);
-                    setLoading(false);
-                  }
-                }}
-                placeholder="在这里 Ctrl+V 粘贴复制的表格..."
-                className="w-full h-24 text-xs font-mono border-2 border-amber-200 rounded-lg p-3 outline-none focus:border-amber-400 resize-none"
-                autoFocus
-              />
-            </div>
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 transition-all"
+                >
+                  取消
+                </button>
+              </div>
+            )}
           </div>
         )}
 

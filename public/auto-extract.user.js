@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         美客多数据爬虫 - 自动提取热搜表格
+// @name         美客多自动爬虫 - 蓝鲸选品数据拦截
 // @namespace    milyfly-crawler
-// @version      1.0
-// @description  自动提取 Mercado Libre #table-trend 热搜趋势数据并传回 MILYFLY 软件
+// @version      2.0
+// @description  自动拦截蓝鲸选品扩展的API数据，提取热搜词表格并传回MILYFLY软件
 // @author       MILYFLY
 // @match        *://*.mercadolibre.com.mx/*
 // @match        *://*.mercadolibre.com/*
@@ -12,74 +12,126 @@
 (function () {
   "use strict";
 
-  function extractTable() {
-    var wrapper = document.getElementById("table-trend_wrapper");
-    if (!wrapper) {
-      console.log("[MILYFLY] 未找到 table-trend，3秒后重试...");
-      setTimeout(extractTable, 3000);
-      return;
-    }
+  var APP_URL = "https://mercadolibre-admin-v2.vercel.app/data-crawler";
+  var captured = false;
 
-    var table = document.getElementById("table-trend");
-    if (!table) {
-      setTimeout(extractTable, 3000);
-      return;
-    }
+  console.log("[MILYFLY] 自动爬虫已启动，等待蓝鲸选品扩展加载数据...");
 
-    // 提取表头
-    var headers = [];
-    var thead = table.querySelector("thead");
-    if (thead) {
-      thead.querySelectorAll("th").forEach(function (th) {
-        var text = th.innerText.trim();
-        if (text) headers.push(text);
-      });
+  // 方案1: 拦截 console.log 抓取蓝鲸选品的数据
+  var origLog = console.log;
+  console.log = function () {
+    var args = Array.prototype.slice.call(arguments);
+    origLog.apply(console, arguments);
+    if (captured) return;
+    for (var i = 0; i < args.length; i++) {
+      if (
+        typeof args[i] === "string" &&
+        (args[i].indexOf("流量词") >= 0 || args[i].indexOf("热搜词") >= 0)
+      ) {
+        for (var j = i + 1; j < args.length; j++) {
+          if (
+            args[j] &&
+            Array.isArray(args[j]) &&
+            args[j].length > 0 &&
+            args[j][0].key
+          ) {
+            captured = true;
+            origLog.call(
+              console,
+              "[MILYFLY] ✅ 成功拦截 " + args[j].length + " 条数据",
+            );
+            saveData(args[j]);
+            return;
+          }
+        }
+      }
     }
+  };
 
-    // 提取数据行
-    var rows = [];
-    var tbody = table.querySelector("tbody");
-    if (tbody) {
-      tbody.querySelectorAll("tr").forEach(function (tr) {
-        var row = [];
-        tr.querySelectorAll("td").forEach(function (td) {
-          row.push(td.innerText.trim().replace(/\s+/g, " "));
-        });
-        if (row.length > 0) rows.push(row);
-      });
-    }
+  // 方案2: 拦截 XHR
+  var origOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function () {
+    var url = arguments[1];
+    var xhr = this;
+    xhr.addEventListener("load", function () {
+      if (!captured && xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (Array.isArray(data) && data.length > 5 && data[0].key) {
+            captured = true;
+            origLog.call(console, "[MILYFLY] ✅ 通过XHR拦截到数据");
+            saveData(data);
+          }
+        } catch (e) {}
+      }
+    });
+    return origOpen.apply(xhr, arguments);
+  };
 
-    if (rows.length === 0) {
-      setTimeout(extractTable, 3000);
-      return;
-    }
+  function saveData(data) {
+    var rows = data.map(function (item) {
+      var h = item.history && item.history.length > 0 ? item.history[0] : {};
+      var rank = h.ranking
+        ? "第" + (h.page || "?") + "页,第" + h.ranking + "名"
+        : "";
+      return [
+        item.key || "",
+        item.key_cn || "",
+        (item.bgl || 0).toString() + "%",
+        String(item.keyCount || 0),
+        rank,
+        String(item.paiming || 0),
+        String(item.sale30 || 0),
+        String(item.visit30 || 0),
+        String(item.total_item || 0),
+        item.jzd || "0%",
+      ];
+    });
 
-    var data = {
-      columns: headers.length > 0 ? headers : [],
+    var result = {
+      columns: [
+        "热搜词",
+        "中文",
+        "流量占比",
+        "曝光次数",
+        "排名情况",
+        "搜索量排名",
+        "30天销量",
+        "30天搜索量",
+        "竞品数",
+        "竞争度",
+      ],
       rows: rows,
     };
 
-    console.log("[MILYFLY] 成功提取 " + rows.length + " 条数据");
-
-    // 通过 postMessage 通知原窗口
-    if (window.opener && window.opener !== window) {
-      window.opener.postMessage({ type: "TABLE_DATA_READY", data: data }, "*");
-    }
-
-    // 保存到 localStorage，供同名域页面读取
-    localStorage.setItem("mx_crawled_table", JSON.stringify(data));
-
-    // 如果当前页面也是我们的软件范围（同域），自动跳转
-    var appUrl = "https://mercadolibre-admin-v2.vercel.app/data-crawler";
-    var encoded = encodeURIComponent(JSON.stringify(data));
+    localStorage.setItem("mx_crawled_table", JSON.stringify(result));
 
     if (window.opener && window.opener !== window) {
-      // 已通知原窗口，不做额外操作
-    } else {
-      window.open(appUrl + "#data=" + encoded, "_blank");
+      window.opener.postMessage(
+        { type: "TABLE_DATA_READY", data: result },
+        "*",
+      );
     }
+
+    // 如果是从软件打开的带参数，自动跳回
+    if (window.location.search.indexOf("milyfly=1") >= 0) {
+      setTimeout(function () {
+        window.location.href = APP_URL;
+      }, 500);
+    }
+
+    origLog.call(
+      console,
+      "[MILYFLY] ✅ 已保存 " + rows.length + " 行数据，请回到数据爬虫页面查看",
+    );
   }
 
-  // 等待页面和扩展完全加载后执行
-  setTimeout(extractTable, 5000);
+  // 自动点击热搜词Tab触发数据加载
+  setTimeout(function () {
+    var tab = document.querySelector('a[href="#tabs-trend"]');
+    if (tab) {
+      origLog.call(console, "[MILYFLY] 正在点击热搜词Tab...");
+      tab.click();
+    }
+  }, 3000);
 })();

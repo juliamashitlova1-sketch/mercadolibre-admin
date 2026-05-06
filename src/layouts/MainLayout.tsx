@@ -244,20 +244,19 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
       </AnimatePresence>
 
       {/* Check-in Card */}
-      <div className="bg-white border border-slate-200/80 rounded-lg p-2 shadow-sm">
-        <div className="flex items-center justify-center gap-1 mb-2">
-          <div className="flex items-center gap-1">
-            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[8px] font-bold text-slate-700 uppercase tracking-wider">
+      <div className="bg-slate-50/70 border border-slate-200/60 rounded-xl p-2.5">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">
               每日工作打卡
             </span>
           </div>
           <span className="text-[7px] text-slate-400 font-mono">{today}</span>
         </div>
 
-        <div className="text-[7px] text-slate-400 font-medium mb-1">
-          进度: {doneCount}/{CHECK_ITEMS.length}
-          <div className="mt-0.5 h-0.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 h-1 bg-slate-200/70 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 allDone ? "bg-emerald-500" : "bg-sky-500"
@@ -265,6 +264,9 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
               style={{ width: `${(doneCount / CHECK_ITEMS.length) * 100}%` }}
             />
           </div>
+          <span className="text-[8px] font-bold text-slate-400 tabular-nums shrink-0">
+            {doneCount}/{CHECK_ITEMS.length}
+          </span>
         </div>
 
         <div className="space-y-0.5">
@@ -274,22 +276,22 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
               <button
                 key={item.id}
                 onClick={() => handleToggle(item.id)}
-                className={`w-full flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-medium transition-all ${
+                className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-[9px] font-medium transition-all ${
                   done
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
-                    : "bg-slate-50 text-slate-500 border border-transparent hover:bg-sky-50 hover:text-sky-600"
+                    ? "bg-emerald-50/80 text-emerald-600"
+                    : "text-slate-400 hover:text-slate-600 hover:bg-white/80"
                 }`}
               >
                 <div
-                  className={`w-2.5 h-2.5 rounded-full border-1.5 flex items-center justify-center transition-all shrink-0 ${
+                  className={`w-3 h-3 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
                     done
                       ? "bg-emerald-500 border-emerald-500"
-                      : "border-slate-300"
+                      : "border-slate-300 bg-white"
                   }`}
                 >
                   {done && (
                     <svg
-                      className="w-1.5 h-1.5 text-white"
+                      className="w-2 h-2 text-white"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -304,18 +306,15 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
                   )}
                 </div>
                 <span className="truncate">{item.label}</span>
-                {done && (
-                  <span className="ml-auto text-[6px] text-emerald-500">✓</span>
-                )}
               </button>
             );
           })}
         </div>
 
         {allDone && (
-          <div className="mt-2 text-center">
-            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              🎉 今日全部完成!
+          <div className="mt-1.5 text-center">
+            <span className="text-[8px] font-bold text-emerald-600">
+              🎉 今日任务全部完成
             </span>
           </div>
         )}
@@ -493,25 +492,25 @@ export default function MainLayout({
 
       <div className="hidden md:flex p-3 pr-0 h-full w-[210px]">
         <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
-          <div className="px-4 pt-3 pb-2 flex items-center justify-center gap-2 cursor-default group shrink-0">
-            <div className="w-6 h-6 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
-              <MilyflyLogo className="w-full h-full object-contain p-0.5 transition-transform duration-500 group-hover:scale-110" />
+          {/* Logo Area */}
+          <div className="px-3 pt-4 pb-3 flex items-center justify-center gap-2.5 shrink-0 border-b border-slate-100/80 mx-3">
+            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-sm">
+              <MilyflyLogo className="w-full h-full object-contain p-0.5" />
             </div>
-            <div
-              className={`font-extrabold text-sm tracking-tight font-heading ${uiVersion === "v2" ? "text-slate-900" : "text-slate-800"}`}
-            >
+            <span className="font-extrabold text-sm tracking-tight text-slate-800">
               MILYFLY
-            </div>
+            </span>
           </div>
 
-          <nav className="flex-1 flex flex-col gap-0.5 px-3 overflow-y-auto hidden-scrollbar items-center">
+          <nav className="flex-1 flex flex-col gap-0.5 px-2.5 py-2 overflow-y-auto hidden-scrollbar items-stretch">
             {menuItems.map((item: any) => {
               if (item.isSeparator) {
                 return (
-                  <div
-                    key={Math.random()}
-                    className="border-t border-slate-200/60 my-1"
-                  />
+                  <div key={Math.random()} className="relative my-1.5">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-100" />
+                    </div>
+                  </div>
                 );
               }
               const Icon = item.icon;
@@ -521,72 +520,76 @@ export default function MainLayout({
                 : location.pathname === item.id;
 
               return (
-                <div key={item.id} className="flex flex-col gap-1">
+                <div key={item.id} className="flex flex-col">
                   <NavLink
                     to={item.children ? item.children[0].id : item.id}
                     className={() => `
-                      w-full flex items-center justify-between gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-medium transition-all duration-300 group
+                      relative flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-[11px] font-semibold tracking-tight transition-all duration-200
                       ${
                         isActive
-                          ? uiVersion === "v2"
-                            ? "bg-sky-500/10 text-sky-600 border border-sky-500/20 shadow-sm"
-                            : "bg-sky-50 text-sky-600 border border-sky-100 shadow-sm"
-                          : uiVersion === "v2"
-                            ? "text-slate-500 hover:text-sky-600 hover:bg-slate-50 border border-transparent"
-                            : "text-slate-500 hover:text-slate-800 hover:bg-slate-50 border border-transparent"
+                          ? "bg-sky-50 text-sky-700"
+                          : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
                       }
                     `}
                   >
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Icon
-                        className={`w-3.5 h-3.5 opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ""}`}
-                      />
-                      <span>{item.label}</span>
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-sky-500 rounded-full" />
+                    )}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
+                          isActive
+                            ? "bg-sky-500/10 text-sky-600"
+                            : "bg-transparent text-slate-400 group-hover:bg-slate-100"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-3.5 h-3.5 ${isActive ? "text-sky-600" : ""}`}
+                        />
+                      </div>
+                      <span className="truncate">{item.label}</span>
                     </div>
                     {item.badge && item.badge === "需补货" && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                     )}
                   </NavLink>
 
-                  {/* Sub-menu items */}
-                  {item.children &&
-                    (item.id === "/pricing"
-                      ? isPricingActive
-                      : location.pathname.startsWith(item.id)) && (
-                      <div className="flex flex-col gap-0.5 ml-4 mt-0.5 mb-1 border-l-2 border-slate-100 pl-1">
-                        {item.children.map((child) => {
-                          const ChildIcon = child.icon;
-                          const isChildActive = location.pathname === child.id;
-                          return (
-                            <NavLink
-                              key={child.id}
-                              to={child.id}
-                              className={`flex items-center justify-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition-all
-                              ${
-                                isChildActive
-                                  ? uiVersion === "v2"
-                                    ? "text-sky-600 bg-sky-500/5"
-                                    : "text-sky-600 bg-sky-50/50"
-                                  : uiVersion === "v2"
-                                    ? "text-slate-400 hover:text-sky-600 hover:bg-slate-50"
-                                    : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
-                              }
-                            `}
-                            >
-                              <ChildIcon className="w-3 h-3" />
-                              <span>{child.label}</span>
-                            </NavLink>
-                          );
-                        })}
-                      </div>
-                    )}
+                  {/* Sub-menu */}
+                  {item.children && (
+                    <div
+                      className={`flex flex-col gap-0.5 ml-3 mt-0.5 mb-0.5 pl-2 border-l border-slate-100 overflow-hidden transition-all duration-300 ${
+                        isPricingActive
+                          ? "max-h-40 opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      {item.children.map((child: any) => {
+                        const ChildIcon = child.icon;
+                        const isChildActive = location.pathname === child.id;
+                        return (
+                          <NavLink
+                            key={child.id}
+                            to={child.id}
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                              isChildActive
+                                ? "text-sky-600 bg-sky-50"
+                                : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <ChildIcon className="w-3 h-3" />
+                            <span>{child.label}</span>
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </nav>
 
-          <div className="p-3 mt-auto shrink-0 flex justify-center">
-            {/* 每日工作打卡 */}
+          {/* Daily Check-in */}
+          <div className="px-2.5 pb-3 pt-1 shrink-0">
             <DailyCheckIn currentTime={currentTime} />
           </div>
         </aside>

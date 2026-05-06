@@ -199,6 +199,16 @@ export default function MainLayout({
       color: "text-cyan-400",
     },
     {
+      id: "/sku-cost-management",
+      label: "SKU成本管理",
+      icon: DollarSign,
+      color: "text-amber-500",
+    },
+    { id: "/fake-orders", label: "刷单支出", icon: CreditCard },
+    { id: "/cargo-damage", label: "货损支出", icon: PackageX },
+    { isSeparator: true },
+    { id: "/sku-management", label: "SKU数据总览", icon: Package },
+    {
       id: "/data-cleaning",
       label: "数据清洗",
       icon: Database,
@@ -216,19 +226,11 @@ export default function MainLayout({
         },
       ],
     },
-    { id: "/sku-management", label: "SKU数据总览", icon: Package },
-    {
-      id: "/sku-cost-management",
-      label: "SKU成本管理",
-      icon: DollarSign,
-      color: "text-amber-500",
-    },
-    { id: "/fake-orders", label: "刷单支出", icon: CreditCard },
-    { id: "/cargo-damage", label: "货损支出", icon: PackageX },
-    { id: "/health", label: "账号健康", icon: AlertTriangle },
     { id: "/operations", label: "运营动作", icon: Activity },
     { id: "/sku-reviews", label: "链接评价", icon: Star },
     { id: "/competitor-data", label: "竞品数据", icon: BarChart3 },
+    { isSeparator: true },
+    { id: "/health", label: "账号健康", icon: AlertTriangle },
     {
       id: "/pricing",
       label: "新品核价",
@@ -325,6 +327,14 @@ export default function MainLayout({
 
           <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar">
             {menuItems.map((item: any) => {
+              if (item.isSeparator) {
+                return (
+                  <div
+                    key={Math.random()}
+                    className="border-t border-slate-200/60 my-2"
+                  />
+                );
+              }
               const Icon = item.icon;
               const isPricingActive = location.pathname.startsWith("/pricing");
               const isActive = item.children

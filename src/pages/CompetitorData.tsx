@@ -15,7 +15,11 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { supabaseNew as supabase } from "../lib/supabase";
-import { CompetitorTracking, CompetitorDailyRecord, ManagedSku } from "../types";
+import {
+  CompetitorTracking,
+  CompetitorDailyRecord,
+  ManagedSku,
+} from "../types";
 import { getMexicoDateString } from "../lib/time";
 
 interface ContextType {
@@ -61,7 +65,9 @@ function mapTrackingRow(row: CompetitorTrackingRow): CompetitorTracking {
   };
 }
 
-function mapDailyRecordRow(row: CompetitorDailyRecordRow): CompetitorDailyRecord {
+function mapDailyRecordRow(
+  row: CompetitorDailyRecordRow,
+): CompetitorDailyRecord {
   return {
     id: row.id,
     competitorId: row.competitor_id,
@@ -110,7 +116,9 @@ const emptyDailyRecord: DailyRecordForm = {
 export default function CompetitorData() {
   const { managedSkus } = useOutletContext<ContextType>();
   const [competitors, setCompetitors] = useState<CompetitorTracking[]>([]);
-  const [dailyRecordsMap, setDailyRecordsMap] = useState<Record<string, CompetitorDailyRecord[]>>({});
+  const [dailyRecordsMap, setDailyRecordsMap] = useState<
+    Record<string, CompetitorDailyRecord[]>
+  >({});
   const [loading, setLoading] = useState(true);
   const [skuFilter, setSkuFilter] = useState<string>("");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -118,23 +126,6 @@ export default function CompetitorData() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CompetitorForm>({ ...emptyForm });
   const [saving, setSaving] = useState(false);
-  const [skuOptions, setSkuOptions] = useState<SkuOption[]>([]);
-
-  // ---------- Fetch sku options from skus table ----------
-  const fetchSkuOptions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("skus")
-        .select("sku, product_name")
-        .order("sku", { ascending: true });
-
-      if (error) throw error;
-      setSkuOptions(data || []);
-    } catch (err: any) {
-      console.error("Error fetching SKU options:", err);
-      alert("获取 SKU 列表失败，请稍后重试");
-    }
-  };
 
   // ---------- Fetch competitors ----------
   const fetchCompetitors = async () => {
@@ -152,7 +143,9 @@ export default function CompetitorData() {
       const { data, error } = await query;
 
       if (error) throw error;
-      const competitorsData = (data || []).map((r: CompetitorTrackingRow) => mapTrackingRow(r));
+      const competitorsData = (data || []).map((r: CompetitorTrackingRow) =>
+        mapTrackingRow(r),
+      );
       setCompetitors(competitorsData);
 
       // Fetch daily records for all competitors
@@ -187,10 +180,6 @@ export default function CompetitorData() {
   };
 
   useEffect(() => {
-    fetchSkuOptions();
-  }, []);
-
-  useEffect(() => {
     fetchCompetitors();
   }, [skuFilter]);
 
@@ -203,7 +192,10 @@ export default function CompetitorData() {
   // ---------- Stats ----------
   const stats = useMemo(() => {
     const total = filteredCompetitors.length;
-    const totalRecords = Object.values(dailyRecordsMap).reduce((acc, records) => acc + records.length, 0);
+    const totalRecords = Object.values(dailyRecordsMap).reduce(
+      (acc, records) => acc + records.length,
+      0,
+    );
     return { total, totalRecords };
   }, [filteredCompetitors, dailyRecordsMap]);
 
@@ -260,12 +252,11 @@ export default function CompetitorData() {
   };
 
   const handleSkuSelect = (sku: string) => {
-    const option = skuOptions.find((s) => s.sku === sku);
     const managed = managedSkus.find((s) => s.sku === sku);
     setForm({
       ...form,
       sku,
-      skuName: option?.product_name || managed?.name || "",
+      skuName: managed?.name || "",
     });
   };
 
@@ -273,7 +264,10 @@ export default function CompetitorData() {
   const addDailyRecord = () => {
     setForm({
       ...form,
-      dailyRecords: [...form.dailyRecords, { ...emptyDailyRecord, date: getMexicoDateString() }],
+      dailyRecords: [
+        ...form.dailyRecords,
+        { ...emptyDailyRecord, date: getMexicoDateString() },
+      ],
     });
   };
 
@@ -284,7 +278,11 @@ export default function CompetitorData() {
     });
   };
 
-  const updateDailyRecord = (index: number, field: keyof DailyRecordForm, value: string | number) => {
+  const updateDailyRecord = (
+    index: number,
+    field: keyof DailyRecordForm,
+    value: string | number,
+  ) => {
     const updated = [...form.dailyRecords];
     updated[index] = { ...updated[index], [field]: value };
     setForm({ ...form, dailyRecords: updated });
@@ -383,7 +381,8 @@ export default function CompetitorData() {
 
   // ---------- Delete ----------
   const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个竞品记录吗？（关联的每日记录也会被删除）")) return;
+    if (!confirm("确定要删除这个竞品记录吗？（关联的每日记录也会被删除）"))
+      return;
     try {
       const { error } = await supabase
         .from("competitor_tracking")
@@ -506,14 +505,22 @@ export default function CompetitorData() {
                             alt={competitor.competitorTitle}
                             className="w-full h-full object-contain"
                             onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = "none";
-                              (e.currentTarget.parentElement!.querySelector(".fallback") as HTMLElement)!.style.display = "flex";
+                              (
+                                e.currentTarget as HTMLImageElement
+                              ).style.display = "none";
+                              (e.currentTarget.parentElement!.querySelector(
+                                ".fallback",
+                              ) as HTMLElement)!.style.display = "flex";
                             }}
                           />
                         ) : null}
                         <div
                           className="fallback w-full h-full flex items-center justify-center"
-                          style={{ display: competitor.competitorImageUrl ? "none" : "flex" }}
+                          style={{
+                            display: competitor.competitorImageUrl
+                              ? "none"
+                              : "flex",
+                          }}
                         >
                           <ImageIcon className="w-8 h-8 text-slate-300" />
                         </div>
@@ -622,9 +629,15 @@ export default function CompetitorData() {
                                 <thead className="v2-table-thead">
                                   <tr>
                                     <th className="v2-table-th">日期</th>
-                                    <th className="v2-table-th text-right">销量</th>
-                                    <th className="v2-table-th text-right">评分</th>
-                                    <th className="v2-table-th text-right">价格</th>
+                                    <th className="v2-table-th text-right">
+                                      销量
+                                    </th>
+                                    <th className="v2-table-th text-right">
+                                      评分
+                                    </th>
+                                    <th className="v2-table-th text-right">
+                                      价格
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -645,7 +658,9 @@ export default function CompetitorData() {
                                       </td>
                                       <td className="v2-table-td text-right">
                                         <span className="text-xs font-bold text-amber-600">
-                                          {Number(record.reviewScore).toFixed(1)}
+                                          {Number(record.reviewScore).toFixed(
+                                            1,
+                                          )}
                                         </span>
                                       </td>
                                       <td className="v2-table-td text-right">
@@ -718,9 +733,9 @@ export default function CompetitorData() {
                     <option value="" disabled>
                       选择 SKU
                     </option>
-                    {skuOptions.map((s) => (
+                    {managedSkus.map((s) => (
                       <option key={s.sku} value={s.sku}>
-                        {s.sku} — {s.product_name}
+                        {s.sku} — {s.name}
                       </option>
                     ))}
                   </select>
@@ -748,7 +763,9 @@ export default function CompetitorData() {
                   <input
                     type="text"
                     value={form.competitorUrl}
-                    onChange={(e) => setForm({ ...form, competitorUrl: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, competitorUrl: e.target.value })
+                    }
                     placeholder="https://..."
                     className="v2-input"
                   />
@@ -762,7 +779,9 @@ export default function CompetitorData() {
                   <input
                     type="text"
                     value={form.competitorTitle}
-                    onChange={(e) => setForm({ ...form, competitorTitle: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, competitorTitle: e.target.value })
+                    }
                     placeholder="竞品标题"
                     className="v2-input"
                   />
@@ -776,7 +795,9 @@ export default function CompetitorData() {
                   <input
                     type="text"
                     value={form.competitorImageUrl}
-                    onChange={(e) => setForm({ ...form, competitorImageUrl: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, competitorImageUrl: e.target.value })
+                    }
                     placeholder="https://..."
                     className="v2-input"
                   />
@@ -790,7 +811,9 @@ export default function CompetitorData() {
                   <input
                     type="date"
                     value={form.competitorListedAt}
-                    onChange={(e) => setForm({ ...form, competitorListedAt: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, competitorListedAt: e.target.value })
+                    }
                     className="v2-input"
                   />
                 </div>
@@ -830,7 +853,13 @@ export default function CompetitorData() {
                               <input
                                 type="date"
                                 value={record.date}
-                                onChange={(e) => updateDailyRecord(index, "date", e.target.value)}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "date",
+                                    e.target.value,
+                                  )
+                                }
                                 className="v2-input text-xs py-1.5 px-2"
                               />
                             </div>
@@ -841,7 +870,13 @@ export default function CompetitorData() {
                               <input
                                 type="number"
                                 value={record.sales}
-                                onChange={(e) => updateDailyRecord(index, "sales", parseInt(e.target.value) || 0)}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "sales",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
                                 className="v2-input text-xs py-1.5 px-2"
                                 min={0}
                               />
@@ -853,7 +888,13 @@ export default function CompetitorData() {
                               <input
                                 type="number"
                                 value={record.reviewScore}
-                                onChange={(e) => updateDailyRecord(index, "reviewScore", parseFloat(e.target.value) || 0)}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "reviewScore",
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
                                 className="v2-input text-xs py-1.5 px-2"
                                 min={0}
                                 max={5}
@@ -871,7 +912,13 @@ export default function CompetitorData() {
                                 <input
                                   type="number"
                                   value={record.price}
-                                  onChange={(e) => updateDailyRecord(index, "price", parseFloat(e.target.value) || 0)}
+                                  onChange={(e) =>
+                                    updateDailyRecord(
+                                      index,
+                                      "price",
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
                                   className="v2-input text-xs py-1.5 pl-5 pr-2"
                                   min={0}
                                   step={0.01}

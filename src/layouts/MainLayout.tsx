@@ -27,6 +27,7 @@ import {
   CreditCard,
   PackageX,
   MessageSquare,
+  BarChart3,
   Star,
 } from "lucide-react";
 import appBg from "../assets/app-bg.png";
@@ -227,6 +228,7 @@ export default function MainLayout({
     { id: "/health", label: "账号健康", icon: AlertTriangle },
     { id: "/operations", label: "运营动作", icon: Activity },
     { id: "/sku-reviews", label: "链接评价", icon: Star },
+    { id: "/competitor-data", label: "竞品数据", icon: BarChart3 },
     {
       id: "/pricing",
       label: "新品核价",

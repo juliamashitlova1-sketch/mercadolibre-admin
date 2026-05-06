@@ -236,3 +236,24 @@ export interface HeatmapData {
   day: string;
   value: number;
 }
+
+export interface CompetitorTracking {
+  id: string;
+  sku: string;
+  skuName: string;
+  competitorUrl: string;
+  competitorTitle: string;
+  competitorImageUrl: string;
+  competitorListedAt: string;
+  createdAt?: string;
+}
+
+export interface CompetitorDailyRecord {
+  id: string;
+  competitorId: string;
+  date: string;
+  sales: number;
+  reviewScore: number;
+  price: number;
+  createdAt?: string;
+}

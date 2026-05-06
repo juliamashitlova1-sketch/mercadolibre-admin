@@ -49,6 +49,10 @@ export default function SkuManagement() {
   const [collapsedTables, setCollapsedTables] = useState<
     Record<string, boolean>
   >({});
+  const [competitorData, setCompetitorData] = useState<any[]>([]);
+  const [competitorDailyMap, setCompetitorDailyMap] = useState<
+    Record<string, any[]>
+  >({});
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
@@ -56,6 +60,7 @@ export default function SkuManagement() {
     fetchCloudData();
     fetchAuxiliaryData();
     fetchLinkReviews();
+    fetchCompetitorData();
   }, []);
 
   const fetchLinkReviews = async () => {
@@ -77,6 +82,42 @@ export default function SkuManagement() {
       setLinkReviews(mapped);
     } catch (err) {
       console.error("Error fetching link reviews:", err);
+    }
+  };
+
+  const fetchCompetitorData = async () => {
+    try {
+      const { data: competitors, error: ce } = await supabaseNew
+        .from("competitor_tracking")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (ce) throw ce;
+      setCompetitorData(competitors || []);
+
+      if (competitors && competitors.length > 0) {
+        const ids = competitors.map((c: any) => c.id);
+        const { data: records, error: re } = await supabaseNew
+          .from("competitor_daily_records")
+          .select("*")
+          .in("competitor_id", ids)
+          .order("date", { ascending: false });
+        if (re) throw re;
+        const map: Record<string, any[]> = {};
+        (records || []).forEach((r: any) => {
+          if (!map[r.competitor_id]) map[r.competitor_id] = [];
+          map[r.competitor_id].push({
+            id: r.id,
+            competitorId: r.competitor_id,
+            date: r.date,
+            sales: r.sales,
+            reviewScore: r.review_score,
+            price: r.price,
+          });
+        });
+        setCompetitorDailyMap(map);
+      }
+    } catch (err) {
+      console.error("Error fetching competitor data:", err);
     }
   };
 
@@ -1477,6 +1518,160 @@ export default function SkuManagement() {
                                                           </td>
                                                         </tr>
                                                       ),
+                                                    );
+                                                  })()}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+
+                                          {/* 7. Competitor Data Section */}
+                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                              <BarChart3 className="w-4 h-4 text-rose-500" />{" "}
+                                              竞品数据
+                                            </div>
+                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              <table className="v2-table border-separate border-spacing-0">
+                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                  <tr>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">
+                                                      竞品
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
+                                                      上架时间
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
+                                                      最近日销
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
+                                                      最近评分
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">
+                                                      最近价格
+                                                    </th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="text-[10px] divide-y divide-slate-50">
+                                                  {(() => {
+                                                    const skuCompetitors =
+                                                      competitorData.filter(
+                                                        (c: any) =>
+                                                          c.sku === item.sku,
+                                                      );
+                                                    if (
+                                                      skuCompetitors.length ===
+                                                      0
+                                                    ) {
+                                                      return (
+                                                        <tr>
+                                                          <td
+                                                            colSpan={5}
+                                                            className="px-3 py-8 text-center text-slate-400 italic"
+                                                          >
+                                                            暂无竞品数据
+                                                          </td>
+                                                        </tr>
+                                                      );
+                                                    }
+                                                    return skuCompetitors.map(
+                                                      (
+                                                        comp: any,
+                                                        cid: number,
+                                                      ) => {
+                                                        const dailyRecords =
+                                                          competitorDailyMap[
+                                                            comp.id
+                                                          ] || [];
+                                                        const latest =
+                                                          dailyRecords.length >
+                                                          0
+                                                            ? dailyRecords[0]
+                                                            : null;
+                                                        return (
+                                                          <tr
+                                                            key={cid}
+                                                            className="v2-table-tr hover:bg-slate-50/80 transition-colors group"
+                                                          >
+                                                            <td className="px-3 py-2.5">
+                                                              <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 rounded border border-slate-100 bg-slate-50 overflow-hidden shrink-0">
+                                                                  {comp.competitor_image_url ? (
+                                                                    <img
+                                                                      src={
+                                                                        comp.competitor_image_url
+                                                                      }
+                                                                      className="w-full h-full object-cover"
+                                                                      onError={(
+                                                                        e: any,
+                                                                      ) => {
+                                                                        e.target.onerror =
+                                                                          null;
+                                                                        e.target.style.display =
+                                                                          "none";
+                                                                      }}
+                                                                    />
+                                                                  ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                                      <ImageIcon className="w-4 h-4" />
+                                                                    </div>
+                                                                  )}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                  <p className="text-xs font-bold text-slate-800 truncate max-w-[150px]">
+                                                                    {comp.competitor_title ||
+                                                                      comp.competitor_url
+                                                                        ?.split(
+                                                                          "/",
+                                                                        )
+                                                                        .pop() ||
+                                                                      "竞品"}
+                                                                  </p>
+                                                                  {comp.competitor_url && (
+                                                                    <a
+                                                                      href={
+                                                                        comp.competitor_url
+                                                                      }
+                                                                      target="_blank"
+                                                                      rel="noreferrer"
+                                                                      className="text-[8px] text-sky-500 hover:underline truncate block max-w-[150px]"
+                                                                    >
+                                                                      {
+                                                                        comp.competitor_url
+                                                                      }
+                                                                    </a>
+                                                                  )}
+                                                                </div>
+                                                              </div>
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-center text-slate-500 font-mono">
+                                                              {comp.competitor_listed_at ||
+                                                                "-"}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-center font-bold text-emerald-600">
+                                                              {latest
+                                                                ? `${latest.sales}`
+                                                                : "-"}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-center">
+                                                              {latest ? (
+                                                                <span className="text-amber-600 font-bold">
+                                                                  {Number(
+                                                                    latest.reviewScore,
+                                                                  ).toFixed(1)}
+                                                                </span>
+                                                              ) : (
+                                                                "-"
+                                                              )}
+                                                            </td>
+                                                            <td className="px-3 py-2.5 text-right font-bold text-sky-600">
+                                                              {latest
+                                                                ? `$${Number(latest.price).toFixed(2)}`
+                                                                : "-"}
+                                                            </td>
+                                                          </tr>
+                                                        );
+                                                      },
                                                     );
                                                   })()}
                                                 </tbody>

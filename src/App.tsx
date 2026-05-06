@@ -22,6 +22,7 @@ import SkuManagement from "./pages/SkuManagement";
 import SkuCostManagement from "./pages/SkuCostManagement";
 import SoftwareSuggestions from "./pages/SoftwareSuggestions";
 import SkuReviews from "./pages/SkuReviews";
+import CompetitorData from "./pages/CompetitorData";
 
 import DataEntry from "./components/DataEntry";
 import SKUEntry from "./components/SKUEntry";
@@ -205,6 +206,7 @@ function AppContent() {
             <Route path="/health" element={<Health />} />
             <Route path="/operations" element={<Operations />} />
             <Route path="/sku-reviews" element={<SkuReviews />} />
+            <Route path="/competitor-data" element={<CompetitorData />} />
             <Route path="/fake-orders" element={<FakeOrders />} />
             <Route path="/cargo-damage" element={<CargoDamage />} />
             <Route path="/pricing" element={<Pricing />} />

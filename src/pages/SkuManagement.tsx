@@ -508,31 +508,71 @@ export default function SkuManagement() {
             "position:absolute;left:-9999px;top:0;width:1px;height:1px;";
           clonedDoc.body.appendChild(tempResolver);
 
-          // Process all <style> elements in the cloned document
+          // Helper: resolve an oklch color string to an rgb() string
+          // Uses getComputedStyle which ALWAYS returns rgb() per CSSOM spec
+          const resolveOklchToRgb = (oklchStr: string): string | null => {
+            try {
+              tempResolver.style.color = oklchStr;
+              // CRITICAL: use getComputedStyle, NOT .style.color
+              // .style.color keeps the raw oklch string on modern browsers that support oklch
+              // getComputedStyle always resolves to rgb() per CSSOM specification
+              const win = clonedDoc.defaultView;
+              if (!win) return null;
+              const computed = win.getComputedStyle(tempResolver).color || "";
+              if (
+                computed &&
+                computed !== oklchStr &&
+                computed.startsWith("rgb")
+              ) {
+                return computed;
+              }
+            } catch (_) {
+              /* skip */
+            }
+            return null;
+          };
+
+          // --- Step 1: Process all <style> elements ---
+          // Improved regex: handles spaces, alpha channel, percentages with decimals
+          // e.g. oklch(98.4% 0.003 247.858), oklch(0.5 0.2 240 / 0.5)
+          const oklchRegex = /oklch\([^)]+\)/g;
           const styleEls = clonedDoc.querySelectorAll("style");
           styleEls.forEach((s) => {
             let cssText = s.textContent || "";
             if (!cssText.includes("oklch")) return;
-            // Find all unique oklch() values
-            const matches = cssText.match(/oklch\([^)]+\)/g);
+            const matches = cssText.match(oklchRegex);
             if (!matches) return;
             const unique = [...new Set(matches)];
             unique.forEach((oklchVal) => {
-              try {
-                tempResolver.style.color = oklchVal;
-                const computedColor = tempResolver.style.color || "";
-                if (
-                  computedColor &&
-                  computedColor !== oklchVal &&
-                  computedColor.startsWith("rgb")
-                ) {
-                  cssText = cssText.split(oklchVal).join(computedColor);
-                }
-              } catch (_) {
-                /* skip problematic values */
+              const rgb = resolveOklchToRgb(oklchVal);
+              if (rgb) {
+                // Use split/join for reliable global replacement
+                cssText = cssText.split(oklchVal).join(rgb);
               }
             });
             s.textContent = cssText;
+          });
+
+          // --- Step 2: Process inline styles on elements ---
+          // Tailwind v4 may also inject oklch via CSS custom properties or inline styles
+          const allEls = clonedDoc.querySelectorAll("*");
+          allEls.forEach((el) => {
+            const htmlEl = el as HTMLElement;
+            const inlineStyle = htmlEl.getAttribute("style");
+            if (inlineStyle && inlineStyle.includes("oklch")) {
+              const matches = inlineStyle.match(oklchRegex);
+              if (matches) {
+                let newStyle = inlineStyle;
+                const unique = [...new Set(matches)];
+                unique.forEach((oklchVal) => {
+                  const rgb = resolveOklchToRgb(oklchVal);
+                  if (rgb) {
+                    newStyle = newStyle.split(oklchVal).join(rgb);
+                  }
+                });
+                htmlEl.setAttribute("style", newStyle);
+              }
+            }
           });
 
           clonedDoc.body.removeChild(tempResolver);

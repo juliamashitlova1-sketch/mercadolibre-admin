@@ -1,79 +1,85 @@
 // ==UserScript==
-// @name         美客多数据爬虫 - 自动提取 #table-trend
-// @namespace    http://tampermonkey.net/
+// @name         美客多数据爬虫 - 自动提取热搜表格
+// @namespace    milyfly-crawler
 // @version      1.0
-// @description  自动提取 Mercado Libre 热搜趋势表格数据
+// @description  自动提取 Mercado Libre #table-trend 热搜趋势数据并传回 MILYFLY 软件
 // @author       MILYFLY
 // @match        *://*.mercadolibre.com.mx/*
 // @match        *://*.mercadolibre.com/*
 // @grant        none
 // ==/UserScript==
 
-(function() {
-  'use strict';
+(function () {
+  "use strict";
 
   function extractTable() {
-    const wrapper = document.getElementById('table-trend_wrapper');
+    var wrapper = document.getElementById("table-trend_wrapper");
     if (!wrapper) {
-      alert('未找到 #table-trend 表格，请确认页面已完全加载');
+      console.log("[MILYFLY] 未找到 table-trend，3秒后重试...");
+      setTimeout(extractTable, 3000);
       return;
     }
 
-    const table = document.getElementById('table-trend');
+    var table = document.getElementById("table-trend");
     if (!table) {
-      alert('表格元素不存在');
+      setTimeout(extractTable, 3000);
       return;
     }
 
     // 提取表头
-    const headers = [];
-    const thead = table.querySelector('thead');
+    var headers = [];
+    var thead = table.querySelector("thead");
     if (thead) {
-      thead.querySelectorAll('th').forEach(th => {
-        const text = th.innerText.trim();
+      thead.querySelectorAll("th").forEach(function (th) {
+        var text = th.innerText.trim();
         if (text) headers.push(text);
       });
     }
 
     // 提取数据行
-    const rows = [];
-    const tbody = table.querySelector('tbody');
+    var rows = [];
+    var tbody = table.querySelector("tbody");
     if (tbody) {
-      tbody.querySelectorAll('tr').forEach(tr => {
-        const row = [];
-        tr.querySelectorAll('td').forEach(td => {
-          row.push(td.innerText.trim().replace(/\s+/g, ' '));
+      tbody.querySelectorAll("tr").forEach(function (tr) {
+        var row = [];
+        tr.querySelectorAll("td").forEach(function (td) {
+          row.push(td.innerText.trim().replace(/\s+/g, " "));
         });
         if (row.length > 0) rows.push(row);
       });
     }
 
     if (rows.length === 0) {
-      alert('表格中没有数据');
+      setTimeout(extractTable, 3000);
       return;
     }
 
-    // 保存到 localStorage
-    const data = { columns: headers.length > 0 ? headers : [], rows };
-    localStorage.setItem('mx_crawled_table', JSON.stringify(data));
+    var data = {
+      columns: headers.length > 0 ? headers : [],
+      rows: rows,
+    };
 
-    // 尝试通知原窗口（如果是从我们的软件打开的）
+    console.log("[MILYFLY] 成功提取 " + rows.length + " 条数据");
+
+    // 通过 postMessage 通知原窗口
     if (window.opener && window.opener !== window) {
-      window.opener.postMessage({ type: 'TABLE_DATA_READY', data }, '*');
+      window.opener.postMessage({ type: "TABLE_DATA_READY", data: data }, "*");
     }
 
-    // 尝试打开我们的软件页面并传入数据
-    const appUrl = 'https://mercadolibre-admin-v2.vercel.app/data-crawler';
-    const encoded = encodeURIComponent(JSON.stringify(data));
+    // 保存到 localStorage，供同名域页面读取
+    localStorage.setItem("mx_crawled_table", JSON.stringify(data));
 
-    // 如果无法通过 postMessage 通信，直接跳转回我们的软件
-    if (!window.opener || window.opener === window) {
-      window.open(appUrl + '#data=' + encoded, '_blank');
+    // 如果当前页面也是我们的软件范围（同域），自动跳转
+    var appUrl = "https://mercadolibre-admin-v2.vercel.app/data-crawler";
+    var encoded = encodeURIComponent(JSON.stringify(data));
+
+    if (window.opener && window.opener !== window) {
+      // 已通知原窗口，不做额外操作
+    } else {
+      window.open(appUrl + "#data=" + encoded, "_blank");
     }
-
-    alert(`✅ 成功提取 ${rows.length} 条数据！已发送回数据爬虫页面。`);
   }
 
-  // 等待扩展加载完成后自动执行
-  setTimeout(extractTable, 3000);
+  // 等待页面和扩展完全加载后执行
+  setTimeout(extractTable, 5000);
 })();

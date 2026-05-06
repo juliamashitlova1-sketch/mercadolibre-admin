@@ -21,7 +21,6 @@ import SkuAdCleaning from "./pages/SkuAdCleaning";
 import SkuManagement from "./pages/SkuManagement";
 import SkuCostManagement from "./pages/SkuCostManagement";
 import SoftwareSuggestions from "./pages/SoftwareSuggestions";
-import ReportCenter from "./pages/ReportCenter";
 import SkuReviews from "./pages/SkuReviews";
 
 import DataEntry from "./components/DataEntry";
@@ -213,7 +212,6 @@ function AppContent() {
             <Route path="/pricing/list" element={<Pricing />} />
             <Route path="/pricing/success" element={<Pricing />} />
             <Route path="/pricing/staging" element={<Pricing />} />
-            <Route path="/reports" element={<ReportCenter />} />
             <Route
               path="/software-suggestions"
               element={<SoftwareSuggestions />}

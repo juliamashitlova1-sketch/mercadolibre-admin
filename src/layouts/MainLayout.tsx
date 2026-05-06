@@ -27,7 +27,6 @@ import {
   CreditCard,
   PackageX,
   MessageSquare,
-  BarChart3,
   Star,
 } from "lucide-react";
 import appBg from "../assets/app-bg.png";
@@ -244,12 +243,6 @@ export default function MainLayout({
         },
         { id: "/pricing/staging", label: "暂存箱", icon: Inbox },
       ],
-    },
-    {
-      id: "/reports",
-      label: "智能报表中心",
-      icon: BarChart3,
-      color: "text-orange-500",
     },
     {
       id: "/software-suggestions",

@@ -20,7 +20,6 @@ import {
   MousePointer2,
   BarChart3,
   RefreshCw,
-  Download,
   History,
   Star,
 } from "lucide-react";
@@ -36,9 +35,6 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
-import SkuAiAnalysis from "../components/SkuAiAnalysis";
 
 import { supabase, supabaseNew } from "../lib/supabase";
 import { USD_TO_MXN } from "../constants";
@@ -50,6 +46,9 @@ export default function SkuManagement() {
   const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
   const [damageData, setDamageData] = useState<any[]>([]);
   const [linkReviews, setLinkReviews] = useState<LinkReview[]>([]);
+  const [collapsedTables, setCollapsedTables] = useState<
+    Record<string, boolean>
+  >({});
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
@@ -504,207 +503,6 @@ export default function SkuManagement() {
     }
   };
 
-  const handleExportPdf = async (skuCode: string) => {
-    const element = document.getElementById(`sku-dashboard-${skuCode}`);
-    if (!element) {
-      alert("未找到看板区域，请展开后再试");
-      return;
-    }
-
-    try {
-      // Add a small delay to ensure all assets (charts, icons) are fully settled
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const canvas = await html2canvas(element, {
-        backgroundColor: "#ffffff",
-        scale: 2, // Higher scale for PDF quality
-        logging: false,
-        useCORS: true,
-        allowTaint: false,
-        imageTimeout: 30000,
-        removeContainer: true,
-        onclone: (clonedDoc) => {
-          // =============================================
-          // FIX: Replace all oklch() colors with rgb() equivalents
-          // html2canvas v1.4.1 does not support oklch color function (Tailwind CSS v4)
-          // =============================================
-          const tempResolver = clonedDoc.createElement("div");
-          tempResolver.style.cssText =
-            "position:absolute;left:-9999px;top:0;width:1px;height:1px;";
-          clonedDoc.body.appendChild(tempResolver);
-
-          // Helper: resolve an oklch color string to an rgb() string
-          // Uses getComputedStyle which ALWAYS returns rgb() per CSSOM spec
-          const resolveOklchToRgb = (oklchStr: string): string | null => {
-            try {
-              tempResolver.style.color = oklchStr;
-              // CRITICAL: use getComputedStyle, NOT .style.color
-              // .style.color keeps the raw oklch string on modern browsers that support oklch
-              // getComputedStyle always resolves to rgb() per CSSOM specification
-              const win = clonedDoc.defaultView;
-              if (!win) return null;
-              const computed = win.getComputedStyle(tempResolver).color || "";
-              if (
-                computed &&
-                computed !== oklchStr &&
-                computed.startsWith("rgb")
-              ) {
-                return computed;
-              }
-            } catch (_) {
-              /* skip */
-            }
-            return null;
-          };
-
-          // --- Step 1: Process all <style> elements ---
-          // Improved regex: handles spaces, alpha channel, percentages with decimals
-          // e.g. oklch(98.4% 0.003 247.858), oklch(0.5 0.2 240 / 0.5)
-          const oklchRegex = /oklch\([^)]+\)/g;
-          const styleEls = clonedDoc.querySelectorAll("style");
-          styleEls.forEach((s) => {
-            let cssText = s.textContent || "";
-            if (!cssText.includes("oklch")) return;
-            const matches = cssText.match(oklchRegex);
-            if (!matches) return;
-            const unique = [...new Set(matches)];
-            unique.forEach((oklchVal) => {
-              const rgb = resolveOklchToRgb(oklchVal);
-              if (rgb) {
-                // Use split/join for reliable global replacement
-                cssText = cssText.split(oklchVal).join(rgb);
-              }
-            });
-            s.textContent = cssText;
-          });
-
-          // --- Step 2: Process inline styles on elements ---
-          // Tailwind v4 may also inject oklch via CSS custom properties or inline styles
-          const allEls = clonedDoc.querySelectorAll("*");
-          allEls.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            const inlineStyle = htmlEl.getAttribute("style");
-            if (inlineStyle && inlineStyle.includes("oklch")) {
-              const matches = inlineStyle.match(oklchRegex);
-              if (matches) {
-                let newStyle = inlineStyle;
-                const unique = [...new Set(matches)];
-                unique.forEach((oklchVal) => {
-                  const rgb = resolveOklchToRgb(oklchVal);
-                  if (rgb) {
-                    newStyle = newStyle.split(oklchVal).join(rgb);
-                  }
-                });
-                htmlEl.setAttribute("style", newStyle);
-              }
-            }
-          });
-
-          clonedDoc.body.removeChild(tempResolver);
-
-          // =============================================
-          // Prepare the dashboard container for PDF capture
-          // =============================================
-          const el = clonedDoc.getElementById(`sku-dashboard-${skuCode}`);
-          if (el) {
-            el.style.padding = "40px";
-            el.style.width = "auto";
-            el.style.height = "auto";
-            // Hide the export button itself from the PDF
-            const btns = el.querySelectorAll("button");
-            btns.forEach((btn) => {
-              if (btn.textContent?.includes("导出报表")) {
-                btn.style.display = "none";
-              }
-            });
-            // Remove max-height constraints from scrollable tables so all rows show
-            const removeMaxHeight = (className: string) => {
-              const elements = el.getElementsByClassName(className);
-              for (let i = 0; i < elements.length; i++) {
-                (elements[i] as HTMLElement).style.maxHeight = "none";
-                (elements[i] as HTMLElement).style.overflow = "visible";
-              }
-            };
-            removeMaxHeight("max-h-[350px]");
-            removeMaxHeight("max-h-[300px]");
-          }
-        },
-      });
-
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error("生成的画布无效");
-      }
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-
-      // Multi-page PDF support for long dashboards
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      // Calculate the ratio to fit the full canvas width into A4
-      const ratio = pdfWidth / canvas.width;
-      const canvasHeightInPdf = canvas.height * ratio;
-
-      if (canvasHeightInPdf <= pdfHeight) {
-        // Single page fits
-        pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, canvasHeightInPdf);
-      } else {
-        // Split into multiple pages
-        let remainingHeight = canvasHeightInPdf;
-        let sourceY = 0;
-        let pageNum = 0;
-
-        while (remainingHeight > 0) {
-          const pageHeight = Math.min(pdfHeight, remainingHeight);
-          const sourceH = pageHeight / ratio;
-
-          // Create a temporary canvas for this page slice
-          const pageCanvas = document.createElement("canvas");
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceH;
-          const ctx = pageCanvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(
-              canvas,
-              0,
-              sourceY,
-              canvas.width,
-              sourceH,
-              0,
-              0,
-              canvas.width,
-              sourceH,
-            );
-          }
-          const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.92);
-
-          if (pageNum > 0) {
-            pdf.addPage();
-          }
-          pdf.addImage(pageImgData, "JPEG", 0, 0, pdfWidth, pageHeight);
-
-          sourceY += sourceH;
-          remainingHeight -= pageHeight;
-          pageNum++;
-        }
-      }
-
-      const dateStr = new Date().toISOString().split("T")[0];
-      pdf.save(`SKU_深度经营分析_${skuCode}_${dateStr}.pdf`);
-    } catch (err: any) {
-      console.error("PDF Export Error:", err);
-      const msg = err.message || "未知错误";
-      alert(
-        `导出 PDF 失败 (${msg})。请确保页面已完全加载，或尝试使用更先进的浏览器。`,
-      );
-    }
-  };
-
   return (
     <div className="v2-page-container">
       <div className="v2-inner-container">
@@ -1064,23 +862,25 @@ export default function SkuManagement() {
                                                 </p>
                                               </div>
                                             </div>
-                                            <div className="flex gap-2">
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleExportPdf(item.sku);
-                                                }}
-                                                className="h-8 px-4 bg-slate-900 text-white rounded-lg flex items-center gap-2 text-[10px] font-bold hover:bg-slate-800 transition-all shadow-md"
-                                              >
-                                                <Download className="w-3 h-3" />{" "}
-                                                导出报表
-                                              </button>
-                                            </div>
                                           </div>
 
                                           {/* 2. Summary Cards */}
-                                          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
-                                            {[
+                                          {(() => {
+                                            const skuReviews =
+                                              linkReviews.filter(
+                                                (r) => r.sku === item.sku,
+                                              );
+                                            const avgReview =
+                                              skuReviews.length > 0
+                                                ? (
+                                                    skuReviews.reduce(
+                                                      (a, r) =>
+                                                        a + r.reviewScore,
+                                                      0,
+                                                    ) / skuReviews.length
+                                                  ).toFixed(1)
+                                                : null;
+                                            const cards = [
                                               {
                                                 label: "广告曝光",
                                                 val: totalImps.toLocaleString(),
@@ -1121,306 +921,266 @@ export default function SkuManagement() {
                                                 val: `${totalAdCV.toFixed(2)}%`,
                                                 color: "text-amber-500",
                                               },
-                                            ].map((card, cid) => (
-                                              <div
-                                                key={cid}
-                                                className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center"
-                                              >
-                                                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-                                                  {card.label}
+                                              ...(avgReview
+                                                ? [
+                                                    {
+                                                      label: "累计评分",
+                                                      val: `${avgReview} / 5.0`,
+                                                      color: "text-amber-600",
+                                                    },
+                                                  ]
+                                                : []),
+                                            ];
+                                            return (
+                                              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4">
+                                                {cards.map((card, cid) => (
+                                                  <div
+                                                    key={cid}
+                                                    className="v2-card bg-white p-3 border-slate-100 shadow-sm text-center"
+                                                  >
+                                                    <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
+                                                      {card.label}
+                                                    </div>
+                                                    <div
+                                                      className={`text-sm font-black ${card.color}`}
+                                                    >
+                                                      {card.val}
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            );
+                                          })()}
+
+                                          {/* 3. Charts (Full Width) */}
+                                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                            <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                              <div className="flex items-center justify-between mb-6">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                  <BarChart3 className="w-4 h-4 text-sky-600" />{" "}
+                                                  销售趋势 (Pieces)
                                                 </div>
-                                                <div
-                                                  className={`text-sm font-black ${card.color}`}
+                                                <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-rose-500" />{" "}
+                                                    总数
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />{" "}
+                                                    广告
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-amber-500" />{" "}
+                                                    自然
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div className="h-[180px]">
+                                                <ResponsiveContainer
+                                                  width="100%"
+                                                  height="100%"
                                                 >
-                                                  {card.val}
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-
-                                          {/* 3. Charts & AI Side-by-Side */}
-                                          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-                                            <div className="xl:col-span-3 space-y-6">
-                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                                <div className="flex items-center justify-between mb-6">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                    <BarChart3 className="w-4 h-4 text-sky-600" />{" "}
-                                                    销售趋势 (Pieces)
-                                                  </div>
-                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-rose-500" />{" "}
-                                                      总数
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />{" "}
-                                                      广告
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-amber-500" />{" "}
-                                                      自然
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div className="h-[180px]">
-                                                  <ResponsiveContainer
-                                                    width="100%"
-                                                    height="100%"
+                                                  <AreaChart
+                                                    data={enrichedAnalytics.slice(
+                                                      -30,
+                                                    )}
                                                   >
-                                                    <AreaChart
-                                                      data={enrichedAnalytics.slice(
-                                                        -30,
-                                                      )}
-                                                    >
-                                                      <defs>
-                                                        <linearGradient
-                                                          id="colorTotal"
-                                                          x1="0"
-                                                          y1="0"
-                                                          x2="0"
-                                                          y2="1"
-                                                        >
-                                                          <stop
-                                                            offset="5%"
-                                                            stopColor="#ef4444"
-                                                            stopOpacity={0.1}
-                                                          />
-                                                          <stop
-                                                            offset="95%"
-                                                            stopColor="#ef4444"
-                                                            stopOpacity={0}
-                                                          />
-                                                        </linearGradient>
-                                                      </defs>
-                                                      <CartesianGrid
-                                                        strokeDasharray="3 3"
-                                                        vertical={false}
-                                                        stroke="#f1f5f9"
-                                                      />
-                                                      <XAxis
-                                                        dataKey="dateShort"
-                                                        fontSize={9}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                      />
-                                                      <YAxis
-                                                        fontSize={9}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                      />
-                                                      <Tooltip
-                                                        contentStyle={{
-                                                          borderRadius: "12px",
-                                                          border: "none",
-                                                          boxShadow:
-                                                            "0 10px 15px -3px rgba(0,0,0,0.1)",
-                                                          fontSize: "10px",
-                                                        }}
-                                                      />
-                                                      <Area
-                                                        type="monotone"
-                                                        dataKey="unitsCount"
-                                                        stroke="#ef4444"
-                                                        fill="url(#colorTotal)"
-                                                        strokeWidth={3}
-                                                      />
-                                                      <Area
-                                                        type="monotone"
-                                                        dataKey="adUnits"
-                                                        stroke="#10b981"
-                                                        fill="transparent"
-                                                        strokeWidth={2}
-                                                      />
-                                                      <Area
-                                                        type="monotone"
-                                                        dataKey="organicUnits"
-                                                        stroke="#f59e0b"
-                                                        fill="transparent"
-                                                        strokeWidth={1}
-                                                        strokeDasharray="4 4"
-                                                      />
-                                                    </AreaChart>
-                                                  </ResponsiveContainer>
-                                                </div>
-                                              </div>
-
-                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                                <div className="flex items-center justify-between mb-6">
-                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                                    <MousePointer2 className="w-4 h-4 text-rose-500" />{" "}
-                                                    广告表现 (Ads Insight)
-                                                  </div>
-                                                  <div className="flex gap-3 text-[10px] items-center font-bold">
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-rose-500" />{" "}
-                                                      CPC
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-sky-500" />{" "}
-                                                      ROAS
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                      <div className="w-2 h-2 rounded-full bg-emerald-500" />{" "}
-                                                      ACOS
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                                <div className="h-[180px]">
-                                                  <ResponsiveContainer
-                                                    width="100%"
-                                                    height="100%"
-                                                  >
-                                                    <LineChart
-                                                      data={enrichedAnalytics.slice(
-                                                        -30,
-                                                      )}
-                                                    >
-                                                      <CartesianGrid
-                                                        strokeDasharray="3 3"
-                                                        vertical={false}
-                                                        stroke="#f1f5f9"
-                                                      />
-                                                      <XAxis
-                                                        dataKey="dateShort"
-                                                        fontSize={9}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                      />
-                                                      <YAxis
-                                                        yAxisId="left"
-                                                        fontSize={9}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                      />
-                                                      <YAxis
-                                                        yAxisId="right"
-                                                        orientation="right"
-                                                        fontSize={9}
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                      />
-                                                      <Tooltip
-                                                        contentStyle={{
-                                                          borderRadius: "12px",
-                                                          border: "none",
-                                                        }}
-                                                      />
-                                                      <Line
-                                                        yAxisId="left"
-                                                        type="monotone"
-                                                        dataKey="cpc"
-                                                        stroke="#ef4444"
-                                                        strokeWidth={3}
-                                                        dot={false}
-                                                      />
-                                                      <Line
-                                                        yAxisId="left"
-                                                        type="monotone"
-                                                        dataKey="roas"
-                                                        stroke="#0ea5e9"
-                                                        strokeWidth={2}
-                                                        dot={false}
-                                                      />
-                                                      <Line
-                                                        yAxisId="right"
-                                                        type="monotone"
-                                                        dataKey="acos"
-                                                        stroke="#10b981"
-                                                        strokeWidth={2}
-                                                        dot={false}
-                                                      />
-                                                    </LineChart>
-                                                  </ResponsiveContainer>
-                                                </div>
+                                                    <defs>
+                                                      <linearGradient
+                                                        id="colorTotal"
+                                                        x1="0"
+                                                        y1="0"
+                                                        x2="0"
+                                                        y2="1"
+                                                      >
+                                                        <stop
+                                                          offset="5%"
+                                                          stopColor="#ef4444"
+                                                          stopOpacity={0.1}
+                                                        />
+                                                        <stop
+                                                          offset="95%"
+                                                          stopColor="#ef4444"
+                                                          stopOpacity={0}
+                                                        />
+                                                      </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid
+                                                      strokeDasharray="3 3"
+                                                      vertical={false}
+                                                      stroke="#f1f5f9"
+                                                    />
+                                                    <XAxis
+                                                      dataKey="dateShort"
+                                                      fontSize={9}
+                                                      axisLine={false}
+                                                      tickLine={false}
+                                                    />
+                                                    <YAxis
+                                                      fontSize={9}
+                                                      axisLine={false}
+                                                      tickLine={false}
+                                                    />
+                                                    <Tooltip
+                                                      contentStyle={{
+                                                        borderRadius: "12px",
+                                                        border: "none",
+                                                        boxShadow:
+                                                          "0 10px 15px -3px rgba(0,0,0,0.1)",
+                                                        fontSize: "10px",
+                                                      }}
+                                                    />
+                                                    <Area
+                                                      type="monotone"
+                                                      dataKey="unitsCount"
+                                                      stroke="#ef4444"
+                                                      fill="url(#colorTotal)"
+                                                      strokeWidth={3}
+                                                    />
+                                                    <Area
+                                                      type="monotone"
+                                                      dataKey="adUnits"
+                                                      stroke="#10b981"
+                                                      fill="transparent"
+                                                      strokeWidth={2}
+                                                    />
+                                                    <Area
+                                                      type="monotone"
+                                                      dataKey="organicUnits"
+                                                      stroke="#f59e0b"
+                                                      fill="transparent"
+                                                      strokeWidth={1}
+                                                      strokeDasharray="4 4"
+                                                    />
+                                                  </AreaChart>
+                                                </ResponsiveContainer>
                                               </div>
                                             </div>
 
-                                            <div className="xl:col-span-2">
-                                              <SkuAiAnalysis
-                                                sku={item.sku}
-                                                skuName={item.productName}
-                                                skuStats={enrichedAnalytics.map(
-                                                  (e) => {
-                                                    const skuPricing =
-                                                      pricingData.find(
-                                                        (p) =>
-                                                          p.sku === item.sku,
-                                                      );
-                                                    const dayFake =
-                                                      fakeOrdersData.filter(
-                                                        (f) =>
-                                                          f.sku === item.sku &&
-                                                          f.date === e.date,
-                                                      );
-                                                    const fakeCost =
-                                                      dayFake.reduce(
-                                                        (acc, curr) => {
-                                                          return (
-                                                            acc +
-                                                            (Number(
-                                                              curr.review_fee_cny ||
-                                                                0,
-                                                            ) -
-                                                              Number(
-                                                                curr.refund_amount_usd ||
-                                                                  0,
-                                                              ) *
-                                                                USD_TO_MXN *
-                                                                0.38)
-                                                          );
-                                                        },
-                                                        0,
-                                                      );
-                                                    const dayDamage = damageData
-                                                      .filter(
-                                                        (d) =>
-                                                          d.sku === item.sku &&
-                                                          d.date === e.date,
-                                                      )
-                                                      .reduce(
-                                                        (acc, curr) =>
-                                                          acc +
-                                                          Number(
-                                                            curr.quantity || 0,
-                                                          ) *
-                                                            Number(
-                                                              curr.sku_value_cny ||
-                                                                0,
-                                                            ),
-                                                        0,
-                                                      );
-
-                                                    return {
-                                                      ...e,
-                                                      sku: item.sku,
-                                                      orders: e.unitsCount,
-                                                      sales:
-                                                        e.unitsCount *
-                                                        (parseFloat(
-                                                          item.priceMXN,
-                                                        ) || 0),
-                                                      adSpend:
-                                                        e.adSpend * USD_TO_MXN,
-                                                      fakeOrderCost: fakeCost,
-                                                      damageCost: dayDamage,
-                                                      costConfig: skuPricing,
-                                                      stock: 0,
-                                                    };
-                                                  },
-                                                )}
-                                                operationLogs={operationLogs.filter(
-                                                  (op: any) =>
-                                                    op.sku === item.sku,
-                                                )}
-                                              />
+                                            <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                              <div className="flex items-center justify-between mb-6">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                  <MousePointer2 className="w-4 h-4 text-rose-500" />{" "}
+                                                  广告表现 (Ads Insight)
+                                                </div>
+                                                <div className="flex gap-3 text-[10px] items-center font-bold">
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-rose-500" />{" "}
+                                                    CPC
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-sky-500" />{" "}
+                                                    ROAS
+                                                  </div>
+                                                  <div className="flex items-center gap-1">
+                                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />{" "}
+                                                    ACOS
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div className="h-[180px]">
+                                                <ResponsiveContainer
+                                                  width="100%"
+                                                  height="100%"
+                                                >
+                                                  <LineChart
+                                                    data={enrichedAnalytics.slice(
+                                                      -30,
+                                                    )}
+                                                  >
+                                                    <CartesianGrid
+                                                      strokeDasharray="3 3"
+                                                      vertical={false}
+                                                      stroke="#f1f5f9"
+                                                    />
+                                                    <XAxis
+                                                      dataKey="dateShort"
+                                                      fontSize={9}
+                                                      axisLine={false}
+                                                      tickLine={false}
+                                                    />
+                                                    <YAxis
+                                                      yAxisId="left"
+                                                      fontSize={9}
+                                                      axisLine={false}
+                                                      tickLine={false}
+                                                    />
+                                                    <YAxis
+                                                      yAxisId="right"
+                                                      orientation="right"
+                                                      fontSize={9}
+                                                      axisLine={false}
+                                                      tickLine={false}
+                                                    />
+                                                    <Tooltip
+                                                      contentStyle={{
+                                                        borderRadius: "12px",
+                                                        border: "none",
+                                                      }}
+                                                    />
+                                                    <Line
+                                                      yAxisId="left"
+                                                      type="monotone"
+                                                      dataKey="cpc"
+                                                      stroke="#ef4444"
+                                                      strokeWidth={3}
+                                                      dot={false}
+                                                    />
+                                                    <Line
+                                                      yAxisId="left"
+                                                      type="monotone"
+                                                      dataKey="roas"
+                                                      stroke="#0ea5e9"
+                                                      strokeWidth={2}
+                                                      dot={false}
+                                                    />
+                                                    <Line
+                                                      yAxisId="right"
+                                                      type="monotone"
+                                                      dataKey="acos"
+                                                      stroke="#10b981"
+                                                      strokeWidth={2}
+                                                      dot={false}
+                                                    />
+                                                  </LineChart>
+                                                </ResponsiveContainer>
+                                              </div>
                                             </div>
                                           </div>
 
-                                          {/* 4. Bottom Table */}
+                                          {/* 4. Daily Operations Table */}
                                           <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
-                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
-                                              <Activity className="w-4 h-4 text-orange-500" />{" "}
-                                              每日经营明细表
+                                            <div className="flex items-center justify-between mb-4">
+                                              <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                <Activity className="w-4 h-4 text-orange-500" />{" "}
+                                                每日经营明细表
+                                              </div>
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setCollapsedTables(
+                                                    (prev) => ({
+                                                      ...prev,
+                                                      [item.sku]:
+                                                        !prev[item.sku],
+                                                    }),
+                                                  );
+                                                }}
+                                                className="text-[10px] font-bold px-3 py-1 rounded-lg border transition-all flex items-center gap-1.5 hover:bg-slate-50"
+                                              >
+                                                {collapsedTables[item.sku] ? (
+                                                  <>
+                                                    <ChevronUp className="w-3 h-3" />{" "}
+                                                    收起
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <ChevronDown className="w-3 h-3" />{" "}
+                                                    查看全部 {analytics.length}{" "}
+                                                    天
+                                                  </>
+                                                )}
+                                              </button>
                                             </div>
                                             <div className="v2-table-wrapper max-h-[350px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
                                               <table className="v2-table border-separate border-spacing-0">
@@ -1444,7 +1204,10 @@ export default function SkuManagement() {
                                                   </tr>
                                                 </thead>
                                                 <tbody className="text-[10px] font-mono divide-y divide-slate-50">
-                                                  {analytics.map((row, rid) => {
+                                                  {(collapsedTables[item.sku]
+                                                    ? analytics
+                                                    : analytics.slice(-7)
+                                                  ).map((row, rid) => {
                                                     const rowE =
                                                       enrichedAnalytics.find(
                                                         (e) =>

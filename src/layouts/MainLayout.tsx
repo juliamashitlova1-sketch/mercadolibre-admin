@@ -245,7 +245,7 @@ function DailyCheckIn({ currentTime }: { currentTime: string }) {
 
       {/* Check-in Card */}
       <div className="bg-white border border-slate-200/80 rounded-lg p-2.5 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-center gap-1.5 mb-2">
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[9px] font-bold text-slate-700 uppercase tracking-wider">
@@ -493,7 +493,7 @@ export default function MainLayout({
 
       <div className="hidden md:flex p-4 pr-0 h-full w-[260px]">
         <aside className="w-full h-full glass-panel rounded-2xl flex flex-col relative z-20 overflow-hidden">
-          <div className="px-5 pt-4 pb-3 flex items-center gap-2.5 cursor-default group shrink-0">
+          <div className="px-5 pt-4 pb-3 flex items-center justify-center gap-2.5 cursor-default group shrink-0">
             <div className="w-7 h-7 rounded-lg bg-white overflow-hidden flex items-center justify-center shadow-sm">
               <MilyflyLogo className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-110" />
             </div>
@@ -504,7 +504,7 @@ export default function MainLayout({
             </div>
           </div>
 
-          <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar">
+          <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto hidden-scrollbar items-center">
             {menuItems.map((item: any) => {
               if (item.isSeparator) {
                 return (
@@ -537,7 +537,7 @@ export default function MainLayout({
                       }
                     `}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Icon
                         className={`w-4 h-4 opacity-80 group-hover:opacity-100 transition-opacity ${item.color || ""}`}
                       />
@@ -561,7 +561,7 @@ export default function MainLayout({
                             <NavLink
                               key={child.id}
                               to={child.id}
-                              className={`flex items-center gap-2 px-2 py-1 rounded text-[11px] font-medium transition-all
+                              className={`flex items-center justify-center gap-2 px-2 py-1 rounded text-[11px] font-medium transition-all
                               ${
                                 isChildActive
                                   ? uiVersion === "v2"
@@ -585,7 +585,7 @@ export default function MainLayout({
             })}
           </nav>
 
-          <div className="p-3 mt-auto shrink-0">
+          <div className="p-3 mt-auto shrink-0 flex justify-center">
             {/* 每日工作打卡 */}
             <DailyCheckIn currentTime={currentTime} />
           </div>

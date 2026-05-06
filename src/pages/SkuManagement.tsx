@@ -53,6 +53,9 @@ export default function SkuManagement() {
   const [competitorDailyMap, setCompetitorDailyMap] = useState<
     Record<string, any[]>
   >({});
+  const [expandedCompetitors, setExpandedCompetitors] = useState<
+    Record<string, boolean>
+  >({});
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
@@ -1531,50 +1534,25 @@ export default function SkuManagement() {
                                               <BarChart3 className="w-4 h-4 text-rose-500" />{" "}
                                               竞品数据
                                             </div>
-                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
-                                              <table className="v2-table border-separate border-spacing-0">
-                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
-                                                  <tr>
-                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">
-                                                      竞品
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
-                                                      上架时间
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
-                                                      最近日销
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
-                                                      最近评分
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">
-                                                      最近价格
-                                                    </th>
-                                                  </tr>
-                                                </thead>
-                                                <tbody className="text-[10px] divide-y divide-slate-50">
-                                                  {(() => {
-                                                    const skuCompetitors =
-                                                      competitorData.filter(
-                                                        (c: any) =>
-                                                          c.sku === item.sku,
-                                                      );
-                                                    if (
-                                                      skuCompetitors.length ===
-                                                      0
-                                                    ) {
-                                                      return (
-                                                        <tr>
-                                                          <td
-                                                            colSpan={5}
-                                                            className="px-3 py-8 text-center text-slate-400 italic"
-                                                          >
-                                                            暂无竞品数据
-                                                          </td>
-                                                        </tr>
-                                                      );
-                                                    }
-                                                    return skuCompetitors.map(
+                                            <div className="v2-table-wrapper max-h-[400px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              {(() => {
+                                                const skuCompetitors =
+                                                  competitorData.filter(
+                                                    (c: any) =>
+                                                      c.sku === item.sku,
+                                                  );
+                                                if (
+                                                  skuCompetitors.length === 0
+                                                ) {
+                                                  return (
+                                                    <div className="py-8 text-center text-slate-400 italic text-xs">
+                                                      暂无竞品数据
+                                                    </div>
+                                                  );
+                                                }
+                                                return (
+                                                  <div className="divide-y divide-slate-50">
+                                                    {skuCompetitors.map(
                                                       (
                                                         comp: any,
                                                         cid: number,
@@ -1583,18 +1561,28 @@ export default function SkuManagement() {
                                                           competitorDailyMap[
                                                             comp.id
                                                           ] || [];
-                                                        const latest =
-                                                          dailyRecords.length >
-                                                          0
-                                                            ? dailyRecords[0]
-                                                            : null;
+                                                        const isExpanded =
+                                                          expandedCompetitors[
+                                                            comp.id
+                                                          ] || false;
                                                         return (
-                                                          <tr
-                                                            key={cid}
-                                                            className="v2-table-tr hover:bg-slate-50/80 transition-colors group"
-                                                          >
-                                                            <td className="px-3 py-2.5">
-                                                              <div className="flex items-center gap-2">
+                                                          <div key={cid}>
+                                                            {/* Summary Row */}
+                                                            <div
+                                                              className="flex items-center justify-between px-3 py-2.5 hover:bg-slate-50/80 transition-colors cursor-pointer"
+                                                              onClick={() =>
+                                                                setExpandedCompetitors(
+                                                                  (prev) => ({
+                                                                    ...prev,
+                                                                    [comp.id]:
+                                                                      !prev[
+                                                                        comp.id
+                                                                      ],
+                                                                  }),
+                                                                )
+                                                              }
+                                                            >
+                                                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                                                 <div className="w-8 h-8 rounded border border-slate-100 bg-slate-50 overflow-hidden shrink-0">
                                                                   {comp.competitor_image_url ? (
                                                                     <img
@@ -1617,8 +1605,8 @@ export default function SkuManagement() {
                                                                     </div>
                                                                   )}
                                                                 </div>
-                                                                <div className="min-w-0">
-                                                                  <p className="text-xs font-bold text-slate-800 truncate max-w-[150px]">
+                                                                <div className="min-w-0 flex-1">
+                                                                  <p className="text-xs font-bold text-slate-800 truncate max-w-[200px]">
                                                                     {comp.competitor_title ||
                                                                       comp.competitor_url
                                                                         ?.split(
@@ -1627,55 +1615,124 @@ export default function SkuManagement() {
                                                                         .pop() ||
                                                                       "竞品"}
                                                                   </p>
-                                                                  {comp.competitor_url && (
-                                                                    <a
-                                                                      href={
-                                                                        comp.competitor_url
-                                                                      }
-                                                                      target="_blank"
-                                                                      rel="noreferrer"
-                                                                      className="text-[8px] text-sky-500 hover:underline truncate block max-w-[150px]"
-                                                                    >
+                                                                  <div className="flex items-center gap-2 text-[9px] text-slate-400">
+                                                                    <span>
+                                                                      📅{" "}
+                                                                      {comp.competitor_listed_at ||
+                                                                        "-"}
+                                                                    </span>
+                                                                    <span>
+                                                                      📊{" "}
                                                                       {
-                                                                        comp.competitor_url
-                                                                      }
-                                                                    </a>
-                                                                  )}
+                                                                        dailyRecords.length
+                                                                      }{" "}
+                                                                      条记录
+                                                                    </span>
+                                                                  </div>
                                                                 </div>
                                                               </div>
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-center text-slate-500 font-mono">
-                                                              {comp.competitor_listed_at ||
-                                                                "-"}
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-center font-bold text-emerald-600">
-                                                              {latest
-                                                                ? `${latest.sales}`
-                                                                : "-"}
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-center">
-                                                              {latest ? (
-                                                                <span className="text-amber-600 font-bold">
-                                                                  {Number(
-                                                                    latest.reviewScore,
-                                                                  ).toFixed(1)}
-                                                                </span>
-                                                              ) : (
-                                                                "-"
+                                                              <div className="flex items-center gap-2 shrink-0">
+                                                                {dailyRecords.length >
+                                                                  0 && (
+                                                                  <span className="text-[10px] font-bold text-sky-600">
+                                                                    最近: $
+                                                                    {Number(
+                                                                      dailyRecords[0]
+                                                                        .price,
+                                                                    ).toFixed(
+                                                                      2,
+                                                                    )}
+                                                                  </span>
+                                                                )}
+                                                                {isExpanded ? (
+                                                                  <ChevronUp className="w-4 h-4 text-slate-400" />
+                                                                ) : (
+                                                                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                                                                )}
+                                                              </div>
+                                                            </div>
+
+                                                            {/* Daily Records (expandable) */}
+                                                            {isExpanded &&
+                                                              dailyRecords.length >
+                                                                0 && (
+                                                                <div className="bg-slate-50/50 border-t border-slate-100">
+                                                                  <table className="w-full text-[10px]">
+                                                                    <thead>
+                                                                      <tr className="text-slate-400 font-bold uppercase tracking-wider">
+                                                                        <th className="px-4 py-2 text-left w-[100px]">
+                                                                          日期
+                                                                        </th>
+                                                                        <th className="px-4 py-2 text-right w-[60px]">
+                                                                          销量
+                                                                        </th>
+                                                                        <th className="px-4 py-2 text-right w-[60px]">
+                                                                          评分
+                                                                        </th>
+                                                                        <th className="px-4 py-2 text-right w-[80px]">
+                                                                          价格
+                                                                        </th>
+                                                                      </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-slate-100">
+                                                                      {dailyRecords.map(
+                                                                        (
+                                                                          rec: any,
+                                                                          rid: number,
+                                                                        ) => (
+                                                                          <tr
+                                                                            key={
+                                                                              rid
+                                                                            }
+                                                                            className="hover:bg-white/60 transition-colors"
+                                                                          >
+                                                                            <td className="px-4 py-1.5 text-slate-500 font-mono">
+                                                                              {
+                                                                                rec.date
+                                                                              }
+                                                                            </td>
+                                                                            <td className="px-4 py-1.5 text-right font-bold text-emerald-600">
+                                                                              {
+                                                                                rec.sales
+                                                                              }
+                                                                            </td>
+                                                                            <td className="px-4 py-1.5 text-right font-bold text-amber-600">
+                                                                              {Number(
+                                                                                rec.reviewScore,
+                                                                              ).toFixed(
+                                                                                1,
+                                                                              )}
+                                                                            </td>
+                                                                            <td className="px-4 py-1.5 text-right font-bold text-sky-600">
+                                                                              $
+                                                                              {Number(
+                                                                                rec.price,
+                                                                              ).toFixed(
+                                                                                2,
+                                                                              )}
+                                                                            </td>
+                                                                          </tr>
+                                                                        ),
+                                                                      )}
+                                                                    </tbody>
+                                                                  </table>
+                                                                </div>
                                                               )}
-                                                            </td>
-                                                            <td className="px-3 py-2.5 text-right font-bold text-sky-600">
-                                                              {latest
-                                                                ? `$${Number(latest.price).toFixed(2)}`
-                                                                : "-"}
-                                                            </td>
-                                                          </tr>
+
+                                                            {isExpanded &&
+                                                              dailyRecords.length ===
+                                                                0 && (
+                                                                <div className="bg-slate-50/50 border-t border-slate-100 py-4 text-center text-slate-400 italic text-[10px]">
+                                                                  暂无每日记录
+                                                                </div>
+                                                              )}
+                                                          </div>
                                                         );
                                                       },
-                                                    );
-                                                  })()}
-                                                </tbody>
-                                              </table>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })()}
                                             </div>
                                           </div>
                                         </div>

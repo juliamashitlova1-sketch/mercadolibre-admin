@@ -1206,7 +1206,7 @@ export default function SkuManagement() {
                                                 <tbody className="text-[10px] font-mono divide-y divide-slate-50">
                                                   {(collapsedTables[item.sku]
                                                     ? analytics
-                                                    : analytics.slice(-7)
+                                                    : analytics.slice(0, 7)
                                                   ).map((row, rid) => {
                                                     const rowE =
                                                       enrichedAnalytics.find(

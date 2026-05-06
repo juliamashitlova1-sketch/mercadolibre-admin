@@ -196,8 +196,8 @@ export default function DataSources() {
                 {new Set(data.map((d) => d.related_section)).size}
               </div>
             </div>
-            <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-slate-400 font-bold flex items-center gap-1.5">
+            <div className="v2-stat-card bg-white border-l-4 border-sky-400 shadow-lg">
+              <span className="v2-stat-label text-sky-600 font-bold flex items-center gap-1.5">
                 <Globe className="w-3 h-3" /> 关联网页
               </span>
               <div className="v2-stat-value text-slate-400 text-sm">

@@ -286,8 +286,8 @@ export default function FakeOrders() {
 
         {data.length > 0 && !loading && (
           <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-white/70 border-slate-200/60">
-              <span className="v2-stat-label text-slate-500">记录总数</span>
+            <div className="v2-stat-card bg-white border-l-4 border-slate-400">
+              <span className="v2-stat-label text-slate-600">记录总数</span>
               <div className="v2-stat-value text-slate-900">{data.length}</div>
             </div>
             <div className="v2-stat-card bg-white border-amber-200/60">

@@ -292,8 +292,8 @@ export default function CargoDamagePage() {
 
         {!loading && data.length > 0 && (
           <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-white/70 border-slate-200/60">
-              <span className="v2-stat-label text-slate-500">异常记录数</span>
+            <div className="v2-stat-card bg-white border-l-4 border-sky-400">
+              <span className="v2-stat-label text-sky-600">异常记录数</span>
               <div className="v2-stat-value text-slate-900">{data.length}</div>
             </div>
             <div className="v2-stat-card bg-white border-rose-200/60">
@@ -315,7 +315,7 @@ export default function CargoDamagePage() {
                 <TrendingDown className="w-6 h-6 text-red-500/20" />
               </div>
             </div>
-            <div className="v2-stat-card bg-white/70 border-slate-200/60">
+            <div className="v2-stat-card bg-white border-l-4 border-slate-400">
               <span className="v2-stat-label text-slate-500">最近活跃</span>
               <div className="v2-stat-value text-slate-400 text-sm">
                 {data[0]?.date}

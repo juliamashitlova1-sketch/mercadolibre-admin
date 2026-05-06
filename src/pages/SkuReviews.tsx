@@ -269,13 +269,13 @@ export default function SkuReviews() {
         {/* ============ Stats Cards ============ */}
         {!loading && reviews.length > 0 && (
           <div className="v2-stats-grid">
-            <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-slate-400 font-bold">
+            <div className="v2-stat-card bg-white border-l-4 border-slate-400 shadow-sm">
+              <span className="v2-stat-label text-slate-600 font-bold">
                 累计评价数
               </span>
               <div className="v2-stat-value text-slate-900">{stats.total}</div>
             </div>
-            <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
+            <div className="v2-stat-card bg-white border-l-4 border-amber-400 shadow-sm">
               <span className="v2-stat-label text-amber-600 font-bold">
                 平均评分
               </span>
@@ -284,7 +284,7 @@ export default function SkuReviews() {
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
               </div>
             </div>
-            <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
+            <div className="v2-stat-card bg-white border-l-4 border-sky-400 shadow-sm">
               <span className="v2-stat-label text-sky-600 font-bold">
                 涉及 SKU 数
               </span>
@@ -292,8 +292,8 @@ export default function SkuReviews() {
                 {Object.keys(skuAverageMap).length}
               </div>
             </div>
-            <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-slate-400 font-bold flex items-center gap-1.5">
+            <div className="v2-stat-card bg-white border-l-4 border-slate-400 shadow-sm">
+              <span className="v2-stat-label text-slate-500 font-bold flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" /> 最近评价
               </span>
               <div className="v2-stat-value text-slate-500 text-sm font-mono">

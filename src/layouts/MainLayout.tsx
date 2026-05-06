@@ -15,7 +15,6 @@ import {
   AlertTriangle,
   Activity,
   Search,
-  Settings,
   PlusCircle,
   Compass,
   Calculator,
@@ -111,6 +110,217 @@ function CurrencyConverter() {
           ))}
       </div>
     </div>
+  );
+}
+
+// ============= Daily Check-in Component =============
+const CHECK_ITEMS = [
+  { id: "orders", label: "订单数据上传" },
+  { id: "visits", label: "访问数据上传" },
+  { id: "ads", label: "广告数据上传" },
+  { id: "competitors", label: "竞品数据每日更新" },
+  { id: "reviews", label: "各链接评价检查" },
+  { id: "operations", label: "运营动作填写" },
+];
+
+function getTodayKey(): string {
+  return getMexicoTimeString().split(" ")[0]; // "YYYY-MM-DD"
+}
+
+function loadCheckins(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem("daily_checkin_" + getTodayKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function DailyCheckIn({ currentTime }: { currentTime: string }) {
+  const today = getTodayKey();
+  const [checkins, setCheckins] =
+    useState<Record<string, boolean>>(loadCheckins);
+  const [showFireworks, setShowFireworks] = useState(false);
+  const [fireworkParticles, setFireworkParticles] = useState<any[]>([]);
+
+  // Reload checkins when day changes
+  useEffect(() => {
+    setCheckins(loadCheckins());
+    setShowFireworks(false);
+  }, [today]);
+
+  const allDone = CHECK_ITEMS.every((item) => checkins[item.id]);
+
+  const handleToggle = (id: string) => {
+    const updated = { ...checkins, [id]: !checkins[id] };
+    setCheckins(updated);
+    localStorage.setItem("daily_checkin_" + today, JSON.stringify(updated));
+
+    // Check if all done now
+    if (CHECK_ITEMS.every((item) => updated[item.id])) {
+      triggerFireworks();
+    }
+  };
+
+  const triggerFireworks = () => {
+    setShowFireworks(true);
+    // Generate 60 particles
+    const particles = Array.from({ length: 60 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      color: [
+        "#ef4444",
+        "#f59e0b",
+        "#10b981",
+        "#3b82f6",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+      ][Math.floor(Math.random() * 7)],
+      size: 4 + Math.random() * 8,
+      delay: Math.random() * 1.5,
+      duration: 1.5 + Math.random() * 2,
+      angle: Math.random() * 360,
+      distance: 50 + Math.random() * 200,
+    }));
+    setFireworkParticles(particles);
+    setTimeout(() => setShowFireworks(false), 4000);
+  };
+
+  const doneCount = CHECK_ITEMS.filter((item) => checkins[item.id]).length;
+
+  return (
+    <>
+      {/* Fireworks overlay */}
+      <AnimatePresence>
+        {showFireworks && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 pointer-events-none"
+            style={{ zIndex: 99999 }}
+          >
+            {fireworkParticles.map((p) => (
+              <motion.div
+                key={p.id}
+                initial={{
+                  opacity: 1,
+                  x: "50vw",
+                  y: "50vh",
+                  scale: 0,
+                }}
+                animate={{
+                  opacity: [1, 1, 0],
+                  x: `calc(50vw + ${Math.cos((p.angle * Math.PI) / 180) * p.distance}px)`,
+                  y: `calc(50vh + ${Math.sin((p.angle * Math.PI) / 180) * p.distance}px)`,
+                  scale: [0, 1.5, 0],
+                }}
+                transition={{
+                  duration: p.duration,
+                  delay: p.delay,
+                  ease: "easeOut",
+                }}
+                className="absolute rounded-full"
+                style={{
+                  width: p.size,
+                  height: p.size,
+                  backgroundColor: p.color,
+                  boxShadow: `0 0 ${p.size}px ${p.color}`,
+                }}
+              />
+            ))}
+            {/* Center burst flash */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: [0, 0.8, 0], scale: [0, 3, 0] }}
+              transition={{ duration: 0.8 }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full"
+              style={{ boxShadow: "0 0 60px 20px rgba(255,255,255,0.6)" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Check-in Card */}
+      <div className="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-sm">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+              每日工作打卡
+            </span>
+          </div>
+          <span className="text-[9px] text-slate-400 font-mono">{today}</span>
+        </div>
+
+        <div className="text-[9px] text-slate-400 font-medium mb-2">
+          进度: {doneCount}/{CHECK_ITEMS.length}
+          <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                allDone ? "bg-emerald-500" : "bg-sky-500"
+              }`}
+              style={{ width: `${(doneCount / CHECK_ITEMS.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          {CHECK_ITEMS.map((item) => {
+            const done = checkins[item.id];
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleToggle(item.id)}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+                  done
+                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+                    : "bg-slate-50 text-slate-500 border border-transparent hover:bg-sky-50 hover:text-sky-600"
+                }`}
+              >
+                <div
+                  className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                    done
+                      ? "bg-emerald-500 border-emerald-500"
+                      : "border-slate-300"
+                  }`}
+                >
+                  {done && (
+                    <svg
+                      className="w-2 h-2 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="truncate">{item.label}</span>
+                {done && (
+                  <span className="ml-auto text-[8px] text-emerald-500">✓</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {allDone && (
+          <div className="mt-2 text-center">
+            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              🎉 今日全部完成!
+            </span>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -376,34 +586,9 @@ export default function MainLayout({
             })}
           </nav>
 
-          <div className="p-4 mt-auto space-y-4">
-            <div
-              className={`glass-card rounded-xl p-4 relative overflow-hidden group transition-colors cursor-pointer ${uiVersion === "v2" ? "border-slate-800" : ""}`}
-            >
-              <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1.5 flex items-center justify-between">
-                <span>管理员</span>
-                <Settings
-                  className={`w-3 h-3 text-slate-400 group-hover:text-slate-700 transition-colors hover:rotate-90 duration-500 ${uiVersion === "v2" ? "group-hover:text-sky-400" : ""}`}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ${uiVersion === "v2" ? "bg-sky-600" : "bg-sky-500"}`}
-                >
-                  JC
-                </div>
-                <div>
-                  <div
-                    className={`text-sm font-semibold ${uiVersion === "v2" ? "text-slate-900" : "text-slate-800"}`}
-                  >
-                    Juan Carlos
-                  </div>
-                  <div className="text-xs text-slate-500 font-mono mt-1">
-                    v1.0.6
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="p-4 mt-auto space-y-3">
+            {/* 每日工作打卡 */}
+            <DailyCheckIn currentTime={currentTime} />
           </div>
         </aside>
       </div>

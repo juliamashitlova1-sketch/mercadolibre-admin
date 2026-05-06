@@ -512,13 +512,16 @@ export default function SkuManagement() {
               }
             });
             // Remove max-height constraints from scrollable tables so all rows show
-            const scrollWrappers = el.querySelectorAll(
-              ".max-h-\[350px\], .max-h-\[300px\]",
-            );
-            scrollWrappers.forEach((w) => {
-              (w as HTMLElement).style.maxHeight = "none";
-              (w as HTMLElement).style.overflow = "visible";
-            });
+            // Use getElementsByClassName to avoid CSS selector escaping issues with brackets
+            const removeMaxHeight = (className: string) => {
+              const elements = el.getElementsByClassName(className);
+              for (let i = 0; i < elements.length; i++) {
+                (elements[i] as HTMLElement).style.maxHeight = "none";
+                (elements[i] as HTMLElement).style.overflow = "visible";
+              }
+            };
+            removeMaxHeight("max-h-[350px]");
+            removeMaxHeight("max-h-[300px]");
           }
         },
       });

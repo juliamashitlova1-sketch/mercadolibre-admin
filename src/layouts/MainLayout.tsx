@@ -7,7 +7,6 @@ import { STOCK_HEALTH_THRESHOLD } from "../constants";
 import {
   Database,
   Package,
-  ShoppingBag,
   ShoppingCart,
   TrendingUp,
   LayoutDashboard,
@@ -33,6 +32,7 @@ import { getMexicoTimeString } from "../lib/time";
 
 import { supabase, supabaseNew } from "../lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
+import MexicoInfoPanel from "../components/MexicoInfoPanel";
 
 const MilyflyLogo = ({ className = "w-6 h-6" }) => (
   <svg
@@ -59,59 +59,6 @@ const MilyflyLogo = ({ className = "w-6 h-6" }) => (
     <circle cx="45" cy="84" r="5" fill="#DF5B18" />
   </svg>
 );
-
-function CurrencyConverter() {
-  const [base, setBase] = useState<"USD" | "MXN" | "CNY">("USD");
-  const [val, setVal] = useState<string>("");
-
-  const rates = {
-    USD: { MXN: 19.85, CNY: 7.24 },
-    MXN: { USD: 0.05, CNY: 0.365 },
-    CNY: { USD: 0.138, MXN: 2.74 },
-  };
-
-  const calculate = (to: "USD" | "MXN" | "CNY") => {
-    if (!val || isNaN(Number(val))) return "0.00";
-    if (to === base) return Number(val).toFixed(2);
-    // @ts-ignore
-    return (Number(val) * (rates[base][to] || 1)).toFixed(2);
-  };
-
-  return (
-    <div className="flex items-center gap-2 group/conv">
-      <select
-        value={base}
-        onChange={(e) => setBase(e.target.value as any)}
-        className="bg-transparent text-[10px] font-bold text-slate-500 outline-none cursor-pointer hover:text-sky-600 transition-colors"
-      >
-        <option value="USD">USD $</option>
-        <option value="MXN">MXN $</option>
-        <option value="CNY">CNY ¥</option>
-      </select>
-      <input
-        type="text"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        placeholder="输入数值"
-        className="w-16 bg-slate-50/50 text-[11px] font-mono font-bold text-slate-700 outline-none px-1.5 py-0.5 rounded border border-transparent focus:border-sky-200 transition-all placeholder:text-slate-300"
-      />
-      <div className="flex items-center gap-2 pr-1 opacity-60 group-hover/conv:opacity-100 transition-opacity">
-        {["USD", "MXN", "CNY"]
-          .filter((c) => c !== base)
-          .map((c) => (
-            <div key={c} className="flex items-center gap-1">
-              <span className="text-[9px] font-medium text-slate-400 uppercase">
-                {c}
-              </span>
-              <span className="text-[11px] font-mono font-bold text-slate-600">
-                {calculate(c as any)}
-              </span>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-}
 
 // ============= Daily Check-in Component =============
 const CHECK_ITEMS = [
@@ -598,49 +545,11 @@ export default function MainLayout({
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Dynamic Island Top Bar Container */}
-        <header className="h-[60px] shrink-0 flex items-center justify-between px-6 z-10">
-          <div
-            className={`flex items-center gap-2 font-medium text-sm ${uiVersion === "v2" ? "text-slate-400" : "text-slate-500"}`}
-          >
-            <span className="hidden sm:inline">MILYFLY 控制台</span>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <span
-              className={`capitalize font-semibold ${uiVersion === "v2" ? "text-slate-900" : "text-slate-800"}`}
-            >
-              {location.pathname === "/"
-                ? "总览看板"
-                : location.pathname
-                    .substring(1)
-                    .split("/")[0]
-                    .replace(/-/g, " ")}
-            </span>
-            <span className="ml-2 text-[8px] text-slate-300 opacity-50">
-              v1.0.5
-            </span>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center gap-3 mx-4">
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full shadow-sm text-xs font-mono font-bold tracking-tight border ${uiVersion === "v2" ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : "bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-100 text-sky-700"}`}
-            >
-              <Compass
-                className={`w-3.5 h-3.5 animate-pulse ${uiVersion === "v2" ? "text-sky-300" : "text-sky-500"}`}
-              />
-              <span className="hidden xl:inline">墨西哥当地时间：</span>
-              <span>{currentTime}</span>
-            </div>
-
-            {/* 汇率转换小工具 - 仅在较大屏幕显示 */}
-            <div className="hidden lg:flex items-center bg-white/80 backdrop-blur border border-slate-200 rounded-full px-2 py-0.5 shadow-sm overflow-hidden h-[28px]">
-              <CurrencyConverter />
-            </div>
-
-            {/* 全局数据导出 - 增加阴影和边框确保可见性 */}
-            <div className="relative z-50">{/* DataExporter was here */}</div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* 没有更新日志弹窗 */}
+        <header className="h-[56px] shrink-0 flex items-center justify-center px-6 z-10">
+          <div className="flex items-center gap-2 bg-white border border-slate-200/60 shadow-sm px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-tight">
+            <Compass className="w-3.5 h-3.5 text-sky-500" />
+            <span className="text-slate-400">墨西哥时间</span>
+            <span className="text-slate-700">{currentTime}</span>
           </div>
         </header>
 
@@ -652,6 +561,9 @@ export default function MainLayout({
           </div>
         </div>
       </main>
+
+      {/* Right Panel - Weather & Holidays */}
+      <MexicoInfoPanel />
 
       {/* Scrollbar styling injected here for simplicity */}
       <style>{`

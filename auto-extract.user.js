@@ -126,12 +126,16 @@
     );
   }
 
-  // 自动点击热搜词Tab触发数据加载
+  // 自动点击反查流量词Tab触发数据加载
   setTimeout(function () {
-    var tab = document.querySelector('a[href="#tabs-trend"]');
+    var tab = document.querySelector('a[href="#tabs-trend-table"]');
     if (tab) {
-      origLog.call(console, "[MILYFLY] 正在点击热搜词Tab...");
+      origLog.call(console, "[MILYFLY] 正在点击反查流量词Tab...");
       tab.click();
+    } else {
+      origLog.call(console, "[MILYFLY] 未找到反查流量词Tab，尝试点击热搜词...");
+      var tab2 = document.querySelector('a[href="#tabs-trend"]');
+      if (tab2) tab2.click();
     }
   }, 3000);
 })();

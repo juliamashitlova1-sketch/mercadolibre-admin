@@ -145,7 +145,7 @@ export default function DataCrawler() {
     } else {
       targetUrl += "?milyfly=1";
     }
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
+    window.open(targetUrl, "_blank");
   };
 
   const handlePasteManually = async () => {

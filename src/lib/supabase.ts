@@ -8,9 +8,12 @@ const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvcHhqZG5nYWtpbmRucW1haG5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMDc0MjEsImV4cCI6MjA5MTg4MzQyMX0.i0VnIyFTJtNb6KfrsOWs6w1R7Y07DlBHiBRLOonEnEI";
 
 // 新数据库（用于链接评价等功能）
-const supabaseUrlNew = (import.meta as any).env.VITE_SUPABASE_URL_NEW || "";
+const supabaseUrlNew =
+  (import.meta as any).env.VITE_SUPABASE_URL_NEW ||
+  "https://wfsgmyolllfzawsbxkdh.supabase.co";
 const supabaseAnonKeyNew =
-  (import.meta as any).env.VITE_SUPABASE_ANON_KEY_NEW || "";
+  (import.meta as any).env.VITE_SUPABASE_ANON_KEY_NEW ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc2dteW9sbGxmemF3c2J4a2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNDUwOTcsImV4cCI6MjA5MzYyMTA5N30.mbIf55xLwXAfUAOEbmbYnmCD9h6ryw63mtP4BB_o9qA";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

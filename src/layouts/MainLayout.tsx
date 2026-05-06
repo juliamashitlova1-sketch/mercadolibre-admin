@@ -15,11 +15,9 @@ import {
   AlertTriangle,
   Activity,
   Search,
-  Bell,
   Settings,
   PlusCircle,
   Compass,
-  Brain,
   Calculator,
   History,
   CheckCircle,
@@ -29,7 +27,6 @@ import {
   MessageSquare,
   BarChart3,
   Star,
-  X,
 } from "lucide-react";
 import appBg from "../assets/app-bg.png";
 
@@ -146,40 +143,6 @@ export default function MainLayout({
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Notification system state
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [appUpdates, setAppUpdates] = useState<any[]>([]);
-  const [hasNewUpdate, setHasNewUpdate] = useState(true);
-
-  useEffect(() => {
-    fetchAppUpdates();
-  }, []);
-
-  const fetchAppUpdates = async () => {
-    try {
-      const { data, error } = await supabaseNew
-        .from("app_updates")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      const updates = data || [];
-      setAppUpdates(updates);
-
-      if (updates.length > 0) {
-        const latestVersion = updates[0].version;
-        const lastSeen = localStorage.getItem("milyfly_last_seen_version");
-        if (lastSeen !== latestVersion) {
-          setIsNotificationOpen(true);
-          setHasNewUpdate(true);
-        } else {
-          setHasNewUpdate(false);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching updates:", err);
-    }
-  };
 
   const inventoryStatus =
     skuData && skuData.length > 0
@@ -490,153 +453,7 @@ export default function MainLayout({
           </div>
 
           <div className="flex items-center gap-4">
-            {/* 更新日志按钮 */}
-            <button
-              onClick={() => {
-                setIsNotificationOpen(!isNotificationOpen);
-                if (appUpdates.length > 0) {
-                  localStorage.setItem(
-                    "milyfly_last_seen_version",
-                    appUpdates[0].version,
-                  );
-                }
-                setHasNewUpdate(false);
-              }}
-              className={`relative w-10 h-10 rounded-full glass-panel shadow-none flex items-center justify-center transition-all group ${isNotificationOpen ? "bg-sky-500/20 ring-2 ring-sky-500/50" : "hover:bg-slate-50/10"}`}
-            >
-              <Bell
-                className={`w-[18px] h-[18px] transition-colors ${isNotificationOpen ? "text-sky-400" : "text-slate-500 group-hover:text-white"}`}
-              />
-              {hasNewUpdate && (
-                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-slate-900 animate-pulse" />
-              )}
-            </button>
-
-            {/* 居中弹窗 */}
-            <AnimatePresence>
-              {isNotificationOpen && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-                    style={{ zIndex: 9998 }}
-                    onClick={() => setIsNotificationOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="fixed inset-0 flex items-center justify-center p-4"
-                    style={{ zIndex: 9999 }}
-                  >
-                    <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[80vh] flex flex-col">
-                      {/* Header */}
-                      <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-sky-50 to-white flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                            <History className="w-5 h-5 text-sky-600" />
-                          </div>
-                          <div>
-                            <h3 className="text-base font-black text-slate-900">
-                              应用更新日志
-                            </h3>
-                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                              记录每一次功能迭代与优化
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[11px] font-bold bg-sky-500/10 text-sky-600 px-3 py-1 rounded-full font-mono border border-sky-200/50">
-                            v{appUpdates[0]?.version || "1.0.0"}
-                          </span>
-                          <button
-                            onClick={() => setIsNotificationOpen(false)}
-                            className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
-                          >
-                            <X className="w-4 h-4 text-slate-400" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                        {appUpdates.length === 0 ? (
-                          <div className="py-16 text-center">
-                            <History className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-                            <p className="text-sm text-slate-400 font-medium">
-                              暂无更新记录
-                            </p>
-                          </div>
-                        ) : (
-                          appUpdates.slice(0, 3).map((update, idx) => (
-                            <div
-                              key={update.id}
-                              className={`p-5 rounded-xl transition-all ${
-                                idx === 0
-                                  ? "bg-sky-50/80 border border-sky-200/60 shadow-sm"
-                                  : "bg-white border border-slate-100"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2.5">
-                                  <span
-                                    className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                                      update.type === "feature"
-                                        ? "bg-emerald-100 text-emerald-700"
-                                        : update.type === "fix"
-                                          ? "bg-rose-100 text-rose-700"
-                                          : "bg-sky-100 text-sky-700"
-                                    }`}
-                                  >
-                                    {update.type === "feature"
-                                      ? "✨ 新功能"
-                                      : update.type === "fix"
-                                        ? "🔧 修复"
-                                        : "📝 更新"}
-                                    <span className="font-mono">
-                                      v{update.version}
-                                    </span>
-                                  </span>
-                                  {idx === 0 && (
-                                    <span className="text-[9px] font-bold text-sky-500 bg-sky-100 px-2 py-0.5 rounded-full">
-                                      最新
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-slate-400 font-mono">
-                                  {new Date(
-                                    update.created_at,
-                                  ).toLocaleDateString("zh-CN", {
-                                    year: "numeric",
-                                    month: "2-digit",
-                                    day: "2-digit",
-                                  })}
-                                </span>
-                              </div>
-                              <h4 className="text-sm font-bold text-slate-800 mb-2">
-                                {update.title}
-                              </h4>
-                              <p className="text-xs text-slate-500 leading-relaxed whitespace-pre-line border-l-2 border-sky-200 pl-3 ml-0.5">
-                                {update.content}
-                              </p>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Footer */}
-                      <div className="px-6 py-3 bg-slate-50/80 border-t border-slate-100 text-center shrink-0">
-                        <p className="text-[10px] text-slate-400 font-medium">
-                          🔄 每次代码更新后自动记录
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+            {/* 没有更新日志弹窗 */}
           </div>
         </header>
 

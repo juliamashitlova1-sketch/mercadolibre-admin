@@ -499,6 +499,47 @@ export default function SkuManagement() {
         imageTimeout: 30000,
         removeContainer: true,
         onclone: (clonedDoc) => {
+          // =============================================
+          // FIX: Replace all oklch() colors with rgb() equivalents
+          // html2canvas v1.4.1 does not support oklch color function (Tailwind CSS v4)
+          // =============================================
+          const tempResolver = clonedDoc.createElement("div");
+          tempResolver.style.cssText =
+            "position:absolute;left:-9999px;top:0;width:1px;height:1px;";
+          clonedDoc.body.appendChild(tempResolver);
+
+          // Process all <style> elements in the cloned document
+          const styleEls = clonedDoc.querySelectorAll("style");
+          styleEls.forEach((s) => {
+            let cssText = s.textContent || "";
+            if (!cssText.includes("oklch")) return;
+            // Find all unique oklch() values
+            const matches = cssText.match(/oklch\([^)]+\)/g);
+            if (!matches) return;
+            const unique = [...new Set(matches)];
+            unique.forEach((oklchVal) => {
+              try {
+                tempResolver.style.color = oklchVal;
+                const computedColor = tempResolver.style.color || "";
+                if (
+                  computedColor &&
+                  computedColor !== oklchVal &&
+                  computedColor.startsWith("rgb")
+                ) {
+                  cssText = cssText.split(oklchVal).join(computedColor);
+                }
+              } catch (_) {
+                /* skip problematic values */
+              }
+            });
+            s.textContent = cssText;
+          });
+
+          clonedDoc.body.removeChild(tempResolver);
+
+          // =============================================
+          // Prepare the dashboard container for PDF capture
+          // =============================================
           const el = clonedDoc.getElementById(`sku-dashboard-${skuCode}`);
           if (el) {
             el.style.padding = "40px";
@@ -512,7 +553,6 @@ export default function SkuManagement() {
               }
             });
             // Remove max-height constraints from scrollable tables so all rows show
-            // Use getElementsByClassName to avoid CSS selector escaping issues with brackets
             const removeMaxHeight = (className: string) => {
               const elements = el.getElementsByClassName(className);
               for (let i = 0; i < elements.length; i++) {

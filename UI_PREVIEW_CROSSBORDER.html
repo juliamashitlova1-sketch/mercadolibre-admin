@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美客多 - 跨境电商数据管理UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Outfit', -apple-system, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .font-heading { font-family: 'Outfit', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* 玻璃态效果 */
+        .glass {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(226,232,240,0.8);
+        }
+        
+        .glass-panel {
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 8px 32px rgba(31,38,135,0.07);
+        }
+        
+        /* 侧边栏菜单样式 */
+        .menu-item {
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover {
+            background: rgba(14,165,233,0.08);
+            color: #0284c7;
+        }
+        .menu-item.active {
+            background: rgba(14,165,233,0.1);
+            color: #0284c7;
+            border: 1px solid rgba(14,165,233,0.2);
+        }
+        
+        /* 统计卡片 */
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(6,81,237,0.05);
+        }
+        .stat-card:hover {
+            border-color: #38bdf8;
+            box-shadow: 0 8px 30px rgba(14,165,233,0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* 状态标签 */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-success {
+            background: rgba(16,185,129,0.1);
+            color: #059669;
+        }
+        .status-warning {
+            background: rgba(245,158,11,0.1);
+            color: #d97706;
+        }
+        .status-danger {
+            background: rgba(239,68,68,0.1);
+            color: #dc2626;
+        }
+        .status-info {
+            background: rgba(14,165,233,0.1);
+            color: #0284c7;
+        }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #0284c7;
+            color: white;
+            box-shadow: 0 4px 14px rgba(2,132,199,0.3);
+        }
+        .btn-primary:hover {
+            background: #0369a1;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(2,132,199,0.4);
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+        
+        /* 输入框 */
+        .input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .input:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 4px rgba(56,189,248,0.1);
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148,163,184,0.4);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148,163,184,0.6);
+        }
+        
+        /* 动画 */
+        @keyframes slideIn {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(56,189,248,0.3); }
+            50% { box-shadow: 0 0 20px rgba(56,189,248,0.6); }
+        }
+        .animate-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex min-h-screen">
+        <!-- 侧边栏 -->
+        <aside class="w-64 fixed left-0 top-0 h-screen glass border-r border-slate-200/60 flex flex-col z-50">
+            <!-- Logo -->
+            <div class="px-6 pt-8 pb-6 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <svg viewBox="0 0 100 90" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 28,45 C 8,10 40,-5 55,25 C 65,-5 98,10 70,45 C 95,50 95,80 75,80 L 40,80 M 12,48 L 22,48 L 27,78 L 48,78" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M 24,53 L 55,54 L 52,70 L 26,68 Z" fill="white" opacity="0.3"/>
+                    </svg>
+                </div>
+                <div class="font-heading font-extrabold text-xl text-slate-900 tracking-tight">MILYFLY</div>
+            </div>
+            
+            <!-- 导航菜单 -->
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                <div class="mb-4">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">数据���心</p>
+                </div>
+                
+                <a href="#" class="menu-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span>数据大屏</span>
+                </a>
+                
+                <div class="mb-4 mt-4">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">数据管理</p>
+                </div>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>SKU数据总览</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>SKU成本管理</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16v.01"></path></svg>
+                    <span>数据清洗</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <span>刷单支出</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    <span>货损支出</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    <span>账号健康</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>运营动作</span>
+                </a>
+                
+                <div class="mb-4 mt-4">
+                    <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-2">工具</p>
+                </div>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    <span>新品核价</span>
+                    <span class="ml-auto badge bg-emerald-100 text-emerald-700">3</span>
+                </a>
+                
+                <a href="#" class="menu-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.289 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    <span>软件建议</span>
+                </a>
+            </nav>
+            
+            <!-- 用户信息 -->
+            <div class="p-4 border-t border-slate-200">
+                <div class="flex items-center gap-3 p-3 rounded-xl glass">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">JC</div>
+                    <div>
+                        <div class="text-sm font-semibold text-slate-900">Juan Carlos</div>
+                        <div class="text-xs text-slate-500">管理员 v1.0.6</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="flex-1 ml-64">
+            <!-- 顶部导航 -->
+            <header class="h-18 glass border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-40">
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="text-slate-400">MILYFLY 控制台</span>
+                    <span class="text-slate-300">/</span>
+                    <span class="font-semibold text-slate-900">数据大屏</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- 搜索框 -->
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 border border-slate-200 w-64">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" placeholder="搜索SKU或订单号..." class="bg-transparent text-sm outline-none w-full text-slate-700">
+                    </div>
+                    
+                    <!-- 通知 -->
+                    <button class="relative w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- 墨西哥时间 -->
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-xs font-mono font-bold text-sky-600">
+                        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                        <span>墨西哥: 2026-05-01 19:57</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 页面内容 -->
+            <div class="p-8">
+                <!-- 页面标题和操作区 -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 class="text-2xl font-heading font-bold text-slate-900 mb-1">数据大屏</h1>
+                        <p class="text-sm text-slate-500">实时监控跨境电商业务数据</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button class="btn btn-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            导出数据
+                        </button>
+                        <button class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            添加SKU
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">总销售额</span>
+                            <span class="p-2 rounded-lg bg-emerald-50">
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                        </div>
+                        <div class="font-mono text-3xl font-bold text-slate-900 mb-1">¥2,456,800</div>
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="text-emerald-600 font-semibold">↑ 12.5%</span>
+                            <span class="text-slate-400">较上周</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">订单数量</span>
+                            <span class="p-2 rounded-lg bg-sky-50">
+                                <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                            </span>
+                        </div>
+                        <div class="font-mono text-3xl font-bold text-slate-900 mb-1">12,847</div>
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="text-emerald-600 font-semibold">↑ 8.3%</span>
+                            <span class="text-slate-400">较上周</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">在售SKU</span>
+                            <span class="p-2 rounded-lg bg-indigo-50">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                            </span>
+                        </div>
+                        <div class="font-mono text-3xl font-bold text-slate-900 mb-1">156</div>
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="text-amber-600 font-semibold">需补货</span>
+                            <span class="text-slate-400">23个</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">账号健康</span>
+                            <span class="p-2 rounded-lg bg-rose-50">
+                                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            </span>
+                        </div>
+                        <div class="font-mono text-3xl font-bold text-slate-900 mb-1">92%</div>
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="status-pill status-success">优秀</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 数据表格 -->
+                <div class="glass border border-slate-200/60 rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-heading font-semibold text-slate-900">热门SKU数据</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">按销量排序的TOP 10产品</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-secondary text-xs py-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                                筛选
+                            </button>
+                            <button class="btn btn-secondary text-xs py-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                                导出
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU编号</th>
+                                    <th>产品名称</th>
+                                    <th>当前库存</th>
+                                    <th>日均销量</th>
+                                    <th>销售价格</th>
+                                    <th>销售额</th>
+                                    <th>库存状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-001</td>
+                                    <td>无线蓝牙耳机 TWS-01</td>
+                                    <td class="font-mono">245</td>
+                                    <td class="font-mono text-emerald-600">+18</td>
+                                    <td class="font-mono">¥399</td>
+                                    <td class="font-mono font-semibold">¥97,755</td>
+                                    <td><span class="status-pill status-success">正常</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-002</td>
+                                    <td>智能手表 Sport X</td>
+                                    <td class="font-mono">52</td>
+                                    <td class="font-mono text-emerald-600">+12</td>
+                                    <td class="font-mono">¥599</td>
+                                    <td class="font-mono font-semibold">¥71,880</td>
+                                    <td><span class="status-pill status-warning">库存预警</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-003</td>
+                                    <td>手机壳 透明款</td>
+                                    <td class="font-mono">1,240</td>
+                                    <td class="font-mono text-emerald-600">+45</td>
+                                    <td class="font-mono">¥89</td>
+                                    <td class="font-mono font-semibold">¥400,500</td>
+                                    <td><span class="status-pill status-success">正常</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-004</td>
+                                    <td>充电线 2米套装</td>
+                                    <td class="font-mono">0</td>
+                                    <td class="font-mono text-rose-600">-</td>
+                                    <td class="font-mono">¥129</td>
+                                    <td class="font-mono font-semibold">¥0</td>
+                                    <td><span class="status-pill status-danger">已下架</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-005</td>
+                                    <td>无线充电器 15W</td>
+                                    <td class="font-mono">380</td>
+                                    <td class="font-mono text-emerald-600">+22</td>
+                                    <td class="font-mono">¥199</td>
+                                    <td class="font-mono font-semibold">¥75,620</td>
+                                    <td><span class="status-pill status-success">正常</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="font-mono font-medium">MLM-006</td>
+                                    <td>运动手环 Band Pro</td>
+                                    <td class="font-mono">128</td>
+                                    <td class="font-mono text-emerald-600">+8</td>
+                                    <td class="font-mono">¥299</td>
+                                    <td class="font-mono font-semibold">¥38,272</td>
+                                    <td><span class="status-pill status-info">补货中</span></td>
+                                    <td>
+                                        <button class="text-sky-600 hover:text-sky-700 text-xs font-medium">编辑</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
+                        <div class="text-xs text-slate-500">显示 1-6 条，共 156 条记录</div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-secondary text-xs py-1.5 px-3">上一页</button>
+                            <button class="w-8 h-8 rounded-lg bg-sky-500 text-white text-xs font-medium">1</button>
+                            <button class="w-8 h-8 rounded-lg hover:bg-slate-50 text-xs font-medium">2</button>
+                            <button class="w-8 h-8 rounded-lg hover:bg-slate-50 text-xs font-medium">3</button>
+                            <button class="w-8 h-8 rounded-lg hover:bg-slate-50 text-xs font-medium">...</button>
+                            <button class="w-8 h-8 rounded-lg hover:bg-slate-50 text-xs font-medium">26</button>
+                            <button class="btn btn-secondary text-xs py-1.5 px-3">下一页</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 快捷操作区 -->
+                <div class="grid grid-cols-3 gap-6 mt-8">
+                    <!-- 新品核价 -->
+                    <div class="glass border border-slate-200/60 rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2.5 rounded-xl bg-emerald-50">
+                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-heading font-semibold text-slate-900">新品核价</h3>
+                                <p class="text-xs text-slate-500">3个待处理</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50">
+                                <span class="text-slate-600">新款手机支架</span>
+                                <button class="text-sky-600 font-medium">查看</button>
+                            </div>
+                            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50">
+                                <span class="text-slate-600">蓝牙音箱</span>
+                                <button class="text-sky-600 font-medium">查看</button>
+                            </div>
+                            <div class="flex items-center justify-between text-xs p-2 rounded-lg bg-slate-50">
+                                <span class="text-slate-600">数据线套装</span>
+                                <button class="text-sky-600 font-medium">查看</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 运营提醒 -->
+                    <div class="glass border border-slate-200/60 rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2.5 rounded-xl bg-amber-50">
+                                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-heading font-semibold text-slate-900">运营提醒</h3>
+                                <p class="text-xs text-slate-500">5条待处理</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="status-pill status-warning">库存</span>
+                                <span class="text-slate-600">SKU-002 库存不足</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="status-pill status-danger">下架</span>
+                                <span class="text-slate-600">SKU-004 已售罄</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="status-pill status-info">广告</span>
+                                <span class="text-slate-600">广告预算不足提醒</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI智能分析 -->
+                    <div class="glass border border-slate-200/60 rounded-2xl p-6">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="p-2.5 rounded-xl bg-purple-50">
+                                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.388l-.548-.547z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-heading font-semibold text-slate-900">AI智能分析</h3>
+                                <p class="text-xs text-slate-500">基于DeepSeek</p>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-600 leading-relaxed p-3 rounded-lg bg-gradient-to-r from-purple-50 to-sky-50 border border-purple-100">
+                            <p>"根据最近30天数据，建议调整SKU-002定价策略，目标利润率提升5%。"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

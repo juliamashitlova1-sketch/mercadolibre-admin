@@ -9,7 +9,7 @@ import {
   TrendingUp, LayoutDashboard,
   DollarSign, AlertTriangle, Activity,
   Search, Bell, Settings, PlusCircle, Compass, Brain, Calculator, History, CheckCircle, Inbox,
-  CreditCard, PackageX, MessageSquare
+  CreditCard, PackageX, MessageSquare, BarChart3
 } from 'lucide-react';
 import appBg from '../assets/app-bg.png';
 
@@ -188,6 +188,12 @@ export default function MainLayout({
         { id: '/pricing/success', label: '核价成功区', icon: CheckCircle, shadow: 'shadow-[0_0_10px_rgba(16,185,129,0.2)]' },
         { id: '/pricing/staging', label: '暂存箱', icon: Inbox },
       ]
+    },
+    { 
+      id: '/reports', 
+      label: '智能报表中心', 
+      icon: BarChart3, 
+      color: 'text-orange-500' 
     },
     { 
       id: '/software-suggestions', 

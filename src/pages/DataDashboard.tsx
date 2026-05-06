@@ -1,9 +1,10 @@
 // Sync Trigger: 2026-04-29 20:58
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { 
   Loader2, BarChart3, PieChart, AlertCircle, Activity, ArrowUpRight, 
-  ArrowDownRight, Zap, Target, Users, Receipt, RefreshCw, Layers,
-  DollarSign, ShoppingBag, ShieldAlert, Gauge, Rocket, Scale
+  Zap, Target, Users, Receipt, RefreshCw, Layers,
+  DollarSign, ShoppingBag, ShieldAlert, Gauge, Rocket, Scale, TrendingUp
 } from 'lucide-react';
 import { MXN_TO_CNY, USD_TO_MXN } from '../constants';
 import { 
@@ -389,6 +390,10 @@ export default function DataDashboard() {
     return { refundRate: total > 0 ? (refunds / total) * 100 : 0, refundCount: refunds };
   }, [data]);
 
+
+
+
+
   const StatCard = ({ title, value, icon: Icon, color }: any) => (
     <div className={`bg-white rounded-2xl border border-${color}-100 p-4 shadow-sm relative overflow-hidden`}>
       <div className={`absolute -right-4 -top-4 w-20 h-20 bg-${color}-50 rounded-full blur-2xl opacity-50`} />
@@ -530,6 +535,8 @@ export default function DataDashboard() {
             </div>
           </div>
         </div>
+
+
 
         {/* Row 4: Profit Summary Chart */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-5">

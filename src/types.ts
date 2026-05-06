@@ -7,7 +7,7 @@ export interface DailyStats {
   questions: number;
   claims: number;
   reputation: '绿色店铺' | '领导者店铺' | '白银店铺' | '黄金店铺' | '铂金店铺' | 'green' | 'yellow' | 'red' | 'Verde (极佳)';
-  calculatedProfit?: number; // 汇总后的真实净利润
+  calculatedProfit?: number;
 }
 
 export interface Claim {
@@ -18,6 +18,7 @@ export interface Claim {
   handlingMethod: string;
   handlingTime: string;
   createdAt: string;
+  status?: string;
 }
 
 export interface OperationLog {
@@ -33,9 +34,9 @@ export interface OperationLog {
 export interface Competitor {
   id: string;
   url: string;
-  name: string; // 拟用作店铺等级
-  specs?: string; // 竞品规格
-  imageUrl?: string; // 竞品图片URL
+  name: string;
+  specs?: string;
+  imageUrl?: string;
   currentPrice: number;
   reviewCount: number;
   rating: number;
@@ -43,40 +44,70 @@ export interface Competitor {
 }
 
 export interface SKUStats {
+  id?: string;
   sku: string;
-  skuName: string; // SKU 中文名称
-  listedAt?: string; // 产品上架时间
-  imageUrl?: string; // 产品主图 (Base64/URL)
+  skuName: string;
+  listedAt?: string;
+  imageUrl?: string;
   date: string;
   sales: number;
   orders: number;
   stock: number;
-  avgSalesSinceListing: number; // 上架至今的平均销量
+  avgSalesSinceListing: number;
   slowStock: number;
-  adSpend: number; // 当日广告消耗
-  impressions: number; // 当日曝光
-  clicks: number; // 当日点击数
-  cpc: number; // 当日CPC
-  roas: number; // 当日roas
-  acos: number; // 当日acos
-  adOrders: number; // 当日广告订单数
-  purchasePrice: number; // 采购价 (CNY)
-  sellingPrice: number; // 当时售价 (MXN)
-  specs?: string; // 产品规格
-  reviewCount?: number; // 评论数量
-  rating?: number; // 评分
-  unitProfitExclAds: number; // 当时利润-不含广告 (MXN)
-  inTransitStock: number; // 在途库存
-  inProductionStock: number; // 生产中库存
-  leadTimeDays: number; // 头程时效 (天)
-  status?: string; // 销售状态 (在售, 在途, ...)
-  competitors?: Competitor[]; // 竞品列表
+  adSpend: number;
+  impressions: number;
+  clicks: number;
+  cpc: number;
+  roas: number;
+  acos: number;
+  adOrders: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  specs?: string;
+  reviewCount?: number;
+  rating?: number;
+  unitProfitExclAds: number;
+  inTransitStock: number;
+  inProductionStock: number;
+  leadTimeDays: number;
+  status?: string;
+  competitors?: Competitor[];
+  costConfig?: SkuPricingConfig;
+  fakeOrderCost?: number;
+  damageCost?: number;
+  visits?: number;
+}
+
+export interface SkuPricingConfig {
+  purchase_price_cny: number;
+  selling_price_mxn: number;
+  exchange_rate: number;
+  commission_rate: number;
+  ad_rate: number;
+  return_rate: number;
+  tax_rate: number;
+  box_length: number;
+  box_width: number;
+  box_height: number;
+  box_weight: number;
+  pack_count: number;
+  unit_length: number;
+  unit_width: number;
+  unit_height: number;
+  product_weight: number;
+  logistics_mode: string;
+  sea_freight_unit_price: number;
+  air_freight_unit_price: number;
+  fixed_fee: number;
+  last_mile_fee: number;
+  margin: number;
 }
 
 export interface CalculatedMetrics {
   aov: number;
   acos: number;
-  tacos: number; // 总广告费 / 总销售额
+  tacos: number;
   roas: number;
   doh: number;
   profit: number;
@@ -103,6 +134,7 @@ export interface CargoDamage {
   skuValueCNY: number;
   createdAt?: string;
 }
+
 export interface SkuAdStats {
   id?: string;
   date: string;
@@ -113,12 +145,12 @@ export interface SkuAdStats {
   clicks: number;
   adOrders: number;
   adSpend: number;
-  // Optional calculated fields if stored
   cpc?: number;
   roas?: number;
   acos?: number;
   createdAt?: string;
 }
+
 export interface SoftwareSuggestion {
   id: string;
   user_name: string;
@@ -127,4 +159,61 @@ export interface SoftwareSuggestion {
   priority: 'High' | 'Medium' | 'Low';
   status: 'pending' | 'reviewed' | 'implemented' | 'rejected';
   created_at: string;
+}
+
+export interface SkuMetadata {
+  sku: string;
+  name?: string;
+  purchasePrice?: number;
+  listedAt?: string;
+  status?: string;
+  imageUrl?: string;
+}
+
+export interface ManagedSku {
+  sku: string;
+  name: string;
+  imageUrl?: string;
+  priceMXN: number;
+}
+
+export interface ApiError {
+  message: string;
+  code?: string;
+  details?: string;
+}
+
+export interface ApiResponse<T> {
+  data: T | null;
+  error: ApiError | null;
+  loading: boolean;
+}
+
+export type Currency = 'USD' | 'MXN' | 'CNY';
+
+export type ReputationType = DailyStats['reputation'];
+
+export type ActionType = OperationLog['actionType'];
+
+export type CargoDamageReason = CargoDamage['reason'];
+
+export interface ReportConfig {
+  type: 'sales' | 'inventory' | 'profit' | 'ads' | 'comprehensive';
+  dateRange: { start: string; end: string };
+  skus?: string[];
+  groupBy: 'day' | 'week' | 'month';
+  format: 'pdf' | 'excel' | 'csv';
+}
+
+export interface ConversionFunnelData {
+  stage: string;
+  count: number;
+  rate: number;
+  color: string;
+}
+
+export interface HeatmapData {
+  hour: number;
+  day: string;
+  value: number;
 }

@@ -1,0 +1,39 @@
+# Environment variables
+.env*
+!.env.example
+
+# Service account keys
+serviceAccountKey*.json
+serviceAccountKey*.json.json
+
+# Node modules
+node_modules/
+
+# Build output (Vercel will build itself)
+dist/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+*.txt
+!README.md
+
+# Excel files
+*.xlsx
+
+# Other
+.DS_Store
+*.log
+coverage/

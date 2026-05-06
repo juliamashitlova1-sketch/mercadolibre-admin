@@ -24,6 +24,7 @@ import SoftwareSuggestions from "./pages/SoftwareSuggestions";
 import SkuReviews from "./pages/SkuReviews";
 import CompetitorData from "./pages/CompetitorData";
 import DataSources from "./pages/DataSources";
+import DataCrawler from "./pages/DataCrawler";
 
 import DataEntry from "./components/DataEntry";
 import SKUEntry from "./components/SKUEntry";
@@ -209,6 +210,7 @@ function AppContent() {
             <Route path="/sku-reviews" element={<SkuReviews />} />
             <Route path="/competitor-data" element={<CompetitorData />} />
             <Route path="/data-sources" element={<DataSources />} />
+            <Route path="/data-crawler" element={<DataCrawler />} />
             <Route path="/fake-orders" element={<FakeOrders />} />
             <Route path="/cargo-damage" element={<CargoDamage />} />
             <Route path="/pricing" element={<Pricing />} />

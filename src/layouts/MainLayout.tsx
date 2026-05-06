@@ -379,6 +379,11 @@ export default function MainLayout({
       label: "数据来源",
       icon: Database,
     },
+    {
+      id: "/data-crawler",
+      label: "数据爬虫",
+      icon: Search,
+    },
   ];
 
   // Stable random grid for DATA_STREAM card

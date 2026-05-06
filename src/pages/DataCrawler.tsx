@@ -1,482 +1,329 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useRef, useEffect } from "react";
 import {
-  Search,
   ExternalLink,
   Loader2,
   Download,
   Globe,
-  Trash2,
-  Clock,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle2,
-  RefreshCw,
-  Clipboard,
+  Copy,
+  Check,
 } from "lucide-react";
 
-// ---------- Types ----------
-
-interface CrawlResult {
-  success: boolean;
-  columns: string[];
-  rows: string[][];
-  rowCount: number;
-  rawTitle: string;
-  note?: string;
-  error?: string;
-}
-
-interface CrawlHistoryEntry {
-  url: string;
-  title: string;
-  timestamp: number;
-}
-
-const HISTORY_KEY = "datacrawler_history";
-
-// ---------- Helpers ----------
-
-function loadHistory(): CrawlHistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(entries: CrawlHistoryEntry[]) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
-}
-
-function parseTabularText(text: string): { columns: string[]; rows: string[][] } {
-  const lines = text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
-  if (lines.length === 0) return { columns: [], rows: [] };
-
-  const columns = lines[0].split("\t").map((c) => c.trim());
-  const rows = lines.slice(1).map((line) => line.split("\t").map((c) => c.trim()));
-
-  return { columns, rows };
-}
-
-function downloadCSV(columns: string[], rows: string[][], filename: string) {
-  const bom = "\uFEFF";
-  const csvLines = [columns.join(","), ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))];
-  const blob = new Blob([bom + csvLines.join("\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ---------- Component ----------
-
 export default function DataCrawler() {
-  // URL input
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<CrawlResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [columns, setColumns] = useState<string[]>([]);
+  const [rows, setRows] = useState<string[][]>([]);
+  const [error, setError] = useState("");
+  const [opened, setOpened] = useState(false);
+  const pasteRef = useRef<HTMLTextAreaElement>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Manual paste
-  const [pasteText, setPasteText] = useState("");
-  const [manualData, setManualData] = useState<{ columns: string[]; rows: string[][] } | null>(null);
-
-  // History
-  const [history, setHistory] = useState<CrawlHistoryEntry[]>(loadHistory);
-
-  // Persist history changes
+  // Auto-listen for paste anywhere after opening URL
   useEffect(() => {
-    saveHistory(history);
-  }, [history]);
+    const handler = async (e: ClipboardEvent) => {
+      if (!opened) return;
+      const html = e.clipboardData?.getData("text/html") || "";
+      const text = e.clipboardData?.getData("text/plain") || "";
+      if (!html && !text) return;
 
-  // ---------- Crawl ----------
-
-  const handleCrawl = useCallback(async () => {
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) return;
-
-    // Normalize URL
-    let targetUrl = trimmedUrl;
-    if (!/^https?:\/\//i.test(targetUrl)) {
-      targetUrl = "https://" + targetUrl;
-    }
-
-    // Open in new tab
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
-
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const res = await fetch("/api/crawl", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: targetUrl }),
-      });
-
-      const data: CrawlResult = await res.json();
-
-      if (!res.ok || !data.success) {
-        setError(data.error || data.note || "抓取失败");
-        setResult(data);
-      } else {
-        setResult(data);
-        // Add to history
-        setHistory((prev) => {
-          const next: CrawlHistoryEntry[] = [
-            { url: targetUrl, title: data.rawTitle || targetUrl, timestamp: Date.now() },
-            ...prev.filter((h) => h.url !== targetUrl),
-          ].slice(0, 20);
-          return next;
-        });
+      // Try to parse HTML first (from table copy)
+      if (html && html.includes("<table")) {
+        parseHtmlTable(html);
+        setOpened(false);
+        setLoading(false);
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || "请求失败，请检查网络连接");
-    } finally {
-      setLoading(false);
+      // Fallback to plain text
+      if (text && text.includes("\t")) {
+        parseTabText(text);
+        setOpened(false);
+        setLoading(false);
+        return;
+      }
+    };
+    if (opened) {
+      document.addEventListener("paste", handler);
+      return () => document.removeEventListener("paste", handler);
     }
-  }, [url]);
+  }, [opened]);
 
-  const handleHistoryClick = (entry: CrawlHistoryEntry) => {
-    setUrl(entry.url);
+  const parseHtmlTable = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if (!table) {
+      setError("未在粘贴内容中找到表格");
+      return;
+    }
+
+    const cols: string[] = [];
+    table.querySelectorAll("thead tr th, thead tr td").forEach((th) => {
+      cols.push((th as HTMLElement).innerText.trim());
+    });
+
+    const data: string[][] = [];
+    table.querySelectorAll("tbody tr").forEach((tr) => {
+      const row: string[] = [];
+      tr.querySelectorAll("td").forEach((td) => {
+        row.push((td as HTMLElement).innerText.trim().replace(/\s+/g, " "));
+      });
+      if (row.length > 0) data.push(row);
+    });
+
+    if (data.length === 0) {
+      setError("未在表格中找到数据行");
+      return;
+    }
+    setColumns(
+      cols.length > 0
+        ? cols
+        : Array.from({ length: data[0].length }, (_, i) => `列${i + 1}`),
+    );
+    setRows(data);
+    setError("");
   };
 
-  const handleDeleteHistory = (entryUrl: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setHistory((prev) => prev.filter((h) => h.url !== entryUrl));
+  const parseTabText = (text: string) => {
+    const lines = text.trim().split("\n").filter(Boolean);
+    if (lines.length < 2) {
+      setError("数据至少需要两行");
+      return;
+    }
+    const cols = lines[0].split("\t");
+    const data = lines.slice(1).map((line) => line.split("\t"));
+    setColumns(cols);
+    setRows(data);
+    setError("");
   };
 
-  const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem(HISTORY_KEY);
+  const handleStart = () => {
+    if (!url) return;
+    setLoading(true);
+    setOpened(true);
+    setError("");
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => pasteRef.current?.focus(), 500);
   };
 
-  // ---------- Manual Parse ----------
-
-  const handleParsePaste = () => {
-    if (!pasteText.trim()) return;
-    const parsed = parseTabularText(pasteText);
-    setManualData(parsed);
+  const handlePasteManually = async () => {
+    try {
+      const clipboard = await navigator.clipboard.read();
+      for (const item of clipboard) {
+        if (item.types.includes("text/html")) {
+          const blob = await item.getType("text/html");
+          const html = await blob.text();
+          if (html.includes("<table")) {
+            parseHtmlTable(html);
+            setOpened(false);
+            setLoading(false);
+            return;
+          }
+        }
+        if (item.types.includes("text/plain")) {
+          const blob = await item.getType("text/plain");
+          const text = await blob.text();
+          if (text.includes("\t")) {
+            parseTabText(text);
+            setOpened(false);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      setError(
+        "剪贴板中没有检测到表格数据。请先在新打开的标签页中选中表格并复制（Ctrl+A → Ctrl+C）",
+      );
+    } catch {
+      setError("无法读取剪贴板，请直接在下方粘贴框中 Ctrl+V 粘贴表格数据");
+    }
   };
 
-  // ---------- Download ----------
-
-  const handleDownload = (columns: string[], rows: string[][]) => {
-    const filename = `crawl_${new Date().toISOString().slice(0, 10)}.csv`;
-    downloadCSV(columns, rows, filename);
+  const exportCSV = () => {
+    const csv = [
+      columns.join(","),
+      ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `数据爬取_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
-
-  // ---------- Determine what to render ----------
-
-  const activeColumns = result?.columns?.length ? result.columns : manualData?.columns || [];
-  const activeRows = result?.rows?.length ? result.rows : manualData?.rows || [];
-  const hasData = activeColumns.length > 0 && activeRows.length > 0;
-
-  // ---------- Render ----------
 
   return (
     <div className="v2-page-container">
       <div className="v2-inner-container">
-        {/* Header */}
-        <header className="v2-header flex-col md:flex-row items-start md:items-center gap-4">
-          <div className="flex items-center space-x-3">
+        <header className="v2-header">
+          <div className="flex items-center space-x-4">
             <div className="v2-header-icon bg-gradient-to-br from-emerald-500 to-teal-600">
-              <Globe className="w-5 h-5" />
+              <Globe className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="v2-header-title">数据爬虫</h1>
-              <p className="v2-header-subtitle">
-                抓取网页中的公开表格数据，支持自动解析与手动粘贴
+              <p className="v2-header-subtitle font-medium">
+                打开网页 → 等待扩展加载 → 复制表格 → 自动解析
               </p>
             </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Left sidebar: Input + History */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* URL Input Card */}
-            <div className="v2-card p-5 space-y-4">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-emerald-500" />
-                目标网址
-              </h3>
-
-              <div className="space-y-3">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCrawl()}
-                  placeholder="https://..."
-                  className="v2-input text-sm"
-                  disabled={loading}
-                />
-
-                <button
-                  onClick={handleCrawl}
-                  disabled={loading || !url.trim()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg shadow-md active:scale-95 transition-all"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      抓取中...
-                    </>
-                  ) : (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      开始爬取
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700"
-                >
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </motion.div>
+        {/* URL Input */}
+        <div className="v2-card bg-white p-5 border-slate-200/60 shadow-sm">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              placeholder="粘贴目标网页 URL..."
+              className="v2-input flex-1 text-sm py-2.5"
+            />
+            <button
+              onClick={handleStart}
+              disabled={!url || loading}
+              className="bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shrink-0 transition-all active:scale-95"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ExternalLink className="w-4 h-4" />
               )}
-            </div>
-
-            {/* Manual Paste Card */}
-            <div className="v2-card p-5 space-y-3">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Clipboard className="w-3.5 h-3.5 text-amber-500" />
-                手动粘贴数据
-              </h3>
-              <textarea
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                placeholder={"从 Excel / Google Sheets 复制数据粘贴到此处\n（制表符分隔）"}
-                rows={6}
-                className="v2-input text-xs font-mono resize-y min-h-[100px]"
-              />
-              <button
-                onClick={handleParsePaste}
-                disabled={!pasteText.trim()}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg shadow-md active:scale-95 transition-all"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                渲染表格
-              </button>
-            </div>
-
-            {/* History */}
-            <div className="v2-card">
-              <div className="v2-card-header">
-                <h3 className="v2-card-title">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  抓取历史
-                </h3>
-                {history.length > 0 && (
-                  <button
-                    onClick={handleClearHistory}
-                    className="text-[10px] text-slate-400 hover:text-rose-500 transition-colors font-bold"
-                  >
-                    清空
-                  </button>
-                )}
-              </div>
-              <div className="max-h-[240px] overflow-y-auto">
-                {history.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-[11px] text-slate-400 italic">
-                    暂无历史记录
-                  </div>
-                ) : (
-                  history.map((entry) => (
-                    <button
-                      key={entry.timestamp + entry.url}
-                      onClick={() => handleHistoryClick(entry)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors border-b border-slate-50 text-left group"
-                    >
-                      <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-bold text-slate-700 truncate">
-                          {entry.title || entry.url}
-                        </div>
-                        <div className="text-[10px] text-slate-400 truncate">
-                          {entry.url}
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => handleDeleteHistory(entry.url, e)}
-                        className="p-1 rounded hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all"
-                        title="删除"
-                      >
-                        <Trash2 className="w-3 h-3 text-rose-400" />
-                      </button>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Results */}
-          <div className="lg:col-span-3 space-y-4">
-            <AnimatePresence mode="wait">
-              {/* Loading */}
-              {loading && (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="v2-card bg-emerald-50/30 border-emerald-200/40 flex flex-col items-center justify-center p-16 text-center"
-                >
-                  <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mb-4" />
-                  <p className="text-sm font-bold text-slate-600">正在抓取数据...</p>
-                  <p className="text-xs text-slate-400 mt-1">已在新标签页中打开目标页面</p>
-                </motion.div>
-              )}
-
-              {/* Empty state + note */}
-              {!loading && !result && !manualData && (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="v2-card bg-slate-50/50 border-dashed border-slate-200 flex flex-col items-center justify-center p-16 text-center"
-                >
-                  <Globe className="w-10 h-10 text-slate-300 mb-4" />
-                  <p className="text-sm font-bold text-slate-500">等待抓取</p>
-                  <p className="text-xs text-slate-400 mt-1 max-w-[280px]">
-                    输入目标网址点击「开始爬取」，或在左侧粘贴表格数据
-                  </p>
-                </motion.div>
-              )}
-
-              {/* Note from server (JS-rendered page) */}
-              {!loading && result?.note && !hasData && (
-                <motion.div
-                  key="note"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="v2-card bg-amber-50/50 border-amber-200/40 p-6 text-center"
-                >
-                  <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-amber-800">{result.note}</p>
-                  {result.rawTitle && (
-                    <p className="text-xs text-amber-600 mt-2">
-                      页面标题: {result.rawTitle}
-                    </p>
-                  )}
-                </motion.div>
-              )}
-
-              {/* Table result */}
-              {!loading && hasData && (
-                <motion.div
-                  key="table"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="v2-card"
-                >
-                  <div className="v2-card-header">
-                    <h2 className="v2-card-title text-slate-800">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      {result ? (
-                        <>
-                          抓取结果
-                          {result.rawTitle && (
-                            <span className="text-[10px] font-normal text-slate-400 ml-2 truncate max-w-[300px]">
-                              — {result.rawTitle}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        "手动粘贴数据"
-                      )}
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-mono bg-slate-100 px-2 py-0.5 rounded">
-                        {activeRows.length} 行 × {activeColumns.length} 列
-                      </span>
-                      <button
-                        onClick={() => handleDownload(activeColumns, activeRows)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-400 text-white text-[10px] font-bold rounded-lg shadow-sm active:scale-95 transition-all"
-                      >
-                        <Download className="w-3 h-3" />
-                        导出 CSV
-                      </button>
-                    </div>
-                  </div>
-                  <div className="v2-table-wrapper max-h-[600px]">
-                    <table className="v2-table">
-                      <thead className="v2-table-thead">
-                        <tr>
-                          <th className="v2-table-th w-12 text-center text-[10px]">#</th>
-                          {activeColumns.map((col, i) => (
-                            <th key={i} className="v2-table-th whitespace-nowrap">
-                              {col || `列${i + 1}`}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {activeRows.map((row, ri) => (
-                          <tr key={ri} className="v2-table-tr">
-                            <td className="v2-table-td text-center text-[10px] text-slate-400 font-mono">
-                              {ri + 1}
-                            </td>
-                            {row.map((cell, ci) => (
-                              <td
-                                key={ci}
-                                className="v2-table-td whitespace-nowrap max-w-[300px] truncate"
-                                title={cell}
-                              >
-                                {cell}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Error-only result (e.g., fetch failed but we got a response) */}
-              {!loading && result && !result.success && !hasData && !result.note && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="v2-card bg-rose-50/50 border-rose-200/40 p-6 text-center"
-                >
-                  <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-rose-800">
-                    {result.error || "未知错误"}
-                  </p>
-                  {result.rawTitle && (
-                    <p className="text-xs text-rose-600 mt-2">
-                      页面标题: {result.rawTitle}
-                    </p>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+              {loading ? "等待粘贴..." : "开始爬取"}
+            </button>
           </div>
         </div>
+
+        {/* Waiting state */}
+        {loading && opened && (
+          <div className="v2-card bg-amber-50/80 border-2 border-amber-300 border-dashed rounded-xl p-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-amber-500" />
+            <h3 className="text-sm font-bold text-amber-700 mb-2">
+              ⏳ 等待数据粘贴
+            </h3>
+            <p className="text-xs text-amber-600 leading-relaxed max-w-md mx-auto">
+              已在浏览器新标签页打开目标网页。请在<b>新标签页中</b>选中表格数据
+              （Ctrl+A → Ctrl+C），然后回到本页面按 Ctrl+V
+              粘贴，系统将自动解析。
+            </p>
+            <div className="mt-4 flex justify-center gap-3">
+              <button
+                onClick={handlePasteManually}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white rounded-lg text-xs font-bold transition-all"
+              >
+                从剪贴板读取
+              </button>
+              <button
+                onClick={() => {
+                  setLoading(false);
+                  setOpened(false);
+                }}
+                className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500 transition-all"
+              >
+                取消
+              </button>
+            </div>
+            <div className="mt-5">
+              <p className="text-[10px] text-amber-500 font-medium mb-2">
+                或者直接在这里 Ctrl+V 粘贴表格数据：
+              </p>
+              <textarea
+                ref={pasteRef}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.includes("<table")) {
+                    parseHtmlTable(val);
+                    setOpened(false);
+                    setLoading(false);
+                  } else if (val.includes("\t")) {
+                    parseTabText(val);
+                    setOpened(false);
+                    setLoading(false);
+                  }
+                }}
+                placeholder="在这里 Ctrl+V 粘贴复制的表格..."
+                className="w-full h-24 text-xs font-mono border-2 border-amber-200 rounded-lg p-3 outline-none focus:border-amber-400 resize-none"
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !loading && (
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-xs text-rose-600">
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Results Table */}
+        {rows.length > 0 && (
+          <div className="v2-card bg-white p-5 border-slate-200/60 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-500" />
+                解析结果 · {rows.length} 行 × {columns.length} 列
+              </h3>
+              <button
+                onClick={exportCSV}
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all"
+              >
+                {copied ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                {copied ? "已下载" : "导出 CSV"}
+              </button>
+            </div>
+            <div className="v2-table-wrapper max-h-[600px] overflow-auto custom-scrollbar border border-slate-100 rounded-lg">
+              <table className="v2-table text-[11px]">
+                <thead className="v2-table-thead bg-slate-50 sticky top-0 z-10">
+                  <tr>
+                    <th className="v2-table-th text-center w-10">#</th>
+                    {columns.map((col, i) => (
+                      <th key={i} className="v2-table-th whitespace-nowrap">
+                        {col || `列${i + 1}`}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rows.map((row, ri) => (
+                    <tr key={ri} className="v2-table-tr hover:bg-slate-50/80">
+                      <td className="v2-table-td text-center text-slate-400 font-mono">
+                        {ri + 1}
+                      </td>
+                      {row.map((cell, ci) => (
+                        <td
+                          key={ci}
+                          className="v2-table-td max-w-[300px] truncate"
+                          title={cell}
+                        >
+                          {cell || "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && rows.length === 0 && (
+          <div className="v2-card bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
+            <Globe className="w-10 h-10 mx-auto mb-3 text-slate-200" />
+            <p className="text-sm text-slate-400 font-medium">
+              输入 URL 并点击"开始爬取"开始
+            </p>
+            <p className="text-xs text-slate-300 mt-1">
+              支持自动识别粘贴板中的 HTML 表格或 Tab 分隔数据
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

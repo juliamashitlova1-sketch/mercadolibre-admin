@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
-import { OperationLog } from "../types";
+import { OperationLog, LinkReview } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Plus,
@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Download,
   History,
+  Star,
 } from "lucide-react";
 import {
   LineChart,
@@ -48,13 +49,37 @@ export default function SkuManagement() {
   const [pricingData, setPricingData] = useState<any[]>([]);
   const [fakeOrdersData, setFakeOrdersData] = useState<any[]>([]);
   const [damageData, setDamageData] = useState<any[]>([]);
+  const [linkReviews, setLinkReviews] = useState<LinkReview[]>([]);
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
   useEffect(() => {
     fetchCloudData();
     fetchAuxiliaryData();
+    fetchLinkReviews();
   }, []);
+
+  const fetchLinkReviews = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("link_reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const mapped = (data || []).map((row: any) => ({
+        id: row.id,
+        sku: row.sku,
+        skuName: row.sku_name || "",
+        reviewTime: row.review_time || "",
+        reviewScore: Number(row.review_score) || 0,
+        reviewContent: row.review_content || "",
+        createdAt: row.created_at,
+      }));
+      setLinkReviews(mapped);
+    } catch (err) {
+      console.error("Error fetching link reviews:", err);
+    }
+  };
 
   const fetchCloudData = async () => {
     setIsLoading(true);
@@ -1580,6 +1605,112 @@ export default function SkuManagement() {
                                                                   "2-digit",
                                                               },
                                                             )}
+                                                          </td>
+                                                        </tr>
+                                                      ),
+                                                    );
+                                                  })()}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </div>
+
+                                          {/* 6. Link Reviews Section */}
+                                          <div className="v2-card bg-white p-5 border-slate-100 shadow-md">
+                                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-slate-700">
+                                              <Star className="w-4 h-4 text-amber-500" />{" "}
+                                              链接评价
+                                            </div>
+                                            <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                              <table className="v2-table border-separate border-spacing-0">
+                                                <thead className="bg-slate-50/80 backdrop-blur sticky top-0 z-10 text-[9px] uppercase font-black text-slate-400">
+                                                  <tr>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">
+                                                      评价时间
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-center border-b border-slate-100">
+                                                      评分
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-left border-b border-slate-100">
+                                                      评价内容
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right border-b border-slate-100">
+                                                      累计评分
+                                                    </th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="text-[10px] divide-y divide-slate-50">
+                                                  {(() => {
+                                                    const skuReviews =
+                                                      linkReviews.filter(
+                                                        (r) =>
+                                                          r.sku === item.sku,
+                                                      );
+                                                    if (
+                                                      skuReviews.length === 0
+                                                    ) {
+                                                      return (
+                                                        <tr>
+                                                          <td
+                                                            colSpan={4}
+                                                            className="px-3 py-8 text-center text-slate-400 italic"
+                                                          >
+                                                            暂无评价记录
+                                                          </td>
+                                                        </tr>
+                                                      );
+                                                    }
+                                                    // Calculate average rating for this SKU
+                                                    const avgRating =
+                                                      skuReviews.reduce(
+                                                        (acc, r) =>
+                                                          acc + r.reviewScore,
+                                                        0,
+                                                      ) / skuReviews.length;
+                                                    return skuReviews.map(
+                                                      (review, rid) => (
+                                                        <tr
+                                                          key={rid}
+                                                          className="v2-table-tr hover:bg-slate-50/80 transition-colors"
+                                                        >
+                                                          <td className="px-3 py-2.5 text-slate-600 font-bold whitespace-nowrap">
+                                                            {review.reviewTime}
+                                                          </td>
+                                                          <td className="px-3 py-2.5 text-center">
+                                                            <span className="inline-flex gap-0.5">
+                                                              {[
+                                                                1, 2, 3, 4, 5,
+                                                              ].map((star) => (
+                                                                <span
+                                                                  key={star}
+                                                                  className={
+                                                                    star <=
+                                                                    review.reviewScore
+                                                                      ? "text-amber-400"
+                                                                      : "text-slate-200"
+                                                                  }
+                                                                >
+                                                                  ★
+                                                                </span>
+                                                              ))}
+                                                            </span>
+                                                          </td>
+                                                          <td
+                                                            className="px-3 py-2.5 text-slate-500 leading-relaxed font-medium max-w-[300px] truncate"
+                                                            title={
+                                                              review.reviewContent
+                                                            }
+                                                          >
+                                                            {review.reviewContent ||
+                                                              "-"}
+                                                          </td>
+                                                          <td className="px-3 py-2.5 text-right">
+                                                            <span className="font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-[10px]">
+                                                              {avgRating.toFixed(
+                                                                1,
+                                                              )}{" "}
+                                                              / 5.0
+                                                            </span>
                                                           </td>
                                                         </tr>
                                                       ),

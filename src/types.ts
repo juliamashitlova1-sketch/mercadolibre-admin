@@ -6,7 +6,16 @@ export interface DailyStats {
   exchangeRate: number;
   questions: number;
   claims: number;
-  reputation: '绿色店铺' | '领导者店铺' | '白银店铺' | '黄金店铺' | '铂金店铺' | 'green' | 'yellow' | 'red' | 'Verde (极佳)';
+  reputation:
+    | "绿色店铺"
+    | "领导者店铺"
+    | "白银店铺"
+    | "黄金店铺"
+    | "铂金店铺"
+    | "green"
+    | "yellow"
+    | "red"
+    | "Verde (极佳)";
   calculatedProfit?: number;
 }
 
@@ -26,7 +35,7 @@ export interface OperationLog {
   sku: string;
   date: string;
   action?: string;
-  actionType: 'Price' | 'Image' | 'Ads' | 'Title' | 'Stock' | 'Other';
+  actionType: "Price" | "Image" | "Ads" | "Title" | "Stock" | "Other";
   description: string;
   createdAt: string;
 }
@@ -130,7 +139,7 @@ export interface CargoDamage {
   skuName: string;
   date: string;
   quantity: number;
-  reason: '送仓差异' | '货代丢失' | '退货无法二次利用';
+  reason: "送仓差异" | "货代丢失" | "退货无法二次利用";
   skuValueCNY: number;
   createdAt?: string;
 }
@@ -154,10 +163,10 @@ export interface SkuAdStats {
 export interface SoftwareSuggestion {
   id: string;
   user_name: string;
-  category: 'Feature Request' | 'Bug Report' | 'UI/UX' | 'Other';
+  category: "Feature Request" | "Bug Report" | "UI/UX" | "Other";
   content: string;
-  priority: 'High' | 'Medium' | 'Low';
-  status: 'pending' | 'reviewed' | 'implemented' | 'rejected';
+  priority: "High" | "Medium" | "Low";
+  status: "pending" | "reviewed" | "implemented" | "rejected";
   created_at: string;
 }
 
@@ -189,20 +198,20 @@ export interface ApiResponse<T> {
   loading: boolean;
 }
 
-export type Currency = 'USD' | 'MXN' | 'CNY';
+export type Currency = "USD" | "MXN" | "CNY";
 
-export type ReputationType = DailyStats['reputation'];
+export type ReputationType = DailyStats["reputation"];
 
-export type ActionType = OperationLog['actionType'];
+export type ActionType = OperationLog["actionType"];
 
-export type CargoDamageReason = CargoDamage['reason'];
+export type CargoDamageReason = CargoDamage["reason"];
 
 export interface ReportConfig {
-  type: 'sales' | 'inventory' | 'profit' | 'ads' | 'comprehensive';
+  type: "sales" | "inventory" | "profit" | "ads" | "comprehensive";
   dateRange: { start: string; end: string };
   skus?: string[];
-  groupBy: 'day' | 'week' | 'month';
-  format: 'pdf' | 'excel' | 'csv';
+  groupBy: "day" | "week" | "month";
+  format: "pdf" | "excel" | "csv";
 }
 
 export interface ConversionFunnelData {
@@ -210,6 +219,16 @@ export interface ConversionFunnelData {
   count: number;
   rate: number;
   color: string;
+}
+
+export interface LinkReview {
+  id: string;
+  sku: string;
+  skuName: string;
+  reviewTime: string;
+  reviewScore: number;
+  reviewContent: string;
+  createdAt?: string;
 }
 
 export interface HeatmapData {

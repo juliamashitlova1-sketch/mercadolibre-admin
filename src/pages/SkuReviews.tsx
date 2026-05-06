@@ -1,14 +1,21 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useMemo } from "react";
+import { useOutletContext } from "react-router-dom";
+import { format } from "date-fns";
+import { motion, AnimatePresence } from "motion/react";
 import {
-  Plus, Trash2, Edit2, Star, MessageSquare,
-  RefreshCw, X, Calendar, Filter
-} from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { LinkReview, ManagedSku } from '../types';
-import { getMexicoDateString } from '../lib/time';
+  Plus,
+  Trash2,
+  Edit2,
+  Star,
+  MessageSquare,
+  RefreshCw,
+  X,
+  Calendar,
+  Filter,
+} from "lucide-react";
+import { supabaseNew as supabase } from "../lib/supabase";
+import { LinkReview, ManagedSku } from "../types";
+import { getMexicoDateString } from "../lib/time";
 
 interface ContextType {
   managedSkus: ManagedSku[];
@@ -45,11 +52,11 @@ export default function SkuReviews() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
-    sku: '',
-    skuName: '',
+    sku: "",
+    skuName: "",
     reviewTime: getMexicoDateString(),
     reviewScore: 5,
-    reviewContent: '',
+    reviewContent: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -58,15 +65,15 @@ export default function SkuReviews() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('link_reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("link_reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setReviews((data || []).map((r: LinkReviewRow) => mapRowToReview(r)));
     } catch (err) {
-      console.error('Error fetching link reviews:', err);
-      alert('获取评价数据失败，请稍后重试');
+      console.error("Error fetching link reviews:", err);
+      alert("获取评价数据失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -107,11 +114,11 @@ export default function SkuReviews() {
   const openCreateModal = () => {
     setEditingId(null);
     setForm({
-      sku: '',
-      skuName: '',
+      sku: "",
+      skuName: "",
       reviewTime: getMexicoDateString(),
       reviewScore: 5,
-      reviewContent: '',
+      reviewContent: "",
     });
     setIsModalOpen(true);
   };
@@ -138,14 +145,14 @@ export default function SkuReviews() {
     setForm({
       ...form,
       sku,
-      skuName: selected?.name || '',
+      skuName: selected?.name || "",
     });
   };
 
   // ---------- Save (Create / Update) ----------
   const handleSave = async () => {
     if (!form.sku || !form.reviewTime || !form.reviewContent.trim()) {
-      alert('请填写完整信息（SKU、评价时间、评价内容为必填）');
+      alert("请填写完整信息（SKU、评价时间、评价内容为必填）");
       return;
     }
 
@@ -162,13 +169,13 @@ export default function SkuReviews() {
       let error = null;
       if (editingId) {
         const { error: err } = await supabase
-          .from('link_reviews')
+          .from("link_reviews")
           .update(payload)
-          .eq('id', editingId);
+          .eq("id", editingId);
         error = err;
       } else {
         const { error: err } = await supabase
-          .from('link_reviews')
+          .from("link_reviews")
           .insert([payload]);
         error = err;
       }
@@ -178,8 +185,8 @@ export default function SkuReviews() {
       closeModal();
       fetchReviews();
     } catch (err: any) {
-      console.error('Error saving review:', err);
-      alert('保存失败: ' + (err.message || '请稍后重试'));
+      console.error("Error saving review:", err);
+      alert("保存失败: " + (err.message || "请稍后重试"));
     } finally {
       setSaving(false);
     }
@@ -187,22 +194,25 @@ export default function SkuReviews() {
 
   // ---------- Delete ----------
   const handleDelete = async (id: string) => {
-    if (!confirm('确定要删除这条评价记录吗？')) return;
+    if (!confirm("确定要删除这条评价记录吗？")) return;
     try {
-      const { error } = await supabase.from('link_reviews').delete().eq('id', id);
+      const { error } = await supabase
+        .from("link_reviews")
+        .delete()
+        .eq("id", id);
       if (error) throw error;
       fetchReviews();
     } catch (err: any) {
-      console.error('Error deleting review:', err);
-      alert('删除失败，请稍后重试');
+      console.error("Error deleting review:", err);
+      alert("删除失败，请稍后重试");
     }
   };
 
   // ---------- Helpers for display ----------
   const getScoreBadge = (score: number) => {
-    if (score >= 4) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-    if (score >= 3) return 'bg-amber-50 text-amber-600 border-amber-100';
-    return 'bg-rose-50 text-rose-600 border-rose-100';
+    if (score >= 4) return "bg-emerald-50 text-emerald-600 border-emerald-100";
+    if (score >= 3) return "bg-amber-50 text-amber-600 border-amber-100";
+    return "bg-rose-50 text-rose-600 border-rose-100";
   };
 
   const renderStars = (score: number) => {
@@ -213,8 +223,8 @@ export default function SkuReviews() {
             key={s}
             className={`w-3.5 h-3.5 ${
               s <= score
-                ? 'text-amber-400 fill-amber-400'
-                : 'text-slate-200 fill-slate-200'
+                ? "text-amber-400 fill-amber-400"
+                : "text-slate-200 fill-slate-200"
             }`}
           />
         ))}
@@ -233,7 +243,9 @@ export default function SkuReviews() {
             </div>
             <div>
               <h1 className="v2-header-title">SKU 链接评价管理</h1>
-              <p className="v2-header-subtitle font-medium">记录与管理 SKU 的买家评价信息</p>
+              <p className="v2-header-subtitle font-medium">
+                记录与管理 SKU 的买家评价信息
+              </p>
             </div>
           </div>
           <div className="flex gap-3">
@@ -258,18 +270,24 @@ export default function SkuReviews() {
         {!loading && reviews.length > 0 && (
           <div className="v2-stats-grid">
             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-slate-400 font-bold">累计评价数</span>
+              <span className="v2-stat-label text-slate-400 font-bold">
+                累计评价数
+              </span>
               <div className="v2-stat-value text-slate-900">{stats.total}</div>
             </div>
             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-amber-600 font-bold">平均评分</span>
+              <span className="v2-stat-label text-amber-600 font-bold">
+                平均评分
+              </span>
               <div className="v2-stat-value text-amber-600 flex items-center gap-2">
                 {stats.averageRating}
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
               </div>
             </div>
             <div className="v2-stat-card bg-white/80 border-slate-200/60 shadow-lg">
-              <span className="v2-stat-label text-sky-600 font-bold">涉及 SKU 数</span>
+              <span className="v2-stat-label text-sky-600 font-bold">
+                涉及 SKU 数
+              </span>
               <div className="v2-stat-value text-sky-600">
                 {Object.keys(skuAverageMap).length}
               </div>
@@ -279,7 +297,7 @@ export default function SkuReviews() {
                 <Calendar className="w-3 h-3" /> 最近评价
               </span>
               <div className="v2-stat-value text-slate-500 text-sm font-mono">
-                {reviews[0]?.reviewTime || '-'}
+                {reviews[0]?.reviewTime || "-"}
               </div>
             </div>
           </div>
@@ -325,9 +343,14 @@ export default function SkuReviews() {
                   </tr>
                 ) : reviews.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-32 text-center text-slate-400 italic">
+                    <td
+                      colSpan={7}
+                      className="py-32 text-center text-slate-400 italic"
+                    >
                       <Star className="w-12 h-12 mx-auto mb-4 opacity-5" />
-                      <p className="text-sm font-bold opacity-60">暂无评价记录</p>
+                      <p className="text-sm font-bold opacity-60">
+                        暂无评价记录
+                      </p>
                       <button
                         onClick={openCreateModal}
                         className="mt-3 text-xs text-amber-600 hover:text-amber-500 font-bold transition-colors"
@@ -346,7 +369,10 @@ export default function SkuReviews() {
                       </td>
                       <td className="v2-table-td">
                         <div className="max-w-[180px]">
-                          <p className="text-slate-700 text-xs font-medium truncate" title={review.skuName}>
+                          <p
+                            className="text-slate-700 text-xs font-medium truncate"
+                            title={review.skuName}
+                          >
                             {review.skuName}
                           </p>
                         </div>
@@ -361,7 +387,9 @@ export default function SkuReviews() {
                       </td>
                       <td className="v2-table-td">
                         <div className="flex justify-center">
-                          <div className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-wide shadow-sm ${getScoreBadge(review.reviewScore)}`}>
+                          <div
+                            className={`px-2.5 py-1 rounded-full border text-[10px] font-black tracking-wide shadow-sm ${getScoreBadge(review.reviewScore)}`}
+                          >
                             {renderStars(review.reviewScore)}
                           </div>
                         </div>
@@ -376,7 +404,7 @@ export default function SkuReviews() {
                       <td className="v2-table-td text-center">
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 text-[11px] font-bold">
                           <Star className="w-3 h-3 text-indigo-400 fill-indigo-400" />
-                          {skuAverageMap[review.sku] ?? '-'}
+                          {skuAverageMap[review.sku] ?? "-"}
                         </span>
                       </td>
                       <td className="v2-table-td text-right">
@@ -429,7 +457,7 @@ export default function SkuReviews() {
               <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50">
                 <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                   <Star className="w-4 h-4 text-amber-500" />
-                  {editingId ? '编辑评价' : '新建评价'}
+                  {editingId ? "编辑评价" : "新建评价"}
                 </h3>
                 <button
                   onClick={closeModal}
@@ -484,7 +512,9 @@ export default function SkuReviews() {
                   <input
                     type="date"
                     value={form.reviewTime}
-                    onChange={(e) => setForm({ ...form, reviewTime: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, reviewTime: e.target.value })
+                    }
                     className="v2-input"
                   />
                 </div>
@@ -502,15 +532,15 @@ export default function SkuReviews() {
                         onClick={() => setForm({ ...form, reviewScore: score })}
                         className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
                           form.reviewScore === score
-                            ? 'bg-amber-500/10 border-amber-400 text-amber-600'
-                            : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300'
+                            ? "bg-amber-500/10 border-amber-400 text-amber-600"
+                            : "bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300"
                         }`}
                       >
                         <Star
                           className={`w-3.5 h-3.5 ${
                             form.reviewScore === score
-                              ? 'text-amber-400 fill-amber-400'
-                              : 'text-slate-300'
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-slate-300"
                           }`}
                         />
                         {score}
@@ -526,7 +556,9 @@ export default function SkuReviews() {
                   </label>
                   <textarea
                     value={form.reviewContent}
-                    onChange={(e) => setForm({ ...form, reviewContent: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, reviewContent: e.target.value })
+                    }
                     placeholder="请输入评价内容..."
                     rows={4}
                     className="v2-input resize-none min-h-[80px]"
@@ -548,7 +580,7 @@ export default function SkuReviews() {
                   className="px-5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {saving && <RefreshCw className="w-3 h-3 animate-spin" />}
-                  {saving ? '保存中...' : editingId ? '更新' : '创建'}
+                  {saving ? "保存中..." : editingId ? "更新" : "创建"}
                 </button>
               </div>
             </motion.div>

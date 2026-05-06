@@ -40,7 +40,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import SkuAiAnalysis from "../components/SkuAiAnalysis";
 
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseNew } from "../lib/supabase";
 import { USD_TO_MXN } from "../constants";
 
 export default function SkuManagement() {
@@ -61,7 +61,7 @@ export default function SkuManagement() {
 
   const fetchLinkReviews = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseNew
         .from("link_reviews")
         .select("*")
         .order("created_at", { ascending: false });

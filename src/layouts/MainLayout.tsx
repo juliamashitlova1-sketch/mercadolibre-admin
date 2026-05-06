@@ -505,7 +505,7 @@ export default function MainLayout({
                   {item.children && (
                     <div
                       className={`flex flex-col gap-0.5 ml-3 mt-0.5 mb-0.5 pl-2 border-l border-slate-100 overflow-hidden transition-all duration-300 ${
-                        isPricingActive
+                        location.pathname.startsWith(item.id)
                           ? "max-h-40 opacity-100"
                           : "max-h-0 opacity-0"
                       }`}

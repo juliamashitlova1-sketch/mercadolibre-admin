@@ -118,48 +118,17 @@ export default function MexicoInfoPanel() {
     setWLoading(true);
     setWError("");
 
-    // Try wttr.in first
-    try {
-      const results = await Promise.allSettled(
-        MEXICO_CITIES.map(async (c) => {
-          const r = await fetch(
-            `https://wttr.in/${encodeURIComponent(c.name)}?format=%t+%C&lang=zh`,
-            { signal: AbortSignal.timeout(6000) },
-          );
-          const txt = (await r.text()).trim();
-          const i = txt.indexOf(" ");
-          const temp = i > 0 ? txt.slice(0, i).replace(/^\+/, "") : txt;
-          const cond = i > 0 ? txt.slice(i + 1) : "";
-          return {
-            label: c.label,
-            temp: temp.trim(),
-            cond: cond.trim(),
-            time: getLocalTime(c.tz),
-          };
-        }),
-      );
-      const items: CityWeather[] = results.map((r) =>
-        r.status === "fulfilled"
-          ? r.value
-          : {
-              label: MEXICO_CITIES[results.indexOf(r)].label,
-              temp: "--",
-              cond: "无数据",
-              time: "--:--",
-            },
-      );
-      if (items.some((i) => i.temp !== "--")) {
-        setWeather(items);
-        setCache(WEATHER_KEY, items);
-        setWLoading(false);
-        return;
-      }
-    } catch {}
-
-    // Fallback: use DeepSeek
     try {
       const now = new Date();
-      const prompt = `今天是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日。请提供墨西哥5个城市当前的天气情况（温度和天气状况），不需要未来预报。用JSON格式返回，不要markdown：\n[{"label":"墨西哥城","temp":"22°C","cond":"晴"},{...}]`;
+      const prompt = `现在是${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日。请查询墨西哥以下5个城市当前的实时天气。返回JSON格式，不要markdown，只要最新实时数据：
+[
+{"label":"墨西哥城","temp":"22","cond":"晴"},
+{"label":"坎昆","temp":"28","cond":"多云"},
+{"label":"瓜达拉哈拉","temp":"25","cond":"晴"},
+{"label":"蒙特雷","temp":"26","cond":"晴"},
+{"label":"蒂华纳","temp":"18","cond":"多云"}
+]
+temp只需要数字温度，cond用中文描述天气状况。如果有联网搜索功能，请查询实时天气数据。`;
       const res = await fetch("https://api.deepseek.com/chat/completions", {
         method: "POST",
         headers: {
@@ -171,22 +140,23 @@ export default function MexicoInfoPanel() {
           messages: [
             {
               role: "system",
-              content: "你了解墨西哥各城市的气候特征。只返回JSON数组。",
+              content:
+                "你是一个天气查询助手。请提供墨西哥城市当前的实时天气数据。只返回JSON数组，不要其他文字。temperature用摄氏度数字。",
             },
             { role: "user", content: prompt },
           ],
           max_tokens: 1024,
         }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(20000),
       });
       if (res.ok) {
         const body = await res.json();
         const content: string = body?.choices?.[0]?.message?.content ?? "";
-        const match = content.match(/\[[\s\S]*?\]/);
+        const match = content.match(/\[\s*\S[\s\S]*?\]/);
         if (match) {
           const items: CityWeather[] = JSON.parse(match[0]).map((c: any) => ({
             label: c.label,
-            temp: c.temp || "--",
+            temp: (c.temp || "--").toString() + "°C",
             cond: c.cond || "",
             time: getLocalTime(
               MEXICO_CITIES.find((mc) => mc.label === c.label)?.tz ||
@@ -195,8 +165,11 @@ export default function MexicoInfoPanel() {
           }));
           setWeather(items);
           setCache(WEATHER_KEY, items);
+          setWLoading(false);
+          return;
         }
       }
+      throw new Error("API 返回格式异常");
     } catch (e: any) {
       setWError(e?.message || "获取失败");
     } finally {
@@ -365,21 +338,12 @@ export default function MexicoInfoPanel() {
                   <span className="text-lg w-6 text-center shrink-0">
                     {weatherEmoji(c.cond)}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-semibold text-slate-700">
-                        {c.label}
-                      </span>
-                      <span className="text-[12px] font-bold font-mono text-slate-800">
-                        {c.temp}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[9px] text-slate-400">
-                      <Clock className="w-2.5 h-2.5" />
-                      <span>{c.time}</span>
-                      <span className="truncate ml-0.5">{c.cond}</span>
-                    </div>
-                  </div>
+                  <span className="text-[11px] font-semibold text-slate-700 flex-1">
+                    {c.label}
+                  </span>
+                  <span className="text-[13px] font-bold font-mono text-slate-800 shrink-0">
+                    {c.temp}
+                  </span>
                 </div>
               ))
             ) : (

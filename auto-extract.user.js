@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         美客多自动爬虫 - 蓝鲸选品数据拦截
 // @namespace    milyfly-crawler
-// @version      2.3
+// @version      2.4
 // @description  自动拦截蓝鲸选品扩展的API数据，提取热搜词表格并传回MILYFLY软件
 // @author       MILYFLY
 // @match        *://*.mercadolibre.com.mx/*
 // @match        *://*.mercadolibre.com/*
 // @grant        unsafeWindow
 // @grant        GM_log
+// @run-at       document-start
 // ==/UserScript==
 
 (function () {
@@ -15,9 +16,8 @@
 
   var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
   var captured = false;
-  var _w = unsafeWindow; // 页面真实 window（脚本猫/暴力猴兼容）
+  var _w = unsafeWindow || window;
 
-  // 日志统一用 GM_log，避免沙箱问题
   function log(msg) {
     try {
       GM_log("[MILYFLY] " + msg);
@@ -27,41 +27,9 @@
     } catch (e) {}
   }
 
-  log("自动爬虫已启动 v2.3");
+  log("自动爬虫已启动 v2.4");
 
-  // 保存原始的 console.log
-  var origLog = _w.console.log.bind(_w.console);
-
-  // 拦截页面 console.log（通过 unsafeWindow）
-  _w.console.log = function () {
-    var args = Array.prototype.slice.call(arguments);
-    origLog.apply(_w.console, arguments);
-    if (captured) return;
-
-    for (var i = 0; i < args.length; i++) {
-      if (
-        typeof args[i] === "string" &&
-        (args[i].indexOf("流量词") >= 0 || args[i].indexOf("热搜词") >= 0)
-      ) {
-        for (var j = i + 1; j < args.length; j++) {
-          if (
-            args[j] &&
-            typeof args[j] === "object" &&
-            Array.isArray(args[j]) &&
-            args[j].length > 0
-          ) {
-            // 兼容无 .key 的情况，只要有 length>0 就尝试处理
-            captured = true;
-            log("✅ 成功拦截 " + args[j].length + " 条数据");
-            saveAndReturn(args[j]);
-            return;
-          }
-        }
-      }
-    }
-  };
-
-  // 拦截 XHR（通过 unsafeWindow）- 只捕获含 .key 的有效数据
+  // ========== 方法1: 拦截 XHR（只捕获含 .key 的有效数据） ==========
   var origOpen = _w.XMLHttpRequest.prototype.open;
   _w.XMLHttpRequest.prototype.open = function () {
     var xhr = this;
@@ -72,7 +40,7 @@
           var data = JSON.parse(xhr.responseText);
           if (
             Array.isArray(data) &&
-            data.length > 0 &&
+            data.length > 5 &&
             data[0] &&
             data[0].key
           ) {
@@ -86,46 +54,161 @@
     return origOpen.apply(xhr, arguments);
   };
 
-  // 拦截 fetch（通过 unsafeWindow）
-  var origFetch = _w.fetch;
-  _w.fetch = function () {
-    var args = arguments;
-    return origFetch.apply(_w, args).then(function (response) {
-      if (!captured) {
-        var cloned = response.clone();
-        cloned
-          .text()
-          .then(function (text) {
-            try {
-              var data = JSON.parse(text);
-              if (
-                Array.isArray(data) &&
-                data.length > 5 &&
-                data[0] &&
-                data[0].key
-              ) {
-                captured = true;
-                log("✅ 通过fetch拦截到数据 " + data.length + " 条");
-                saveAndReturn(data);
-              }
-            } catch (e) {}
-          })
-          .catch(function () {});
-      }
-      return response;
-    });
-  };
+  // ========== 方法2: 拦截 fetch（只捕获含 .key 的有效数据） ==========
+  if (_w.fetch) {
+    var origFetch = _w.fetch;
+    _w.fetch = function () {
+      var args = arguments;
+      return origFetch.apply(_w, args).then(function (response) {
+        if (!captured) {
+          var cloned = response.clone();
+          cloned
+            .text()
+            .then(function (text) {
+              try {
+                var data = JSON.parse(text);
+                if (
+                  Array.isArray(data) &&
+                  data.length > 5 &&
+                  data[0] &&
+                  data[0].key
+                ) {
+                  captured = true;
+                  log("✅ 通过fetch拦截到数据 " + data.length + " 条");
+                  saveAndReturn(data);
+                }
+              } catch (e) {}
+            })
+            .catch(function () {});
+        }
+        return response;
+      });
+    };
+  }
 
+  // ========== 方法3: 监听 postMessage（蓝鲸选品扩展可能通过此方式通信） ==========
+  _w.addEventListener("message", function (e) {
+    if (captured) return;
+    try {
+      var d = e.data;
+      // 尝试从各种可能的消息结构中提取数据
+      if (d && typeof d === "object") {
+        // 直接包含 key 数组
+        if (
+          d.data &&
+          Array.isArray(d.data) &&
+          d.data.length > 5 &&
+          d.data[0] &&
+          d.data[0].key
+        ) {
+          captured = true;
+          log("✅ 通过postMessage拦截到数据 " + d.data.length + " 条");
+          saveAndReturn(d.data);
+          return;
+        }
+        // 某些扩展把数据放在 payload 或 body 里
+        var payload = d.payload || d.body || d.result || d.data;
+        if (
+          payload &&
+          Array.isArray(payload) &&
+          payload.length > 5 &&
+          payload[0] &&
+          payload[0].key
+        ) {
+          captured = true;
+          log(
+            "✅ 通过postMessage(payload)拦截到数据 " + payload.length + " 条",
+          );
+          saveAndReturn(payload);
+          return;
+        }
+      }
+    } catch (e) {}
+  });
+
+  // ========== 方法4: DOM 提取（兜底方案） ==========
+  function extractFromDOM() {
+    if (captured) return;
+    // 查找页面上的趋势表格
+    var tables = _w.document.querySelectorAll(
+      "#table-trend table, .trend-table table, [class*='trend'] table, table",
+    );
+    for (var t = 0; t < tables.length; t++) {
+      var table = tables[t];
+      var headers = [];
+      var rows = [];
+      var thead = table.querySelector("thead");
+      if (thead) {
+        thead.querySelectorAll("th, td").forEach(function (th) {
+          headers.push((th.textContent || "").trim());
+        });
+      }
+      var tbody = table.querySelector("tbody");
+      if (tbody) {
+        tbody.querySelectorAll("tr").forEach(function (tr) {
+          var row = [];
+          tr.querySelectorAll("td").forEach(function (td) {
+            row.push((td.textContent || "").trim().replace(/\s+/g, " "));
+          });
+          if (row.length > 0) rows.push(row);
+        });
+      }
+      if (rows.length > 5) {
+        captured = true;
+        log("✅ 通过DOM提取到 " + rows.length + " 行数据");
+        saveAndReturn({ columns: headers, rows: rows });
+        return;
+      }
+    }
+  }
+
+  // 自动点击反查流量词Tab，然后轮询等待数据
+  setTimeout(function () {
+    var tab = _w.document.querySelector('a[href="#tabs-trend-table"]');
+    if (tab) {
+      log("点击反查流量词Tab...");
+      tab.click();
+    } else {
+      var t2 = _w.document.querySelector('a[href="#tabs-trend"]');
+      if (t2) {
+        log("点击热搜词Tab...");
+        t2.click();
+      }
+    }
+
+    // 点击后轮询 DOM，每隔 1 秒检查一次，最多 30 秒
+    var pollCount = 0;
+    var pollTimer = setInterval(function () {
+      pollCount++;
+      if (captured) {
+        clearInterval(pollTimer);
+        return;
+      }
+      extractFromDOM();
+      if (pollCount >= 30) {
+        clearInterval(pollTimer);
+        if (!captured) log("⚠️ 轮询30秒未找到数据");
+      }
+    }, 1000);
+  }, 3000);
+
+  // ========== saveAndReturn: 格式化数据并传回 ==========
   function saveAndReturn(data) {
-    // 如果 data 是数组且元素有 .key 属性，正常处理
-    // 如果数组元素是字符串，转为需要的形式
     var formatted;
+    var cols;
+
+    // 如果传入的是 { columns, rows } 对象（来自DOM提取）
+    if (data.columns && data.rows) {
+      saveAndSend(data);
+      return;
+    }
+
+    // 如果传入的是数组
     if (data.length > 0 && typeof data[0] === "string") {
-      // 纯字符串数组 — 直接作为热搜词列
       formatted = data.map(function (s) {
         return [s, "", "", "", "", "", "", "", "", ""];
       });
-      var cols = [
+      cols = [
         "热搜词",
         "中文",
         "流量占比",
@@ -158,7 +241,7 @@
           item.jzd || "0%",
         ];
       });
-      var cols = [
+      cols = [
         "热搜词",
         "中文",
         "流量占比",
@@ -172,7 +255,10 @@
       ];
     }
 
-    var result = { columns: cols, rows: formatted };
+    saveAndSend({ columns: cols, rows: formatted });
+  }
+
+  function saveAndSend(result) {
     var sent = false;
 
     // 方法1: postMessage 到 opener（主通道）
@@ -189,38 +275,23 @@
       }
     }
 
-    // 方法2: 尝试直接修改 opener 的 location.hash（跨域可能被阻止）
+    // 方法2: location.hash 传回
     if (!sent && _w.opener && _w.opener !== _w) {
       try {
         var encoded = encodeURIComponent(JSON.stringify(result));
         _w.opener.location.href = APP_URL + "/data-crawler#data=" + encoded;
-        log("✅ 通过 location.hash 传回");
+        log("✅ 通过location.hash传回");
         sent = true;
       } catch (e) {
-        log("location.hash 失败");
+        log("location.hash失败");
       }
     }
 
-    // 方法3: 如果上面都不行，新标签打开结果页
+    // 方法3: 新标签打开
     if (!sent) {
       var encoded2 = encodeURIComponent(JSON.stringify(result));
       _w.open(APP_URL + "/data-crawler#data=" + encoded2, "_blank");
       log("✅ 通过新标签传回");
     }
   }
-
-  // 自动点击反查流量词Tab（通过 unsafeWindow）
-  setTimeout(function () {
-    var tab = _w.document.querySelector('a[href="#tabs-trend-table"]');
-    if (tab) {
-      log("点击反查流量词Tab...");
-      tab.click();
-    } else {
-      var t2 = _w.document.querySelector('a[href="#tabs-trend"]');
-      if (t2) {
-        log("点击热搜词Tab...");
-        t2.click();
-      }
-    }
-  }, 3000);
 })();

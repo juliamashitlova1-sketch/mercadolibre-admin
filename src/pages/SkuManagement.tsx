@@ -23,6 +23,7 @@ import {
   History,
   Search,
   Star,
+  Download,
 } from "lucide-react";
 import {
   LineChart,
@@ -581,6 +582,90 @@ export default function SkuManagement() {
     }
   };
 
+  // 导出 SKU 全部数据为 JSON
+  const exportSkuData = (skuCode: string) => {
+    const skuInfo = skus.find((s: any) => s.sku === skuCode);
+    const skuReviews = linkReviews.filter((r) => r.sku === skuCode);
+    const skuLogs = operationLogs.filter((r: any) => r.sku === skuCode);
+    const skuCompetitors = competitorData.filter((c: any) => c.sku === skuCode);
+    const skuTrend = trendDataMap[skuCode] || [];
+    const analytics = getSkuDailyAnalytics(skuCode);
+
+    const exportData = {
+      exportTime: new Date().toISOString(),
+      sku: skuCode,
+      skuName: skuInfo?.productName || "",
+      status: skuInfo?.status || "",
+      basicInfo: {
+        inventory: skuInfo?.inventory || 0,
+        priceMXN: skuInfo?.priceMXN || 0,
+        costRMB: skuInfo?.costRMB || 0,
+        listedDate: skuInfo?.listedDate || "",
+        replenishInventory: skuInfo?.replenishInventory || 0,
+      },
+      dailyAnalytics: analytics.map((a: any) => ({
+        date: a.date,
+        orders: a.orders,
+        units: a.units,
+        sales: a.sales,
+        adSpend: a.adSpend,
+        adOrders: a.adOrders,
+        profit: a.profit,
+        roas: a.roas,
+        acos: a.acos,
+      })),
+      blueWhaleData: skuTrend.map((t: any) => ({
+        date: t.crawl_date,
+        keyword: t.keyword,
+        keyword_cn: t.keyword_cn,
+        trafficShare: t.traffic_share,
+        impressions: t.impressions,
+        ranking: t.ranking,
+        searchRank: t.search_rank,
+        sales30d: t.sales_30d,
+        search30d: t.search_30d,
+        competitors: t.competitors,
+        competition: t.competition,
+      })),
+      operationLogs: skuLogs.map((l: any) => ({
+        date: l.date,
+        action: l.action,
+        actionType: l.actionType,
+        description: l.description,
+        createdAt: l.createdAt,
+      })),
+      linkReviews: skuReviews.map((r) => ({
+        reviewTime: r.reviewTime,
+        reviewScore: r.reviewScore,
+        reviewContent: r.reviewContent,
+      })),
+      competitors: skuCompetitors.map((c: any) => ({
+        title: c.competitor_title,
+        url: c.competitor_url,
+        listedAt: c.competitor_listed_at,
+        dailyRecords: (competitorDailyMap[c.id] || []).map((r: any) => ({
+          date: r.date,
+          price: r.price,
+          sales: r.sales,
+          reviewScore: r.reviewScore,
+          sales7d: r.sales7d,
+          sales30d: r.sales30d,
+          reviewCount: r.reviewCount,
+          listingDate: r.listingDate,
+        })),
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `SKU_${skuCode}_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div className="v2-page-container">
       <div className="v2-inner-container">
@@ -941,6 +1026,16 @@ export default function SkuManagement() {
                                                 </p>
                                               </div>
                                             </div>
+                                            <button
+                                              onClick={() =>
+                                                exportSkuData(item.sku)
+                                              }
+                                              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold transition-all active:scale-95"
+                                              title="导出该SKU全部数据"
+                                            >
+                                              <Download className="w-3.5 h-3.5" />
+                                              导出报表
+                                            </button>
                                           </div>
 
                                           {/* 2. Summary Cards */}

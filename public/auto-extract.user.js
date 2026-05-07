@@ -18,12 +18,20 @@
   var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
   var captured = false;
 
-  // Only run when triggered by milyfly crawler（使用 _w 代替 window，兼容脚本猫沙箱）
+  // 仅当从 MILYFLY 软件打开时才运行（检查 referrer 和 URL 参数双重验证）
+  var isFromApp = false;
   try {
-    if (_w.location.href.indexOf("milyfly=1") < 0) {
-      return;
+    var ref = _w.document.referrer || "";
+    var href = _w.location.href || "";
+    // referrer 包含我们的域名，或者 URL 包含 milyfly=1
+    if (
+      ref.indexOf("mercadolibre-admin-v2.vercel.app") >= 0 ||
+      href.indexOf("milyfly=1") >= 0
+    ) {
+      isFromApp = true;
     }
-  } catch (e) {
+  } catch (e) {}
+  if (!isFromApp) {
     return;
   }
 

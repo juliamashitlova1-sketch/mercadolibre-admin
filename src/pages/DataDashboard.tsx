@@ -283,7 +283,7 @@ export default function DataDashboard() {
     });
 
     Object.values(dailyMap).forEach((item: any) => {
-      item.expenses = item.fakeOrderCost + item.cargoDamageCost + item.adSpend;
+      item.expenses = item.fakeOrderCost + item.cargoDamageCost;
     });
 
     const chartItems = Object.values(dailyMap).sort(

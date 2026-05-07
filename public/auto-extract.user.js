@@ -82,13 +82,19 @@
       try {
         var result = { competitorId: competitorId };
 
-        // 当前售价
-        var priceEl = _w.document.querySelector(
-          ".andes-money-amount__fraction, [class*='ui-pdp-price'] .andes-money-amount__fraction",
-        );
-        if (priceEl)
-          result.price =
-            parseFloat(priceEl.textContent.replace(/[^0-9.]/g, "")) || 0;
+        // 当前售价（优先取 meta[itemprop=price] 折后实价）
+        var priceMeta = _w.document.querySelector('meta[itemprop="price"]');
+        if (priceMeta) {
+          result.price = parseFloat(priceMeta.getAttribute("content")) || 0;
+        } else {
+          // 兜底：取非划线价的最新价格
+          var priceEl = _w.document.querySelector(
+            ".andes-money-amount:not(.andes-money-amount--previous) .andes-money-amount__fraction",
+          );
+          if (priceEl)
+            result.price =
+              parseFloat(priceEl.textContent.replace(/[^0-9.]/g, "")) || 0;
+        }
 
         // 上架时间
         var listingEl = _w.document.querySelector(

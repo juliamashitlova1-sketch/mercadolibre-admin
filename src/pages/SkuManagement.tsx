@@ -120,6 +120,10 @@ export default function SkuManagement() {
             sales: r.sales,
             reviewScore: r.review_score,
             price: r.price,
+            listingDate: r.listing_date || "",
+            sales7d: r.sales_7d || 0,
+            sales30d: r.sales_30d || 0,
+            reviewCount: r.review_count || 0,
           });
         });
         setCompetitorDailyMap(map);
@@ -1910,17 +1914,29 @@ export default function SkuManagement() {
                                                                   <table className="w-full text-[10px]">
                                                                     <thead>
                                                                       <tr className="text-slate-400 font-bold uppercase tracking-wider">
-                                                                        <th className="px-4 py-2 text-left w-[100px]">
+                                                                        <th className="px-2 py-2 text-left">
                                                                           日期
                                                                         </th>
-                                                                        <th className="px-4 py-2 text-right w-[60px]">
-                                                                          销量
+                                                                        <th className="px-2 py-2 text-right">
+                                                                          价格
                                                                         </th>
-                                                                        <th className="px-4 py-2 text-right w-[60px]">
+                                                                        <th className="px-2 py-2 text-right">
+                                                                          总销量
+                                                                        </th>
+                                                                        <th className="px-2 py-2 text-right">
+                                                                          7天
+                                                                        </th>
+                                                                        <th className="px-2 py-2 text-right">
+                                                                          30天
+                                                                        </th>
+                                                                        <th className="px-2 py-2 text-right">
                                                                           评分
                                                                         </th>
-                                                                        <th className="px-4 py-2 text-right w-[80px]">
-                                                                          价格
+                                                                        <th className="px-2 py-2 text-right">
+                                                                          评论数
+                                                                        </th>
+                                                                        <th className="px-2 py-2 text-left">
+                                                                          上架时间
                                                                         </th>
                                                                       </tr>
                                                                     </thead>
@@ -1936,30 +1952,46 @@ export default function SkuManagement() {
                                                                             }
                                                                             className="hover:bg-white/60 transition-colors"
                                                                           >
-                                                                            <td className="px-4 py-1.5 text-slate-500 font-mono">
+                                                                            <td className="px-2 py-1.5 text-slate-500 font-mono">
                                                                               {
                                                                                 rec.date
                                                                               }
                                                                             </td>
-                                                                            <td className="px-4 py-1.5 text-right font-bold text-emerald-600">
-                                                                              {
-                                                                                rec.sales
-                                                                              }
-                                                                            </td>
-                                                                            <td className="px-4 py-1.5 text-right font-bold text-amber-600">
-                                                                              {Number(
-                                                                                rec.reviewScore,
-                                                                              ).toFixed(
-                                                                                1,
-                                                                              )}
-                                                                            </td>
-                                                                            <td className="px-4 py-1.5 text-right font-bold text-sky-600">
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-sky-600">
                                                                               $
                                                                               {Number(
                                                                                 rec.price,
                                                                               ).toFixed(
                                                                                 2,
                                                                               )}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-emerald-600">
+                                                                              {
+                                                                                rec.sales
+                                                                              }
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-amber-600">
+                                                                              {rec.sales7d ||
+                                                                                "-"}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-amber-600">
+                                                                              {rec.sales30d ||
+                                                                                "-"}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-amber-600">
+                                                                              {Number(
+                                                                                rec.reviewScore,
+                                                                              ).toFixed(
+                                                                                1,
+                                                                              )}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-right font-bold text-slate-600">
+                                                                              {rec.reviewCount ||
+                                                                                "-"}
+                                                                            </td>
+                                                                            <td className="px-2 py-1.5 text-left text-slate-400 font-mono">
+                                                                              {rec.listingDate ||
+                                                                                "-"}
                                                                             </td>
                                                                           </tr>
                                                                         ),

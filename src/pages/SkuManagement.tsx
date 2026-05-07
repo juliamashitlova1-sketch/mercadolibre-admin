@@ -246,7 +246,7 @@ export default function SkuManagement() {
       // 4. Fetch Costs, Fake Orders and Damage for AI
       const [pricing, fake, damage] = await Promise.all([
         supabase.from("sku_pricing").select("*"),
-        supabase.from("fake_orders").select("*"),
+        supabaseNew.from("fake_orders").select("*"),
         supabase.from("cargo_damage").select("*"),
       ]);
 

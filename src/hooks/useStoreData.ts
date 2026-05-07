@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseNew } from "../lib/supabase";
 import {
   DailyStats,
   SKUStats,
@@ -437,7 +437,7 @@ export function useExpenses() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data: fData } = await supabase
+    const { data: fData } = await supabaseNew
       .from("fake_orders")
       .select(
         "*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, unitCostCNY:unit_cost_cny, skuName:sku_name",
@@ -457,7 +457,7 @@ export function useExpenses() {
   useEffect(() => {
     fetchData();
 
-    const fChannel = supabase
+    const fChannel = supabaseNew
       .channel("fake-orders-changes")
       .on(
         "postgres_changes",
@@ -476,7 +476,7 @@ export function useExpenses() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(fChannel);
+      supabaseNew.removeChannel(fChannel);
       supabase.removeChannel(cChannel);
     };
   }, [fetchData, refreshKey]);

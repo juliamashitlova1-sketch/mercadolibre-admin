@@ -1,19 +1,29 @@
-import { supabase } from '../lib/supabase';
-import { DailyStats, Claim, OperationLog, FakeOrder, CargoDamage } from '../types';
+import { supabase, supabaseNew } from "../lib/supabase";
+import {
+  DailyStats,
+  Claim,
+  OperationLog,
+  FakeOrder,
+  CargoDamage,
+} from "../types";
 
 export const mapOperationLog = (row: Record<string, any>): OperationLog => {
-  let skuVal = row.sku || '';
-  let descriptionVal = row.description || row.details || '';
-  let actionTypeVal: OperationLog['actionType'] = row.action_type || 'Price';
+  let skuVal = row.sku || "";
+  let descriptionVal = row.description || row.details || "";
+  let actionTypeVal: OperationLog["actionType"] = row.action_type || "Price";
 
-  if (row.details && typeof row.details === 'string' && row.details.startsWith('{')) {
+  if (
+    row.details &&
+    typeof row.details === "string" &&
+    row.details.startsWith("{")
+  ) {
     try {
       const parsed = JSON.parse(row.details);
       if (!skuVal && parsed.sku) skuVal = parsed.sku;
       if (parsed.actionType) actionTypeVal = parsed.actionType;
       if (parsed.description) descriptionVal = parsed.description;
     } catch (e) {
-      console.error('Error parsing log details:', e);
+      console.error("Error parsing log details:", e);
     }
   }
 
@@ -33,9 +43,9 @@ export const mapOperationLog = (row: Record<string, any>): OperationLog => {
 export const dataService = {
   async fetchDailyStats(): Promise<DailyStats[]> {
     const { data, error } = await supabase
-      .from('daily_stats')
-      .select('*')
-      .order('date', { ascending: true })
+      .from("daily_stats")
+      .select("*")
+      .order("date", { ascending: true })
       .limit(30);
 
     if (error) throw new Error(error.message);
@@ -48,27 +58,27 @@ export const dataService = {
       exchangeRate: row.exchange_rate || 0.35,
       questions: row.questions || 0,
       claims: row.claims || 0,
-      reputation: row.reputation || '绿色店铺',
+      reputation: row.reputation || "绿色店铺",
       calculatedProfit: row.calculated_profit,
     }));
   },
 
   async fetchClaims(): Promise<Claim[]> {
     const { data, error } = await supabase
-      .from('claims')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("claims")
+      .select("*")
+      .order("created_at", { ascending: false })
       .limit(50);
 
     if (error) throw new Error(error.message);
 
     return (data || []).map((row: Record<string, any>) => ({
       id: row.id,
-      orderId: row.order_number || '',
-      request: row.reason?.split('|')[0] || '',
-      productName: row.product_name || '',
-      handlingMethod: row.reason?.split('|')[1]?.trim().split('@')[0] || '',
-      handlingTime: row.reason?.split('@')[1]?.trim() || '',
+      orderId: row.order_number || "",
+      request: row.reason?.split("|")[0] || "",
+      productName: row.product_name || "",
+      handlingMethod: row.reason?.split("|")[1]?.trim().split("@")[0] || "",
+      handlingTime: row.reason?.split("@")[1]?.trim() || "",
       createdAt: row.created_at,
       status: row.status,
     }));
@@ -76,9 +86,9 @@ export const dataService = {
 
   async fetchOperationLogs(): Promise<OperationLog[]> {
     const { data, error } = await supabase
-      .from('operation_logs')
-      .select('*')
-      .order('date', { ascending: false })
+      .from("operation_logs")
+      .select("*")
+      .order("date", { ascending: false })
       .limit(500);
 
     if (error) throw new Error(error.message);
@@ -86,10 +96,12 @@ export const dataService = {
   },
 
   async fetchFakeOrders(): Promise<FakeOrder[]> {
-    const { data, error } = await supabase
-      .from('fake_orders')
-      .select('*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, skuName:sku_name')
-      .order('date', { ascending: false });
+    const { data, error } = await supabaseNew
+      .from("fake_orders")
+      .select(
+        "*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, skuName:sku_name",
+      )
+      .order("date", { ascending: false });
 
     if (error) throw new Error(error.message);
     return (data || []) as unknown as FakeOrder[];
@@ -97,24 +109,27 @@ export const dataService = {
 
   async fetchCargoDamage(): Promise<CargoDamage[]> {
     const { data, error } = await supabase
-      .from('cargo_damage')
-      .select('*, skuName:sku_name, skuValueCNY:sku_value_cny')
-      .order('date', { ascending: false });
+      .from("cargo_damage")
+      .select("*, skuName:sku_name, skuValueCNY:sku_value_cny")
+      .order("date", { ascending: false });
 
     if (error) throw new Error(error.message);
     return (data || []) as unknown as CargoDamage[];
   },
 
   async deleteClaim(id: string): Promise<void> {
-    const { error } = await supabase.from('claims').delete().eq('id', id);
+    const { error } = await supabase.from("claims").delete().eq("id", id);
     if (error) throw new Error(error.message);
   },
 
   async updateReputation(newReputation: string): Promise<void> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const { error } = await supabase
-      .from('daily_stats')
-      .upsert({ date: today, reputation: newReputation }, { onConflict: 'date' });
+      .from("daily_stats")
+      .upsert(
+        { date: today, reputation: newReputation },
+        { onConflict: "date" },
+      );
     if (error) throw new Error(error.message);
-  }
+  },
 };

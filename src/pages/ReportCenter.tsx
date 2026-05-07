@@ -33,7 +33,7 @@ import {
   Legend,
   ComposedChart,
 } from "recharts";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseNew } from "../lib/supabase";
 import { MXN_TO_CNY, USD_TO_MXN } from "../constants";
 import { calculateSkuProfitMetrics } from "../utils/calculator";
 
@@ -90,7 +90,7 @@ export default function ReportCenter() {
         supabase.from("cleaned_orders").select("*"),
         supabase.from("sku_ads").select("*"),
         supabase.from("sku_visits").select("*"),
-        supabase.from("fake_orders").select("*"),
+        supabaseNew.from("fake_orders").select("*"),
         supabase.from("cargo_damage").select("*"),
         supabase.from("sku_pricing").select("*"),
       ]);

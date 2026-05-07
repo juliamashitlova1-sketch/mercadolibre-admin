@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Download, Calendar, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { format, parseISO } from "date-fns";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseNew } from "../lib/supabase";
 
 interface DataExporterProps {
   skuData: any[];
@@ -34,7 +34,7 @@ export default function DataExporter({ skuData }: DataExporterProps) {
           .gte("date", startDate)
           .lte("date", endDate)
           .order("date", { ascending: true }),
-        supabase
+        supabaseNew
           .from("fake_orders")
           .select("*")
           .gte("date", startDate)

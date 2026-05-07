@@ -41,7 +41,7 @@ import {
   Bar,
   ComposedChart,
 } from "recharts";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseNew } from "../lib/supabase";
 import { calculateSkuProfitMetrics } from "../utils/calculator";
 
 interface CleanedOrder {
@@ -78,7 +78,7 @@ export default function DataDashboard() {
           supabase.from("sku_visits").select("*"),
           supabase.from("skus").select("*"),
           supabase.from("sku_pricing").select("*"),
-          supabase.from("fake_orders").select("*"),
+          supabaseNew.from("fake_orders").select("*"),
           supabase.from("cargo_damage").select("*"),
         ]);
 

@@ -20,7 +20,7 @@ import {
   DollarSign,
   RefreshCcw,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabaseNew as supabase } from "../lib/supabase";
 import { FakeOrder, SKUStats } from "../types";
 import { USD_TO_MXN, MXN_TO_CNY } from "../constants";
 import { getMexicoDateString } from "../lib/time";
@@ -114,6 +114,20 @@ export default function FakeOrders() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!confirm("确定要清空所有刷单支出记录吗？此操作不可恢复！")) return;
+    if (!confirm("再次确认：将删除全部刷单支出数据！")) return;
+    const { error } = await supabase
+      .from("fake_orders")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) {
+      alert("清空失败: " + error.message);
+    } else {
+      fetchData();
+    }
+  };
+
   const calculateActualCostTotal = () => {
     return data
       .reduce((acc, curr) => {
@@ -162,20 +176,30 @@ export default function FakeOrders() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setCurrentRecord({
-                date: getMexicoDateString(),
-                sku: "",
-                skuName: "",
-              });
-              setIsEditing(true);
-            }}
-            className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>新增记录</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setCurrentRecord({
+                  date: getMexicoDateString(),
+                  sku: "",
+                  skuName: "",
+                  unitCostCNY: 0,
+                });
+                setIsEditing(true);
+              }}
+              className="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>新增记录</span>
+            </button>
+            <button
+              onClick={handleClearAll}
+              className="cursor-pointer bg-red-600/80 hover:bg-red-600 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>清空全部</span>
+            </button>
+          </div>
         </header>
 
         {isEditing && (

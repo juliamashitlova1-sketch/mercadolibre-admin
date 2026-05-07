@@ -71,7 +71,7 @@
     var rows = data.map(function (item) {
       var h = item.history && item.history.length > 0 ? item.history[0] : {};
       var rank = h.ranking
-        ? "第" + (h.page || "?") + "页,第" + h.ranking + "名"
+        ? "\u7B2C" + (h.page || "?") + "\u9875,\u7B2C" + h.ranking + "\u540D"
         : "";
       return [
         item.key || "",
@@ -88,54 +88,49 @@
     });
     var result = {
       columns: [
-        "热搜词",
-        "中文",
-        "流量占比",
-        "曝光次数",
-        "排名情况",
-        "搜索量排名",
-        "30天销量",
-        "30天搜索量",
-        "竞品数",
-        "竞争度",
+        "\u70ED\u641C\u8BCD",
+        "\u4E2D\u6587",
+        "\u6D41\u91CF\u5360\u6BD4",
+        "\u66DD\u5149\u6B21\u6570",
+        "\u6392\u540D\u60C5\u51B5",
+        "\u641C\u7D22\u91CF\u6392\u540D",
+        "30\u5929\u9500\u91CF",
+        "30\u5929\u641C\u7D22\u91CF",
+        "\u7ADE\u54C1\u6570",
+        "\u7ADE\u4E89\u5EA6",
       ],
       rows: rows,
     };
-
-    // 方法1: postMessage 到 opener
     var sent = false;
+
+    // 方法1: postMessage 到 opener（主通道）
     if (window.opener && window.opener !== window) {
       try {
         window.opener.postMessage(
           { type: "TABLE_DATA_READY", data: result },
           "*",
         );
-        origLog.call(console, "[MILYFLY] postMessage 已发送");
+        origLog.call(
+          console,
+          "[MILYFLY] \u2714 postMessage \u5DF2\u53D1\u9001",
+        );
         sent = true;
-        // 让opener窗口获得焦点
         try {
           window.opener.focus();
         } catch (e) {}
       } catch (e) {
-        origLog.call(console, "[MILYFLY] postMessage失败:", e.message);
+        origLog.call(console, "[MILYFLY] postMessage\u5931\u8D25:", e.message);
       }
     }
 
-    // 方法2: 如果postMessage没成功，将数据存入 hash 并告知 opener 刷新
-    if (!sent) {
+    // 方法2: URL hash 导航（备用：postMessage 失败时）
+    if (!sent && window.opener && window.opener !== window) {
       var encoded = encodeURIComponent(JSON.stringify(result));
-      var dataUrl = APP_URL + "/data-crawler#data=" + encoded;
-
-      // 尝试导航 opener（跨域可能被阻止）
-      if (window.opener && window.opener !== window) {
-        try {
-          window.opener.location.href = dataUrl;
-          return;
-        } catch (e) {}
+      try {
+        window.opener.location.href = APP_URL + "/data-crawler#data=" + encoded;
+      } catch (e) {
+        // 跨域无法导航 opener，不做处理
       }
-
-      // 最后手段：新标签打开
-      window.open(dataUrl, "_blank");
     }
   }
 

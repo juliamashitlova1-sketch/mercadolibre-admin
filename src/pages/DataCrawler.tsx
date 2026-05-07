@@ -145,7 +145,8 @@ export default function DataCrawler() {
     } else {
       targetUrl += "?milyfly=1";
     }
-    window.open(targetUrl, "_blank");
+    // 使用 noopener=no 保持 opener 引用，让 Tampermonkey 脚本能通过 postMessage 传回数据
+    window.open(targetUrl, "_blank", "noopener=no");
   };
 
   const handlePasteManually = async () => {

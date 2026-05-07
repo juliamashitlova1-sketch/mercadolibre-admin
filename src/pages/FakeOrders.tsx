@@ -37,6 +37,7 @@ export default function FakeOrders() {
     date: getMexicoDateString(),
     sku: "",
     skuName: "",
+    unitCostCNY: 0,
   });
 
   const fetchData = async () => {
@@ -44,7 +45,7 @@ export default function FakeOrders() {
     const { data: records, error } = await supabase
       .from("fake_orders")
       .select(
-        "*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, skuName:sku_name",
+        "*, reviewFeeCNY:review_fee_cny, refundAmountUSD:refund_amount_usd, unitCostCNY:unit_cost_cny, skuName:sku_name",
       )
       .order("date", { ascending: false });
 
@@ -72,6 +73,7 @@ export default function FakeOrders() {
       sku_name: currentRecord.skuName,
       review_fee_cny: currentRecord.reviewFeeCNY,
       refund_amount_usd: currentRecord.refundAmountUSD,
+      unit_cost_cny: currentRecord.unitCostCNY,
     };
 
     let error;
@@ -96,6 +98,7 @@ export default function FakeOrders() {
         date: getMexicoDateString(),
         sku: "",
         skuName: "",
+        unitCostCNY: 0,
       });
       fetchData();
     }
@@ -116,7 +119,8 @@ export default function FakeOrders() {
       .reduce((acc, curr) => {
         const fee = curr.reviewFeeCNY || 0;
         const refund = (curr.refundAmountUSD || 0) * USD_TO_MXN * MXN_TO_CNY;
-        return acc + (fee - refund);
+        const unitCost = curr.unitCostCNY || 0;
+        return acc + (fee - refund + unitCost);
       }, 0)
       .toFixed(2);
   };
@@ -180,7 +184,7 @@ export default function FakeOrders() {
               <Plus className="w-4 h-4" />
               {currentRecord.id ? "编辑测评记录" : "新增测评记录"}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
               <div className="space-y-1.5 min-w-0">
                 <Label className="text-xs font-bold text-slate-500 uppercase">
                   业务日期
@@ -249,6 +253,26 @@ export default function FakeOrders() {
                     setCurrentRecord({
                       ...currentRecord,
                       refundAmountUSD:
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value),
+                    })
+                  }
+                  className="v2-input"
+                />
+              </div>
+              <div className="space-y-1.5 min-w-0">
+                <Label className="text-xs font-bold text-slate-500 uppercase">
+                  单个成本 (CNY)
+                </Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={currentRecord.unitCostCNY ?? ""}
+                  onChange={(e) =>
+                    setCurrentRecord({
+                      ...currentRecord,
+                      unitCostCNY:
                         e.target.value === ""
                           ? undefined
                           : Number(e.target.value),
@@ -335,6 +359,7 @@ export default function FakeOrders() {
                   <th className="v2-table-th">SKU</th>
                   <th className="v2-table-th">测评费 (CNY)</th>
                   <th className="v2-table-th">回款 (USD)</th>
+                  <th className="v2-table-th">单个成本 (CNY)</th>
                   <th className="v2-table-th">实际成本 (CNY)</th>
                   <th className="v2-table-th text-right">操作</th>
                 </tr>
@@ -342,14 +367,14 @@ export default function FakeOrders() {
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="v2-table-td py-10 text-center">
+                    <td colSpan={7} className="v2-table-td py-10 text-center">
                       <Loader2 className="w-5 h-5 animate-spin mx-auto text-sky-500" />
                     </td>
                   </tr>
                 ) : data.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="v2-table-td py-20 text-center text-slate-400 italic"
                     >
                       暂无记录
@@ -361,7 +386,8 @@ export default function FakeOrders() {
                       Number(record.reviewFeeCNY || 0) -
                       Number(record.refundAmountUSD || 0) *
                         USD_TO_MXN *
-                        MXN_TO_CNY;
+                        MXN_TO_CNY +
+                      Number(record.unitCostCNY || 0);
                     return (
                       <tr key={record.id} className="v2-table-tr group">
                         <td className="v2-table-td text-slate-500">
@@ -382,6 +408,9 @@ export default function FakeOrders() {
                         </td>
                         <td className="v2-table-td text-slate-600">
                           ${(record.refundAmountUSD || 0).toLocaleString()}
+                        </td>
+                        <td className="v2-table-td text-slate-600">
+                          ¥{(record.unitCostCNY || 0).toLocaleString()}
                         </td>
                         <td className="v2-table-td">
                           <span

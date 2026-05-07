@@ -130,6 +130,7 @@ export interface FakeOrder {
   skuName: string;
   reviewFeeCNY: number;
   refundAmountUSD: number;
+  unitCostCNY: number;
   createdAt?: string;
 }
 

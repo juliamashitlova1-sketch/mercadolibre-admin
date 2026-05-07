@@ -61,7 +61,7 @@
     }
   };
 
-  // 拦截 XHR（通过 unsafeWindow）
+  // 拦截 XHR（通过 unsafeWindow）- 只捕获含 .key 的有效数据
   var origOpen = _w.XMLHttpRequest.prototype.open;
   _w.XMLHttpRequest.prototype.open = function () {
     var xhr = this;
@@ -70,7 +70,12 @@
       if (!captured && xhr.status === 200) {
         try {
           var data = JSON.parse(xhr.responseText);
-          if (Array.isArray(data) && data.length > 0) {
+          if (
+            Array.isArray(data) &&
+            data.length > 0 &&
+            data[0] &&
+            data[0].key
+          ) {
             captured = true;
             log("✅ 通过XHR拦截到数据 " + data.length + " 条");
             saveAndReturn(data);

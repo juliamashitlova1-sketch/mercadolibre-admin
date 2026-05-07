@@ -64,7 +64,7 @@
   try {
     var fullUrl = _w.location.href;
     // 从完整URL中提取 sku 参数，不受页面SPA路由影响
-    var match = fullUrl.match(/[?&]sku=([^&]+)/);
+    var match = fullUrl.match(/[?&]sku=([^&#]+)/);
     if (match) currentSku = decodeURIComponent(match[1]);
   } catch (e) {}
   log("自动爬虫已启动 v2.5" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
@@ -73,7 +73,7 @@
   if (_w.location.href.indexOf("type=competitor") >= 0) {
     log("竞品数据爬取模式");
     // 从完整URL提取 competitor_id
-    var compIdMatch = _w.location.href.match(/[?&]competitor_id=([^&]+)/);
+    var compIdMatch = _w.location.href.match(/[?&]competitor_id=([^&#]+)/);
     var competitorId = compIdMatch ? decodeURIComponent(compIdMatch[1]) : "";
     log("竞品ID: " + competitorId);
 

@@ -94,52 +94,87 @@
     };
   }
 
-  // ========== 方法3: 监听 postMessage（蓝鲸选品扩展可能通过此方式通信） ==========
+  // ========== 方法3: 深度监听 postMessage（捕获扩展内部通信） ==========
   _w.addEventListener("message", function (e) {
     if (captured) return;
     try {
       var d = e.data;
-      // 尝试从各种可能的消息结构中提取数据
       if (d && typeof d === "object") {
-        // 直接包含 key 数组
-        if (
-          d.data &&
-          Array.isArray(d.data) &&
-          d.data.length > 5 &&
-          d.data[0] &&
-          d.data[0].key
-        ) {
-          captured = true;
-          log("✅ 通过postMessage拦截到数据 " + d.data.length + " 条");
-          saveAndReturn(d.data);
-          return;
+        // 递归搜索对象中的数组，找到含 .key 的数据
+        function findKeyArray(obj, depth) {
+          if (depth > 3 || !obj || typeof obj !== "object") return null;
+          if (Array.isArray(obj) && obj.length > 5 && obj[0] && obj[0].key) {
+            return obj;
+          }
+          for (var k in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) {
+              var result = findKeyArray(obj[k], depth + 1);
+              if (result) return result;
+            }
+          }
+          return null;
         }
-        // 某些扩展把数据放在 payload 或 body 里
-        var payload = d.payload || d.body || d.result || d.data;
-        if (
-          payload &&
-          Array.isArray(payload) &&
-          payload.length > 5 &&
-          payload[0] &&
-          payload[0].key
-        ) {
+        var found = findKeyArray(d, 0);
+        if (found) {
           captured = true;
-          log(
-            "✅ 通过postMessage(payload)拦截到数据 " + payload.length + " 条",
-          );
-          saveAndReturn(payload);
+          log("✅ 通过postMessage深度拦截到数据 " + found.length + " 条");
+          saveAndReturn(found);
           return;
         }
       }
     } catch (e) {}
   });
 
+  // ========== 新方法: 拦截 addEventListener('message') 注册（捕获扩展内部消息） ==========
+  var origAddEventListener = _w.addEventListener;
+  _w.addEventListener = function (type, handler, options) {
+    if (type === "message" && !handler._milyflyPatched) {
+      var origHandler = handler;
+      var patchedHandler = function (e) {
+        if (!captured) {
+          try {
+            var d = e.data;
+            if (d && typeof d === "object") {
+              function findKeyArray(obj, depth) {
+                if (depth > 3 || !obj || typeof obj !== "object") return null;
+                if (
+                  Array.isArray(obj) &&
+                  obj.length > 5 &&
+                  obj[0] &&
+                  obj[0].key
+                )
+                  return obj;
+                for (var k in obj) {
+                  if (Object.prototype.hasOwnProperty.call(obj, k)) {
+                    var r = findKeyArray(obj[k], depth + 1);
+                    if (r) return r;
+                  }
+                }
+                return null;
+              }
+              var found = findKeyArray(d, 0);
+              if (found) {
+                captured = true;
+                log("✅ 通过message拦截器捕获 " + found.length + " 条");
+                saveAndReturn(found);
+              }
+            }
+          } catch (e) {}
+        }
+        return origHandler.apply(this, arguments);
+      };
+      patchedHandler._milyflyPatched = true;
+      return origAddEventListener.call(_w, type, patchedHandler, options);
+    }
+    return origAddEventListener.call(_w, type, handler, options);
+  };
+
   var pollCount = 0;
 
   // ========== 方法4: DOM 提取（兜底方案 - 只用于XHR/fetch都失败时） ==========
   function extractFromDOM() {
     if (captured) return;
-    // 查找页面上的趋势表格
+    // 查找页面上的趋势表格 - 优先找含"热搜词""流量占比"等列的
     var tables = _w.document.querySelectorAll(
       "#table-trend table, .trend-table table, [class*='trend'] table, table",
     );
@@ -163,15 +198,44 @@
           if (row.length > 0) rows.push(row);
         });
       }
-      // 只接受足够多行(>20)且第一列非空的数据，避免抓到分页表格的局部数据
-      if (rows.length > 20 && rows[0][0] && rows[0][0].length > 0) {
+
+      // 检查是否为趋势关键词表格：列数约为10列，且包含热搜词/流量占比等关键词
+      var isTrendTable = false;
+      var headerText = headers.join(" ");
+      if (
+        headerText.indexOf("热搜词") >= 0 ||
+        headerText.indexOf("流量占比") >= 0 ||
+        headerText.indexOf("曝光") >= 0
+      ) {
+        isTrendTable = true;
+      }
+      // 如果没有thead，检查第一行数据
+      if (!isTrendTable && rows.length > 0) {
+        var firstRow = rows[0].join(" ");
+        // 趋势数据第一列应该是关键词(非数字非纯属性)
+        if (
+          rows[0][0] &&
+          rows[0][0].indexOf("毫米") < 0 &&
+          rows[0][0].indexOf("塑料") < 0
+        ) {
+          // 可能有10列左右的数据
+          if (rows[0].length >= 8 && rows[0].length <= 12) {
+            isTrendTable = true;
+          }
+        }
+      }
+
+      if (!isTrendTable) continue;
+
+      // 只接受足够多行(>20)的数据
+      if (rows.length > 20) {
         captured = true;
         log("✅ 通过DOM提取到 " + rows.length + " 行数据");
         saveAndReturn({ columns: headers, rows: rows });
         return;
       }
-      // 如果行数较少但已经等了很久，也接受（兜底兜底）
-      if (rows.length > 3 && pollCount > 15) {
+      // 如果行数较少但已经等了很久，也接受
+      if (rows.length > 3 && pollCount > 25) {
         captured = true;
         log("⚠️ DOM提取到 " + rows.length + " 行(局部)");
         saveAndReturn({ columns: headers, rows: rows });

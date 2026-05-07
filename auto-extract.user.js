@@ -1,27 +1,43 @@
 // ==UserScript==
 // @name         美客多自动爬虫 - 蓝鲸选品数据拦截
 // @namespace    milyfly-crawler
-// @version      2.2
+// @version      2.3
 // @description  自动拦截蓝鲸选品扩展的API数据，提取热搜词表格并传回MILYFLY软件
 // @author       MILYFLY
 // @match        *://*.mercadolibre.com.mx/*
 // @match        *://*.mercadolibre.com/*
-// @grant        none
+// @grant        unsafeWindow
+// @grant        GM_log
 // ==/UserScript==
 
 (function () {
   "use strict";
+
   var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
   var captured = false;
-  console.log("[MILYFLY] 自动爬虫已启动");
+  var _w = unsafeWindow; // 页面真实 window（脚本猫/暴力猴兼容）
 
-  var origLog = console.log;
+  // 日志统一用 GM_log，避免沙箱问题
+  function log(msg) {
+    try {
+      GM_log("[MILYFLY] " + msg);
+    } catch (e) {}
+    try {
+      _w.console.log("[MILYFLY] " + msg);
+    } catch (e) {}
+  }
 
-  // 拦截 console.log
-  console.log = function () {
+  log("自动爬虫已启动 v2.3");
+
+  // 保存原始的 console.log
+  var origLog = _w.console.log.bind(_w.console);
+
+  // 拦截页面 console.log（通过 unsafeWindow）
+  _w.console.log = function () {
     var args = Array.prototype.slice.call(arguments);
-    origLog.apply(console, arguments);
+    origLog.apply(_w.console, arguments);
     if (captured) return;
+
     for (var i = 0; i < args.length; i++) {
       if (
         typeof args[i] === "string" &&
@@ -30,15 +46,13 @@
         for (var j = i + 1; j < args.length; j++) {
           if (
             args[j] &&
+            typeof args[j] === "object" &&
             Array.isArray(args[j]) &&
-            args[j].length > 0 &&
-            args[j][0].key
+            args[j].length > 0
           ) {
+            // 兼容无 .key 的情况，只要有 length>0 就尝试处理
             captured = true;
-            origLog.call(
-              console,
-              "[MILYFLY] ✅ 成功拦截 " + args[j].length + " 条数据",
-            );
+            log("✅ 成功拦截 " + args[j].length + " 条数据");
             saveAndReturn(args[j]);
             return;
           }
@@ -47,18 +61,18 @@
     }
   };
 
-  // 拦截 XHR
-  var origOpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function () {
-    var url = arguments[1];
+  // 拦截 XHR（通过 unsafeWindow）
+  var origOpen = _w.XMLHttpRequest.prototype.open;
+  _w.XMLHttpRequest.prototype.open = function () {
     var xhr = this;
+    var url = arguments[1];
     xhr.addEventListener("load", function () {
       if (!captured && xhr.status === 200) {
         try {
           var data = JSON.parse(xhr.responseText);
-          if (Array.isArray(data) && data.length > 5 && data[0].key) {
+          if (Array.isArray(data) && data.length > 0) {
             captured = true;
-            origLog.call(console, "[MILYFLY] ✅ 通过XHR拦截到数据");
+            log("✅ 通过XHR拦截到数据 " + data.length + " 条");
             saveAndReturn(data);
           }
         } catch (e) {}
@@ -67,83 +81,139 @@
     return origOpen.apply(xhr, arguments);
   };
 
-  function saveAndReturn(data) {
-    var rows = data.map(function (item) {
-      var h = item.history && item.history.length > 0 ? item.history[0] : {};
-      var rank = h.ranking
-        ? "\u7B2C" + (h.page || "?") + "\u9875,\u7B2C" + h.ranking + "\u540D"
-        : "";
-      return [
-        item.key || "",
-        item.key_cn || "",
-        (item.bgl || 0) + "%",
-        String(item.keyCount || 0),
-        rank,
-        String(item.paiming || 0),
-        String(item.sale30 || 0),
-        String(item.visit30 || 0),
-        String(item.total_item || 0),
-        item.jzd || "0%",
-      ];
+  // 拦截 fetch（通过 unsafeWindow）
+  var origFetch = _w.fetch;
+  _w.fetch = function () {
+    var args = arguments;
+    return origFetch.apply(_w, args).then(function (response) {
+      if (!captured) {
+        var cloned = response.clone();
+        cloned
+          .text()
+          .then(function (text) {
+            try {
+              var data = JSON.parse(text);
+              if (
+                Array.isArray(data) &&
+                data.length > 5 &&
+                data[0] &&
+                data[0].key
+              ) {
+                captured = true;
+                log("✅ 通过fetch拦截到数据 " + data.length + " 条");
+                saveAndReturn(data);
+              }
+            } catch (e) {}
+          })
+          .catch(function () {});
+      }
+      return response;
     });
-    var result = {
-      columns: [
-        "\u70ED\u641C\u8BCD",
-        "\u4E2D\u6587",
-        "\u6D41\u91CF\u5360\u6BD4",
-        "\u66DD\u5149\u6B21\u6570",
-        "\u6392\u540D\u60C5\u51B5",
-        "\u641C\u7D22\u91CF\u6392\u540D",
-        "30\u5929\u9500\u91CF",
-        "30\u5929\u641C\u7D22\u91CF",
-        "\u7ADE\u54C1\u6570",
-        "\u7ADE\u4E89\u5EA6",
-      ],
-      rows: rows,
-    };
+  };
+
+  function saveAndReturn(data) {
+    // 如果 data 是数组且元素有 .key 属性，正常处理
+    // 如果数组元素是字符串，转为需要的形式
+    var formatted;
+    if (data.length > 0 && typeof data[0] === "string") {
+      // 纯字符串数组 — 直接作为热搜词列
+      formatted = data.map(function (s) {
+        return [s, "", "", "", "", "", "", "", "", ""];
+      });
+      var cols = [
+        "热搜词",
+        "中文",
+        "流量占比",
+        "曝光次数",
+        "排名情况",
+        "搜索量排名",
+        "30天销量",
+        "30天搜索量",
+        "竞品数",
+        "竞争度",
+      ];
+    } else {
+      formatted = data.map(function (item) {
+        if (!item || typeof item !== "object")
+          return ["", "", "", "", "", "", "", "", "", ""];
+        var h = item.history && item.history.length > 0 ? item.history[0] : {};
+        var rank = h.ranking
+          ? "第" + (h.page || "?") + "页,第" + h.ranking + "名"
+          : "";
+        return [
+          item.key || "",
+          item.key_cn || "",
+          (item.bgl || 0) + "%",
+          String(item.keyCount || 0),
+          rank,
+          String(item.paiming || 0),
+          String(item.sale30 || 0),
+          String(item.visit30 || 0),
+          String(item.total_item || 0),
+          item.jzd || "0%",
+        ];
+      });
+      var cols = [
+        "热搜词",
+        "中文",
+        "流量占比",
+        "曝光次数",
+        "排名情况",
+        "搜索量排名",
+        "30天销量",
+        "30天搜索量",
+        "竞品数",
+        "竞争度",
+      ];
+    }
+
+    var result = { columns: cols, rows: formatted };
     var sent = false;
 
     // 方法1: postMessage 到 opener（主通道）
-    if (window.opener && window.opener !== window) {
+    if (_w.opener && _w.opener !== _w) {
       try {
-        window.opener.postMessage(
-          { type: "TABLE_DATA_READY", data: result },
-          "*",
-        );
-        origLog.call(
-          console,
-          "[MILYFLY] \u2714 postMessage \u5DF2\u53D1\u9001",
-        );
+        _w.opener.postMessage({ type: "TABLE_DATA_READY", data: result }, "*");
+        log("✅ postMessage 已发送");
         sent = true;
         try {
-          window.opener.focus();
+          _w.opener.focus();
         } catch (e) {}
       } catch (e) {
-        origLog.call(console, "[MILYFLY] postMessage\u5931\u8D25:", e.message);
+        log("postMessage失败: " + e.message);
       }
     }
 
-    // 方法2: URL hash 导航（备用：postMessage 失败时）
-    if (!sent && window.opener && window.opener !== window) {
-      var encoded = encodeURIComponent(JSON.stringify(result));
+    // 方法2: 尝试直接修改 opener 的 location.hash（跨域可能被阻止）
+    if (!sent && _w.opener && _w.opener !== _w) {
       try {
-        window.opener.location.href = APP_URL + "/data-crawler#data=" + encoded;
+        var encoded = encodeURIComponent(JSON.stringify(result));
+        _w.opener.location.href = APP_URL + "/data-crawler#data=" + encoded;
+        log("✅ 通过 location.hash 传回");
+        sent = true;
       } catch (e) {
-        // 跨域无法导航 opener，不做处理
+        log("location.hash 失败");
       }
+    }
+
+    // 方法3: 如果上面都不行，新标签打开结果页
+    if (!sent) {
+      var encoded2 = encodeURIComponent(JSON.stringify(result));
+      _w.open(APP_URL + "/data-crawler#data=" + encoded2, "_blank");
+      log("✅ 通过新标签传回");
     }
   }
 
-  // 自动点击反查流量词Tab
+  // 自动点击反查流量词Tab（通过 unsafeWindow）
   setTimeout(function () {
-    var tab = document.querySelector('a[href="#tabs-trend-table"]');
+    var tab = _w.document.querySelector('a[href="#tabs-trend-table"]');
     if (tab) {
-      origLog.call(console, "[MILYFLY] 点击反查流量词Tab...");
+      log("点击反查流量词Tab...");
       tab.click();
     } else {
-      var t2 = document.querySelector('a[href="#tabs-trend"]');
+      var t2 = _w.document.querySelector('a[href="#tabs-trend"]');
       if (t2) {
-        origLog.call(console, "[MILYFLY] 点击热搜词Tab...");
+        log("点击热搜词Tab...");
         t2.click();
       }
     }

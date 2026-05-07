@@ -26,7 +26,7 @@ export default function DataCrawler() {
   const [crawlConfigs, setCrawlConfigs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(getMexicoDateString());
-  const [crawlingSku, setCrawlingSku] = useState<string | null>(null);
+  const [crawlingSkus, setCrawlingSkus] = useState<Record<string, boolean>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
   const [expandedSkus, setExpandedSkus] = useState<Record<string, boolean>>({});
   const [savedSkus, setSavedSkus] = useState<Record<string, boolean>>({});
@@ -77,7 +77,7 @@ export default function DataCrawler() {
         const rows = d.rows || [];
 
         if (sku && rows.length > 0) {
-          setCrawlingSku(null);
+          setCrawlingSkus((prev) => ({ ...prev, [sku]: false }));
           saveTrendData(sku, rows);
         }
       }
@@ -152,7 +152,7 @@ export default function DataCrawler() {
       alert("请先配置该 SKU 的目标网页 URL");
       return;
     }
-    setCrawlingSku(sku);
+    setCrawlingSkus((prev) => ({ ...prev, [sku]: true }));
     const separator = url.includes("?") ? "&" : "?";
     const targetUrl = `${url}${separator}milyfly=1&sku=${encodeURIComponent(sku)}`;
     window.open(targetUrl, "_blank", "noopener=no");
@@ -262,7 +262,7 @@ export default function DataCrawler() {
                     const skuCode = sku.sku;
                     const url = crawlConfigs[skuCode] || "";
                     const keywordCount = crawlResults[skuCode] || 0;
-                    const isCrawling = crawlingSku === skuCode;
+                    const isCrawling = crawlingSkus[skuCode];
                     const skuTrend = getSkuTrendData(skuCode);
 
                     return (

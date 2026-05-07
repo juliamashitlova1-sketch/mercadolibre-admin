@@ -134,7 +134,9 @@
     } catch (e) {}
   });
 
-  // ========== 方法4: DOM 提取（兜底方案） ==========
+  var pollCount = 0;
+
+  // ========== 方法4: DOM 提取（兜底方案 - 只用于XHR/fetch都失败时） ==========
   function extractFromDOM() {
     if (captured) return;
     // 查找页面上的趋势表格
@@ -161,9 +163,17 @@
           if (row.length > 0) rows.push(row);
         });
       }
-      if (rows.length > 5) {
+      // 只接受足够多行(>20)且第一列非空的数据，避免抓到分页表格的局部数据
+      if (rows.length > 20 && rows[0][0] && rows[0][0].length > 0) {
         captured = true;
         log("✅ 通过DOM提取到 " + rows.length + " 行数据");
+        saveAndReturn({ columns: headers, rows: rows });
+        return;
+      }
+      // 如果行数较少但已经等了很久，也接受（兜底兜底）
+      if (rows.length > 3 && pollCount > 15) {
+        captured = true;
+        log("⚠️ DOM提取到 " + rows.length + " 行(局部)");
         saveAndReturn({ columns: headers, rows: rows });
         return;
       }
@@ -184,18 +194,20 @@
       }
     }
 
-    // 点击后轮询 DOM，每隔 1 秒检查一次，最多 30 秒
-    var pollCount = 0;
+    // 点击后轮询 DOM，前15秒只看不抓(给XHR/fetch时间)，之后每1秒检查一次，最多60秒
     var pollTimer = setInterval(function () {
       pollCount++;
       if (captured) {
         clearInterval(pollTimer);
         return;
       }
-      extractFromDOM();
-      if (pollCount >= 30) {
+      // 前15秒只等XHR/fetch，不触发DOM提取避免抢captured
+      if (pollCount > 15) {
+        extractFromDOM();
+      }
+      if (pollCount >= 60) {
         clearInterval(pollTimer);
-        if (!captured) log("⚠️ 轮询30秒未找到数据");
+        if (!captured) log("⚠️ 轮询60秒未找到数据");
       }
     }, 1000);
   }, 3000);

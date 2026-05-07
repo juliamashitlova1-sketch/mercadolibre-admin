@@ -27,7 +27,13 @@
     } catch (e) {}
   }
 
-  log("自动爬虫已启动 v2.4");
+  // 从 URL 参数中读取 SKU
+  var currentSku = "";
+  try {
+    var urlParams = new URLSearchParams(_w.location.search);
+    currentSku = urlParams.get("sku") || "";
+  } catch (e) {}
+  log("自动爬虫已启动 v2.4" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
 
   // ========== 方法1: 拦截 XHR（只捕获含 .key 的有效数据） ==========
   var origOpen = _w.XMLHttpRequest.prototype.open;
@@ -199,6 +205,7 @@
 
     // 如果传入的是 { columns, rows } 对象（来自DOM提取）
     if (data.columns && data.rows) {
+      data.sku = currentSku;
       saveAndSend(data);
       return;
     }
@@ -255,7 +262,7 @@
       ];
     }
 
-    saveAndSend({ columns: cols, rows: formatted });
+    saveAndSend({ columns: cols, rows: formatted, sku: currentSku });
   }
 
   function saveAndSend(result) {

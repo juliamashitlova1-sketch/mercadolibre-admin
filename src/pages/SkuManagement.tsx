@@ -21,6 +21,7 @@ import {
   BarChart3,
   RefreshCw,
   History,
+  Search,
   Star,
 } from "lucide-react";
 import {
@@ -56,6 +57,10 @@ export default function SkuManagement() {
   const [expandedCompetitors, setExpandedCompetitors] = useState<
     Record<string, boolean>
   >({});
+  const [trendDataMap, setTrendDataMap] = useState<Record<string, any[]>>({});
+  const [trendDatesMap, setTrendDatesMap] = useState<Record<string, string>>(
+    {},
+  );
 
   const { operationLogs } = useOutletContext<any>() || { operationLogs: [] };
 
@@ -121,6 +126,31 @@ export default function SkuManagement() {
       }
     } catch (err) {
       console.error("Error fetching competitor data:", err);
+    }
+  };
+
+  const loadTrendData = async (sku: string) => {
+    if (trendDataMap[sku]) return; // already loaded
+    try {
+      const { data } = await supabaseNew
+        .from("sku_trend_data")
+        .select("*")
+        .eq("sku", sku)
+        .order("crawl_date", { ascending: false });
+      if (data) {
+        setTrendDataMap((prev) => ({ ...prev, [sku]: data }));
+        const dates = [...new Set(data.map((d: any) => d.crawl_date))]
+          .sort()
+          .reverse();
+        if (dates.length > 0) {
+          setTrendDatesMap((prev) => {
+            if (prev[sku]) return prev;
+            return { ...prev, [sku]: dates[0] };
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error loading trend data:", err);
     }
   };
 
@@ -742,6 +772,7 @@ export default function SkuManagement() {
                                 >
                                   <div className="p-4 w-full">
                                     {(() => {
+                                      loadTrendData(item.sku);
                                       const analytics = getSkuDailyAnalytics(
                                         item.sku,
                                       ) as any[];
@@ -1191,6 +1222,225 @@ export default function SkuManagement() {
                                               </div>
                                             </div>
                                           </div>
+
+                                          {/* 蓝鲸数据 Section */}
+                                          {trendDataMap[item.sku] &&
+                                            trendDataMap[item.sku].length >
+                                              0 && (
+                                              <div className="v2-card bg-white p-5 border-slate-100 shadow-md mt-4">
+                                                <div className="flex items-center justify-between mb-4">
+                                                  <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                                                    <Search className="w-4 h-4 text-blue-500" />
+                                                    蓝鲸数据
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    {(() => {
+                                                      const dates = [
+                                                        ...new Set(
+                                                          trendDataMap[
+                                                            item.sku
+                                                          ].map(
+                                                            (d: any) =>
+                                                              d.crawl_date,
+                                                          ),
+                                                        ),
+                                                      ]
+                                                        .sort()
+                                                        .reverse();
+                                                      return dates.length >
+                                                        0 ? (
+                                                        <select
+                                                          value={
+                                                            trendDatesMap[
+                                                              item.sku
+                                                            ] || dates[0]
+                                                          }
+                                                          onChange={(e) =>
+                                                            setTrendDatesMap(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [item.sku]:
+                                                                  e.target
+                                                                    .value,
+                                                              }),
+                                                            )
+                                                          }
+                                                          className="text-[10px] border border-slate-200 rounded px-2 py-1 outline-none"
+                                                        >
+                                                          {dates.map((d) => (
+                                                            <option
+                                                              key={d}
+                                                              value={d}
+                                                            >
+                                                              {d}
+                                                            </option>
+                                                          ))}
+                                                        </select>
+                                                      ) : null;
+                                                    })()}
+                                                    <span className="text-[10px] text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full font-bold">
+                                                      {trendDataMap[
+                                                        item.sku
+                                                      ].length.toLocaleString()}{" "}
+                                                      个关键词
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                                <div className="v2-table-wrapper max-h-[300px] overflow-y-auto custom-scrollbar border border-slate-50 rounded-lg">
+                                                  <table className="v2-table text-[10px] border-separate border-spacing-0">
+                                                    <thead className="bg-slate-50/80 sticky top-0 z-10">
+                                                      <tr>
+                                                        <th className="v2-table-th">
+                                                          热搜词
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          中文
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          流量占比
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          曝光次数
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          排名
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          搜索排名
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          30天销量
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          30天搜索
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          竞品数
+                                                        </th>
+                                                        <th className="v2-table-th">
+                                                          竞争度
+                                                        </th>
+                                                      </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-50">
+                                                      {(
+                                                        trendDataMap[
+                                                          item.sku
+                                                        ] || []
+                                                      )
+                                                        .filter(
+                                                          (d: any) =>
+                                                            d.crawl_date ===
+                                                            (trendDatesMap[
+                                                              item.sku
+                                                            ] || ""),
+                                                        )
+                                                        .map(
+                                                          (
+                                                            d: any,
+                                                            i: number,
+                                                          ) =>
+                                                            d.id ? (
+                                                              <tr
+                                                                key={d.id}
+                                                                className="hover:bg-slate-50/50"
+                                                              >
+                                                                <td className="v2-table-td font-bold text-slate-700">
+                                                                  {d.keyword}
+                                                                </td>
+                                                                <td className="v2-table-td text-slate-500">
+                                                                  {d.keyword_cn ||
+                                                                    "-"}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.traffic_share
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.impressions
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.ranking}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.search_rank
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.sales_30d}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.search_30d}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.competitors
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.competition
+                                                                  }
+                                                                </td>
+                                                              </tr>
+                                                            ) : (
+                                                              <tr
+                                                                key={i}
+                                                                className="hover:bg-slate-50/50"
+                                                              >
+                                                                <td className="v2-table-td font-bold text-slate-700">
+                                                                  {d.keyword}
+                                                                </td>
+                                                                <td className="v2-table-td text-slate-500">
+                                                                  {d.keyword_cn ||
+                                                                    "-"}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.traffic_share
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.impressions
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.ranking}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.search_rank
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.sales_30d}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {d.search_30d}
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.competitors
+                                                                  }
+                                                                </td>
+                                                                <td className="v2-table-td font-mono">
+                                                                  {
+                                                                    d.competition
+                                                                  }
+                                                                </td>
+                                                              </tr>
+                                                            ),
+                                                        )}
+                                                    </tbody>
+                                                  </table>
+                                                </div>
+                                              </div>
+                                            )}
 
                                           {/* 4. Daily Operations Table */}
                                           <div className="v2-card bg-white p-5 border-slate-100 shadow-md">

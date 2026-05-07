@@ -256,5 +256,9 @@ export interface CompetitorDailyRecord {
   sales: number;
   reviewScore: number;
   price: number;
+  listingDate?: string; // 上架时间
+  sales7d?: number; // 7天销量
+  sales30d?: number; // 30天销量
+  reviewCount?: number; // 评论数量
   createdAt?: string;
 }

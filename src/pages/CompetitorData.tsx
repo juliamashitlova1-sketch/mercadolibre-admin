@@ -13,6 +13,8 @@ import {
   Calendar,
   BarChart3,
   Image as ImageIcon,
+  Globe,
+  Loader2,
 } from "lucide-react";
 import { supabaseNew as supabase } from "../lib/supabase";
 import {
@@ -44,6 +46,10 @@ interface CompetitorDailyRecordRow {
   sales: number;
   review_score: number;
   price: number;
+  listing_date?: string;
+  sales_7d?: number;
+  sales_30d?: number;
+  review_count?: number;
   created_at: string;
 }
 
@@ -75,6 +81,10 @@ function mapDailyRecordRow(
     sales: row.sales,
     reviewScore: row.review_score,
     price: row.price,
+    listingDate: row.listing_date || "",
+    sales7d: row.sales_7d || 0,
+    sales30d: row.sales_30d || 0,
+    reviewCount: row.review_count || 0,
     createdAt: row.created_at,
   };
 }
@@ -84,6 +94,10 @@ interface DailyRecordForm {
   sales: number;
   reviewScore: number;
   price: number;
+  listingDate?: string;
+  sales7d?: number;
+  sales30d?: number;
+  reviewCount?: number;
 }
 
 interface CompetitorForm {
@@ -111,6 +125,10 @@ const emptyDailyRecord: DailyRecordForm = {
   sales: 0,
   reviewScore: 0,
   price: 0,
+  listingDate: "",
+  sales7d: 0,
+  sales30d: 0,
+  reviewCount: 0,
 };
 
 export default function CompetitorData() {
@@ -126,6 +144,9 @@ export default function CompetitorData() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CompetitorForm>({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [crawlingCompetitors, setCrawlingCompetitors] = useState<
+    Record<string, boolean>
+  >({});
 
   // ---------- Fetch competitors ----------
   const fetchCompetitors = async () => {
@@ -177,6 +198,39 @@ export default function CompetitorData() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCrawlCompetitor = async (competitor: CompetitorTracking) => {
+    if (!competitor.competitorUrl) {
+      alert("该竞品没有配置URL");
+      return;
+    }
+    setCrawlingCompetitors((prev) => ({ ...prev, [competitor.id]: true }));
+    const separator = competitor.competitorUrl.includes("?") ? "&" : "?";
+    const targetUrl = `${competitor.competitorUrl}${separator}milyfly=1&type=competitor&competitor_id=${competitor.id}`;
+    window.open(targetUrl, "_blank", "noopener=no");
+
+    // Poll for data every 3 seconds for up to 60 seconds
+    let pollCount = 0;
+    const timer = setInterval(async () => {
+      pollCount++;
+      if (pollCount > 20) {
+        clearInterval(timer);
+        setCrawlingCompetitors((prev) => ({ ...prev, [competitor.id]: false }));
+        return;
+      }
+      const { data } = await supabase
+        .from("competitor_daily_records")
+        .select("id, date")
+        .eq("competitor_id", competitor.id)
+        .eq("date", getMexicoDateString())
+        .limit(1);
+      if (data && data.length > 0) {
+        clearInterval(timer);
+        setCrawlingCompetitors((prev) => ({ ...prev, [competitor.id]: false }));
+        fetchCompetitors();
+      }
+    }, 3000);
   };
 
   useEffect(() => {
@@ -241,6 +295,10 @@ export default function CompetitorData() {
         sales: r.sales,
         reviewScore: r.reviewScore,
         price: r.price,
+        listingDate: r.listingDate || "",
+        sales7d: r.sales7d || 0,
+        sales30d: r.sales30d || 0,
+        reviewCount: r.reviewCount || 0,
       })),
     });
     setIsModalOpen(true);
@@ -331,6 +389,10 @@ export default function CompetitorData() {
             sales: r.sales,
             review_score: r.reviewScore,
             price: r.price,
+            listing_date: r.listingDate || "",
+            sales_7d: r.sales7d || 0,
+            sales_30d: r.sales30d || 0,
+            review_count: r.reviewCount || 0,
           }));
 
           const { error: insertError } = await supabase
@@ -359,6 +421,10 @@ export default function CompetitorData() {
             sales: r.sales,
             review_score: r.reviewScore,
             price: r.price,
+            listing_date: r.listingDate || "",
+            sales_7d: r.sales7d || 0,
+            sales_30d: r.sales30d || 0,
+            review_count: r.reviewCount || 0,
           }));
 
           const { error: recordsInsertError } = await supabase
@@ -393,6 +459,44 @@ export default function CompetitorData() {
     } catch (err: any) {
       console.error("Error deleting competitor:", err);
       alert("删除失败，请稍后重试");
+    }
+  };
+
+  // ---------- PostMessage listener for competitor data ----------
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "COMPETITOR_DATA_READY" && e.data?.data) {
+        const d = e.data.data;
+        if (d.competitorId) {
+          saveCompetitorData(d);
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+  const saveCompetitorData = async (data: any) => {
+    try {
+      const { error } = await supabase.from("competitor_daily_records").upsert(
+        {
+          competitor_id: data.competitorId,
+          date: getMexicoDateString(),
+          price: data.price || 0,
+          sales: data.totalSales || 0,
+          review_score: data.avgRating || 0,
+          listing_date: data.listingDate || "",
+          sales_7d: data.sales7d || 0,
+          sales_30d: data.sales30d || 0,
+          review_count: data.reviewCount || 0,
+        },
+        { onConflict: "competitor_id,date" },
+      );
+      if (error) throw error;
+      alert("✅ 竞品数据保存成功");
+      fetchCompetitors();
+    } catch (err: any) {
+      alert("❌ 保存失败: " + err.message);
     }
   };
 
@@ -561,6 +665,26 @@ export default function CompetitorData() {
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
+                            <button
+                              onClick={() => handleCrawlCompetitor(competitor)}
+                              disabled={crawlingCompetitors[competitor.id]}
+                              className={`p-1.5 rounded-lg transition-all ${
+                                crawlingCompetitors[competitor.id]
+                                  ? "text-sky-400 bg-sky-50 cursor-wait"
+                                  : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                              }`}
+                              title={
+                                crawlingCompetitors[competitor.id]
+                                  ? "爬取中..."
+                                  : "爬取竞品数据"
+                              }
+                            >
+                              {crawlingCompetitors[competitor.id] ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Globe className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </div>
                         </div>
 
@@ -638,6 +762,18 @@ export default function CompetitorData() {
                                     <th className="v2-table-th text-right">
                                       价格
                                     </th>
+                                    <th className="v2-table-th text-right">
+                                      上架时间
+                                    </th>
+                                    <th className="v2-table-th text-right">
+                                      7天销量
+                                    </th>
+                                    <th className="v2-table-th text-right">
+                                      30天销量
+                                    </th>
+                                    <th className="v2-table-th text-right">
+                                      评论数
+                                    </th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -666,6 +802,26 @@ export default function CompetitorData() {
                                       <td className="v2-table-td text-right">
                                         <span className="text-xs font-bold text-emerald-600">
                                           {formatPrice(record.price)}
+                                        </span>
+                                      </td>
+                                      <td className="v2-table-td text-right">
+                                        <span className="text-xs text-slate-600 font-medium">
+                                          {record.listingDate || "-"}
+                                        </span>
+                                      </td>
+                                      <td className="v2-table-td text-right">
+                                        <span className="text-xs font-bold text-indigo-600">
+                                          {record.sales7d ?? "-"}
+                                        </span>
+                                      </td>
+                                      <td className="v2-table-td text-right">
+                                        <span className="text-xs font-bold text-violet-600">
+                                          {record.sales30d ?? "-"}
+                                        </span>
+                                      </td>
+                                      <td className="v2-table-td text-right">
+                                        <span className="text-xs font-bold text-cyan-600">
+                                          {record.reviewCount ?? "-"}
                                         </span>
                                       </td>
                                     </tr>
@@ -845,7 +1001,7 @@ export default function CompetitorData() {
                           key={index}
                           className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg"
                         >
-                          <div className="flex-1 grid grid-cols-4 gap-2">
+                          <div className="flex-1 grid grid-cols-4 gap-x-2 gap-y-3">
                             <div>
                               <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">
                                 日期
@@ -924,6 +1080,78 @@ export default function CompetitorData() {
                                   step={0.01}
                                 />
                               </div>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">
+                                上架时间
+                              </label>
+                              <input
+                                type="text"
+                                value={record.listingDate || ""}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "listingDate",
+                                    e.target.value,
+                                  )
+                                }
+                                className="v2-input text-xs py-1.5 px-2"
+                                placeholder="2024-01-01"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">
+                                7天销量
+                              </label>
+                              <input
+                                type="number"
+                                value={record.sales7d || ""}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "sales7d",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className="v2-input text-xs py-1.5 px-2"
+                                min={0}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">
+                                30天销量
+                              </label>
+                              <input
+                                type="number"
+                                value={record.sales30d || ""}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "sales30d",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className="v2-input text-xs py-1.5 px-2"
+                                min={0}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">
+                                评论数
+                              </label>
+                              <input
+                                type="number"
+                                value={record.reviewCount || ""}
+                                onChange={(e) =>
+                                  updateDailyRecord(
+                                    index,
+                                    "reviewCount",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className="v2-input text-xs py-1.5 px-2"
+                                min={0}
+                              />
                             </div>
                           </div>
                           <button

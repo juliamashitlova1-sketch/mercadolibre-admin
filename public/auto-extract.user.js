@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         美客多自动爬虫 - 蓝鲸选品数据拦截
+// @name         美客多自动爬虫 - 蓝鲸选品/竞品数据拦截
 // @namespace    milyfly-crawler
-// @version      2.4
+// @version      2.5
 // @description  自动拦截蓝鲸选品扩展的API数据，提取热搜词表格并传回MILYFLY软件
 // @author       MILYFLY
 // @match        *://*.mercadolibre.com.mx/*
@@ -13,6 +13,15 @@
 
 (function () {
   "use strict";
+
+  // Only run when triggered by milyfly crawler
+  try {
+    if (window.location.href.indexOf("milyfly=1") < 0) {
+      return; // Not triggered by our crawler, don't run
+    }
+  } catch (e) {
+    return;
+  }
 
   var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
   var captured = false;
@@ -35,7 +44,7 @@
     var match = fullUrl.match(/[?&]sku=([^&]+)/);
     if (match) currentSku = decodeURIComponent(match[1]);
   } catch (e) {}
-  log("自动爬虫已启动 v2.4" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
+  log("自动爬虫已启动 v2.5" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
 
   // ========== 方法1: 拦截 XHR（只捕获含 .key 的有效数据） ==========
   var origOpen = _w.XMLHttpRequest.prototype.open;
@@ -242,6 +251,97 @@
         return;
       }
     }
+  }
+
+  // ========== 竞品数据提取（type=competitor时运行） ==========
+  function extractCompetitorData() {
+    try {
+      var urlParams = new URLSearchParams(_w.location.search);
+      var competitorId = urlParams.get("competitor_id") || "";
+
+      // Extract data from DOM
+      var result = { competitorId: competitorId };
+
+      // 当前售价 - look for the price element
+      var priceEl = _w.document.querySelector(
+        '[class*="ui-pdp-price"] .andes-money-amount__fraction, .ui-pdp-price .andes-money-amount__fraction',
+      );
+      if (priceEl)
+        result.price =
+          parseFloat(priceEl.textContent.replace(/[^0-9.]/g, "")) || 0;
+
+      // 上架时间 - from ljxp-start-time element
+      var listingEl = _w.document.querySelector("#ljxp-start-time .ljxp-value");
+      if (listingEl) result.listingDate = listingEl.textContent.trim();
+
+      // 7天销量
+      var sales7El = _w.document.querySelector("#ljxp-sale7 .ljxp-value");
+      if (sales7El) result.sales7d = parseInt(sales7El.textContent.trim()) || 0;
+
+      // 30天销量
+      var sales30El = _w.document.querySelector("#ljxp-sale30 .ljxp-value");
+      if (sales30El)
+        result.sales30d = parseInt(sales30El.textContent.trim()) || 0;
+
+      // 总销量
+      var totalSalesEl = _w.document.querySelector(
+        "#ljxp-saleTotal .ljxp-value",
+      );
+      if (totalSalesEl)
+        result.totalSales = parseInt(totalSalesEl.textContent.trim()) || 0;
+
+      // 评论数量
+      var reviewCountEl = _w.document.querySelector(
+        '.ui-pdp-reviews__rating__count, [class*="reviews"] [class*="amount"], .ui-review-view__rating__summary',
+      );
+      if (reviewCountEl)
+        result.reviewCount =
+          parseInt(reviewCountEl.textContent.replace(/[^0-9]/g, "")) || 0;
+
+      // 平均评分
+      var ratingEl = _w.document.querySelector(
+        '.ui-pdp-reviews__rating__summary, [class*="rating"] [class*="average"]',
+      );
+      if (ratingEl)
+        result.avgRating = parseFloat(ratingEl.textContent.trim()) || 0;
+
+      log("✅ 竞品数据提取完成: " + JSON.stringify(result));
+
+      // Send back via postMessage and API
+      if (_w.opener && _w.opener !== _w) {
+        try {
+          _w.opener.postMessage(
+            { type: "COMPETITOR_DATA_READY", data: result },
+            "*",
+          );
+          log("✅ 竞品数据 postMessage 已发送");
+        } catch (e) {}
+      }
+
+      // Also via API
+      try {
+        _w.fetch(APP_URL + "/api/save-competitor-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result),
+        })
+          .then(function (r) {
+            if (r.ok) log("✅ 竞品API保存成功");
+          })
+          .catch(function (e) {});
+      } catch (e) {}
+    } catch (e) {
+      log("⚠️ 竞品提取失败: " + e.message);
+    }
+  }
+
+  // Check if this is a competitor crawl
+  if (_w.location.href.indexOf("type=competitor") >= 0) {
+    log("竞品数据爬取模式");
+    setTimeout(function () {
+      extractCompetitorData();
+    }, 5000);
+    return; // Don't run trend extraction
   }
 
   // 自动点击反查流量词Tab，然后轮询等待数据

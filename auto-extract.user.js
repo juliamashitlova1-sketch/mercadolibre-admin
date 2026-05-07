@@ -282,7 +282,31 @@
       }
     }
 
-    // 方法2: location.hash 传回
+    // 方法2: 通过 API 直接写入数据库（最可靠，绕过跨域问题）
+    try {
+      var today = new Date().toISOString().slice(0, 10);
+      var body = JSON.stringify({
+        sku: result.sku || "",
+        crawl_date: today,
+        rows: result.rows || [],
+      });
+      _w.fetch(APP_URL + "/api/save-trend-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body,
+      })
+        .then(function (r) {
+          if (r.ok) log("✅ API保存成功");
+          else log("⚠️ API返回错误: " + r.status);
+        })
+        .catch(function (e) {
+          log("⚠️ API调用失败: " + e.message);
+        });
+    } catch (e) {
+      log("⚠️ API调用异常: " + e.message);
+    }
+
+    // 方法3: location.hash 传回（备用）
     if (!sent && _w.opener && _w.opener !== _w) {
       try {
         var encoded = encodeURIComponent(JSON.stringify(result));
@@ -294,7 +318,7 @@
       }
     }
 
-    // 方法3: 新标签打开
+    // 方法4: 新标签打开
     if (!sent) {
       var encoded2 = encodeURIComponent(JSON.stringify(result));
       _w.open(APP_URL + "/data-crawler#data=" + encoded2, "_blank");

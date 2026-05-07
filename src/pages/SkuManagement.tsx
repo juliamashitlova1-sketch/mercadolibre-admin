@@ -589,7 +589,28 @@ export default function SkuManagement() {
     const skuLogs = operationLogs.filter((r: any) => r.sku === skuCode);
     const skuCompetitors = competitorData.filter((c: any) => c.sku === skuCode);
     const skuTrend = trendDataMap[skuCode] || [];
-    const analytics = getSkuDailyAnalytics(skuCode);
+    const rawAnalytics = getSkuDailyAnalytics(skuCode);
+    // 增强数据：合并广告数据（与UI展示逻辑一致）
+    const analytics = rawAnalytics.map((row: any) => {
+      const ads = getSkuAdsForDate(skuCode, row.date);
+      const adSpend = ads ? parseFloat(ads.adSpend) || 0 : 0;
+      const adOrders = ads ? parseInt(ads.adOrders, 10) || 0 : 0;
+      const price = parseFloat(String(skuInfo?.priceMXN || 0));
+      const adRevenue = (adOrders * price) / USD_TO_MXN;
+      const roas = adSpend > 0 ? adRevenue / adSpend : 0;
+      const acos = adRevenue > 0 ? (adSpend / adRevenue) * 100 : 0;
+      return {
+        date: row.date,
+        orders: row.salesCount || 0,
+        units: row.unitsCount || 0,
+        sales: row.salesMxn || 0,
+        adSpend,
+        adOrders,
+        profit: 0,
+        roas,
+        acos,
+      };
+    });
     const today = new Date().toISOString().slice(0, 10);
 
     function td(v: any) {

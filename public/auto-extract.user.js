@@ -27,11 +27,13 @@
     } catch (e) {}
   }
 
-  // 从 URL 参数中读取 SKU
+  // 从 URL 参数中读取 SKU（同时检查 search 和 hash，兼容SPA）
   var currentSku = "";
   try {
-    var urlParams = new URLSearchParams(_w.location.search);
-    currentSku = urlParams.get("sku") || "";
+    var fullUrl = _w.location.href;
+    // 从完整URL中提取 sku 参数，不受页面SPA路由影响
+    var match = fullUrl.match(/[?&]sku=([^&]+)/);
+    if (match) currentSku = decodeURIComponent(match[1]);
   } catch (e) {}
   log("自动爬虫已启动 v2.4" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
 
@@ -290,6 +292,15 @@
         crawl_date: today,
         rows: result.rows || [],
       });
+      // 如果 sku 为空，尝试从页面标题或URL中提取
+      if (!result.sku) {
+        try {
+          var titleMatch =
+            _w.document.title.match(/\[(\w+)\]/) ||
+            _w.location.href.match(/\/(\w+)\?/);
+          if (titleMatch) result.sku = titleMatch[1];
+        } catch (e) {}
+      }
       _w.fetch(APP_URL + "/api/save-trend-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

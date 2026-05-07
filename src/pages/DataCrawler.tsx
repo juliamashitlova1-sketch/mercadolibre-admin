@@ -128,16 +128,14 @@ export default function DataCrawler() {
 
   const handleSaveUrl = async (sku: string, url: string) => {
     try {
-      const { error } = await supabaseNew
-        .from("sku_crawl_config")
-        .upsert(
-          {
-            sku,
-            sku_name: managedSkus.find((s) => s.sku === sku)?.name || "",
-            url,
-          },
-          { onConflict: "sku" },
-        );
+      const { error } = await supabaseNew.from("sku_crawl_config").upsert(
+        {
+          sku,
+          sku_name: managedSkus.find((s) => s.sku === sku)?.name || "",
+          url,
+        },
+        { onConflict: "sku" },
+      );
       if (error) throw error;
       setSavedSkus((prev) => ({ ...prev, [sku]: true }));
       setTimeout(
@@ -195,6 +193,41 @@ export default function DataCrawler() {
             </div>
           </div>
         </header>
+
+        {/* Script Install Guide */}
+        <div className="p-4 bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-200/60 rounded-xl mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-emerald-700 mb-1">
+                🤖 自动脚本安装
+              </p>
+              <p className="text-[9px] text-slate-500 leading-relaxed">
+                安装 Tampermonkey / 脚本猫 扩展后，添加下方脚本。 打开 Mercado
+                Libre 页面时自动提取数据并传回本软件。
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <a
+                href="/auto-extract.user.js"
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition-all"
+              >
+                📥 下载自动脚本
+              </a>
+              <button
+                onClick={() => {
+                  const code = `javascript:(function(){const s=document.createElement('script');s.src='${window.location.origin}/auto-extract.user.js?'+Date.now();document.body.appendChild(s)})();`;
+                  navigator.clipboard.writeText(code);
+                  alert(
+                    "书签代码已复制！在浏览器书签栏新建书签，粘贴到网址栏即可。",
+                  );
+                }}
+                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[10px] font-bold transition-all"
+              >
+                📋 复制书签代码
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* SKU Crawl Config Table */}
         <div className="v2-card bg-white p-5 border-slate-200/60 shadow-sm">

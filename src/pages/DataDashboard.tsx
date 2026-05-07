@@ -243,16 +243,37 @@ export default function DataDashboard() {
         Number(f.review_fee_cny || 0) -
         Number(f.refund_amount_usd || 0) * USD_TO_MXN * MXN_TO_CNY +
         Number(f.unit_cost_cny || 0);
-      if (dailyMap[key]) {
-        dailyMap[key].fakeOrderCost += actualCost;
+      if (!dailyMap[key]) {
+        dailyMap[key] = {
+          date: f.date,
+          sku: f.sku?.toUpperCase(),
+          units: 0,
+          baseProfit: 0,
+          unitProfit: 0,
+          fakeOrderCost: 0,
+          cargoDamageCost: 0,
+          adSpend: 0,
+        };
       }
+      dailyMap[key].fakeOrderCost += actualCost;
     });
 
     cargoDamageData.forEach((c) => {
       const key = `${c.date}_${c.sku?.toUpperCase()}`;
-      if (dailyMap[key])
-        dailyMap[key].cargoDamageCost +=
-          Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
+      if (!dailyMap[key]) {
+        dailyMap[key] = {
+          date: c.date,
+          sku: c.sku?.toUpperCase(),
+          units: 0,
+          baseProfit: 0,
+          unitProfit: 0,
+          fakeOrderCost: 0,
+          cargoDamageCost: 0,
+          adSpend: 0,
+        };
+      }
+      dailyMap[key].cargoDamageCost +=
+        Number(c.quantity || 0) * Number(c.sku_value_cny || 0);
     });
 
     adsData.forEach((a) => {
@@ -960,7 +981,7 @@ export default function DataDashboard() {
               <DollarSign className="w-4 h-4 text-emerald-500" /> 利润汇总分析
               (RMB)
             </h3>
-            <div className="flex gap-6">
+            <div className="flex gap-4">
               <div className="text-right">
                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                   总毛利
@@ -969,25 +990,34 @@ export default function DataDashboard() {
                   ¥{profitSummaryData.totals.grossProfit.toFixed(0)}
                 </div>
               </div>
+              <div className="w-px bg-slate-100" />
               <div className="text-right">
-                <div className="text-[10px] font-bold text-slate-400 uppercase">
-                  刷单/货损支出
+                <div className="text-[10px] font-bold text-rose-400 uppercase">
+                  刷单支出
                 </div>
                 <div className="text-sm font-black text-rose-500">
-                  ¥
-                  {profitSummaryData.totals.fakeOrderCost +
-                    profitSummaryData.totals.cargoDamageCost >
-                  0
-                    ? "-"
-                    : ""}
-                  {(
-                    profitSummaryData.totals.fakeOrderCost +
-                    profitSummaryData.totals.cargoDamageCost
-                  ).toFixed(0)}
+                  ¥{profitSummaryData.totals.fakeOrderCost.toFixed(0)}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                <div className="text-[10px] font-bold text-orange-400 uppercase">
+                  货损支出
+                </div>
+                <div className="text-sm font-black text-orange-500">
+                  ¥{profitSummaryData.totals.cargoDamageCost.toFixed(0)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-indigo-400 uppercase">
+                  广告支出
+                </div>
+                <div className="text-sm font-black text-indigo-500">
+                  ¥{profitSummaryData.totals.adSpend.toFixed(0)}
+                </div>
+              </div>
+              <div className="w-px bg-slate-100" />
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-sky-400 uppercase">
                   总纯利
                 </div>
                 <div className="text-sm font-black text-sky-600">
@@ -1032,14 +1062,28 @@ export default function DataDashboard() {
                   name="毛利 (Gross Profit)"
                   fill="#10b981"
                   radius={[4, 4, 0, 0]}
-                  maxBarSize={40}
+                  maxBarSize={30}
                 />
                 <Bar
-                  dataKey="expenses"
-                  name="刷单/货损支出 (Expenses)"
+                  dataKey="fakeOrderCost"
+                  name="刷单支出"
                   fill="#f43f5e"
                   radius={[4, 4, 0, 0]}
-                  maxBarSize={40}
+                  maxBarSize={30}
+                />
+                <Bar
+                  dataKey="cargoDamageCost"
+                  name="货损支出"
+                  fill="#f97316"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={30}
+                />
+                <Bar
+                  dataKey="adSpend"
+                  name="广告支出"
+                  fill="#6366f1"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={30}
                 />
                 <Line
                   type="monotone"

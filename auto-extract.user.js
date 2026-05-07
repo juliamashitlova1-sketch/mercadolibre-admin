@@ -14,26 +14,41 @@
 (function () {
   "use strict";
 
-  var _w = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
   var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
   var captured = false;
+  var _w = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 
-  // 仅当从 MILYFLY 软件打开时才运行（检查 referrer 和 URL 参数双重验证）
-  var isFromApp = false;
+  // 调试日志：确认脚本版本和来源判断
   try {
-    var ref = _w.document.referrer || "";
-    var href = _w.location.href || "";
-    // referrer 包含我们的域名，或者 URL 包含 milyfly=1
-    if (
-      ref.indexOf("mercadolibre-admin-v2.vercel.app") >= 0 ||
-      href.indexOf("milyfly=1") >= 0
-    ) {
-      isFromApp = true;
-    }
+    console.log("[MILYFLY] v2.5 检查来源...");
   } catch (e) {}
-  if (!isFromApp) {
+
+  // 仅当从 MILYFLY 软件打开时才运行
+  try {
+    var pageUrl = (location && location.href) || "";
+    var pageRef = (document && document.referrer) || "";
+    try {
+      console.log("[MILYFLY] URL:", pageUrl, "REF:", pageRef);
+    } catch (e) {}
+    if (
+      pageUrl.indexOf("milyfly=1") < 0 &&
+      pageRef.indexOf("mercadolibre-admin-v2.vercel.app") < 0 &&
+      pageRef.indexOf("localhost") < 0
+    ) {
+      try {
+        console.log("[MILYFLY] 非软件打开，跳过执行");
+      } catch (e) {}
+      return;
+    }
+  } catch (e) {
+    try {
+      console.log("[MILYFLY] 判断异常:", e);
+    } catch (ex) {}
     return;
   }
+  try {
+    console.log("[MILYFLY] 来源验证通过，继续执行");
+  } catch (e) {}
 
   function log(msg) {
     try {

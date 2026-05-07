@@ -66,7 +66,44 @@ export default function DataDashboard() {
 
   useEffect(() => {
     fetchData();
+
+    // 实时监听刷单支出和货损支出变化
+    const fakeChannel = supabaseNew
+      .channel("dashboard-fake-orders")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fake_orders" },
+        () => fetchFakeAndDamage(),
+      )
+      .subscribe();
+
+    const damageChannel = supabaseNew
+      .channel("dashboard-cargo-damage")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cargo_damage" },
+        () => fetchFakeAndDamage(),
+      )
+      .subscribe();
+
+    return () => {
+      supabaseNew.removeChannel(fakeChannel);
+      supabaseNew.removeChannel(damageChannel);
+    };
   }, []);
+
+  const fetchFakeAndDamage = async () => {
+    try {
+      const [fake, damage] = await Promise.all([
+        supabaseNew.from("fake_orders").select("*"),
+        supabaseNew.from("cargo_damage").select("*"),
+      ]);
+      setFakeOrdersData(fake.data || []);
+      setCargoDamageData(damage.data || []);
+    } catch (err) {
+      console.error("Error refetching expenses:", err);
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);

@@ -40,7 +40,7 @@ export default function DataExporter({ skuData }: DataExporterProps) {
           .gte("date", startDate)
           .lte("date", endDate)
           .order("date", { ascending: true }),
-        supabase
+        supabaseNew
           .from("cargo_damage")
           .select("*")
           .gte("date", startDate)

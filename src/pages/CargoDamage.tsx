@@ -21,7 +21,7 @@ import {
   TrendingDown,
   ClipboardList,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabaseNew as supabase } from "../lib/supabase";
 import { CargoDamage, SKUStats } from "../types";
 import { getMexicoDateString } from "../lib/time";
 
@@ -114,6 +114,20 @@ export default function CargoDamagePage() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!confirm("确定要清空所有货损支出记录吗？此操作不可恢复！")) return;
+    if (!confirm("再次确认：将删除全部货损支出数据！")) return;
+    const { error } = await supabase
+      .from("cargo_damage")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) {
+      alert("清空失败: " + error.message);
+    } else {
+      fetchData();
+    }
+  };
+
   const handleSkuSelect = (sku: string) => {
     const selectedManaged = managedSkus.find((s) => s.sku === sku);
     const selectedStats = skuData.find((s) => s.sku === sku);
@@ -150,21 +164,30 @@ export default function CargoDamagePage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setCurrentRecord({
-                date: getMexicoDateString(),
-                sku: "",
-                skuName: "",
-                reason: "送仓差异",
-              });
-              setIsEditing(true);
-            }}
-            className="cursor-pointer bg-rose-600 hover:bg-rose-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>记录货损</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setCurrentRecord({
+                  date: getMexicoDateString(),
+                  sku: "",
+                  skuName: "",
+                  reason: "送仓差异",
+                });
+                setIsEditing(true);
+              }}
+              className="cursor-pointer bg-rose-600 hover:bg-rose-500 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>记录货损</span>
+            </button>
+            <button
+              onClick={handleClearAll}
+              className="cursor-pointer bg-red-600/80 hover:bg-red-600 text-white transition-all px-4 py-2 rounded-lg flex items-center justify-center space-x-2 shadow-md active:scale-95 text-xs font-medium"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>清空全部</span>
+            </button>
+          </div>
         </header>
 
         {isEditing && (

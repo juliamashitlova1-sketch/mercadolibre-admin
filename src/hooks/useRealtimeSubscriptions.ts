@@ -51,7 +51,7 @@ export function useRealtimeSubscriptions() {
           () => fetchExpenses(),
         )
         .subscribe(),
-      supabase
+      supabaseNew
         .channel("rt-cargo-damage")
         .on(
           "postgres_changes",

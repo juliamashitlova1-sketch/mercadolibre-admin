@@ -247,7 +247,7 @@ export default function SkuManagement() {
       const [pricing, fake, damage] = await Promise.all([
         supabase.from("sku_pricing").select("*"),
         supabaseNew.from("fake_orders").select("*"),
-        supabase.from("cargo_damage").select("*"),
+        supabaseNew.from("cargo_damage").select("*"),
       ]);
 
       setPricingData(pricing.data || []);

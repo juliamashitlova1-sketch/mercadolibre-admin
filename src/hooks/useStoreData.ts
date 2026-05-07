@@ -444,7 +444,7 @@ export function useExpenses() {
       )
       .order("date", { ascending: false });
 
-    const { data: cData } = await supabase
+    const { data: cData } = await supabaseNew
       .from("cargo_damage")
       .select("*, skuName:sku_name, skuValueCNY:sku_value_cny")
       .order("date", { ascending: false });
@@ -466,7 +466,7 @@ export function useExpenses() {
       )
       .subscribe();
 
-    const cChannel = supabase
+    const cChannel = supabaseNew
       .channel("cargo-damage-changes")
       .on(
         "postgres_changes",
@@ -477,7 +477,7 @@ export function useExpenses() {
 
     return () => {
       supabaseNew.removeChannel(fChannel);
-      supabase.removeChannel(cChannel);
+      supabaseNew.removeChannel(cChannel);
     };
   }, [fetchData, refreshKey]);
 

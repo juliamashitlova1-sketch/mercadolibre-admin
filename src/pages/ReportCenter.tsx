@@ -91,7 +91,7 @@ export default function ReportCenter() {
         supabase.from("sku_ads").select("*"),
         supabase.from("sku_visits").select("*"),
         supabaseNew.from("fake_orders").select("*"),
-        supabase.from("cargo_damage").select("*"),
+        supabaseNew.from("cargo_damage").select("*"),
         supabase.from("sku_pricing").select("*"),
       ]);
 

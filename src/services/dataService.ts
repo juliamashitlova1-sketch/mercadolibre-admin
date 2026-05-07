@@ -108,7 +108,7 @@ export const dataService = {
   },
 
   async fetchCargoDamage(): Promise<CargoDamage[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseNew
       .from("cargo_damage")
       .select("*, skuName:sku_name, skuValueCNY:sku_value_cny")
       .order("date", { ascending: false });

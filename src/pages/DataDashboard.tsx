@@ -79,7 +79,7 @@ export default function DataDashboard() {
           supabase.from("skus").select("*"),
           supabase.from("sku_pricing").select("*"),
           supabaseNew.from("fake_orders").select("*"),
-          supabase.from("cargo_damage").select("*"),
+          supabaseNew.from("cargo_damage").select("*"),
         ]);
 
       setData(orders.data || []);

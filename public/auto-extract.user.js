@@ -46,6 +46,98 @@
   } catch (e) {}
   log("自动爬虫已启动 v2.5" + (currentSku ? " (SKU: " + currentSku + ")" : ""));
 
+  // ========== 竞品爬取模式：立即执行并退出，不启动任何拦截器 ==========
+  if (_w.location.href.indexOf("type=competitor") >= 0) {
+    log("竞品数据爬取模式");
+    // 从完整URL提取 competitor_id
+    var compIdMatch = _w.location.href.match(/[?&]competitor_id=([^&]+)/);
+    var competitorId = compIdMatch ? decodeURIComponent(compIdMatch[1]) : "";
+    log("竞品ID: " + competitorId);
+
+    // 延迟等待页面加载后提取数据
+    setTimeout(function () {
+      try {
+        var result = { competitorId: competitorId };
+
+        // 当前售价
+        var priceEl = _w.document.querySelector(
+          ".andes-money-amount__fraction, [class*='ui-pdp-price'] .andes-money-amount__fraction",
+        );
+        if (priceEl)
+          result.price =
+            parseFloat(priceEl.textContent.replace(/[^0-9.]/g, "")) || 0;
+
+        // 上架时间
+        var listingEl = _w.document.querySelector(
+          "#ljxp-start-time .ljxp-value",
+        );
+        if (listingEl) result.listingDate = listingEl.textContent.trim();
+
+        // 7天销量
+        var sales7El = _w.document.querySelector("#ljxp-sale7 .ljxp-value");
+        if (sales7El)
+          result.sales7d = parseInt(sales7El.textContent.trim()) || 0;
+
+        // 30天销量
+        var sales30El = _w.document.querySelector("#ljxp-sale30 .ljxp-value");
+        if (sales30El)
+          result.sales30d = parseInt(sales30El.textContent.trim()) || 0;
+
+        // 总销量
+        var totalSalesEl = _w.document.querySelector(
+          "#ljxp-saleTotal .ljxp-value",
+        );
+        if (totalSalesEl)
+          result.totalSales = parseInt(totalSalesEl.textContent.trim()) || 0;
+
+        // 评论数量
+        var reviewCountEl = _w.document.querySelector(
+          ".ui-pdp-reviews__rating__count, [class*='reviews'] [class*='amount'], .ui-review-view__rating__summary",
+        );
+        if (reviewCountEl)
+          result.reviewCount =
+            parseInt(reviewCountEl.textContent.replace(/[^0-9]/g, "")) || 0;
+
+        // 平均评分
+        var ratingEl = _w.document.querySelector(
+          ".ui-pdp-reviews__rating__summary, [class*='rating'] [class*='average']",
+        );
+        if (ratingEl)
+          result.avgRating = parseFloat(ratingEl.textContent.trim()) || 0;
+
+        log("✅ 竞品数据提取完成: " + JSON.stringify(result));
+
+        // postMessage 传回
+        if (_w.opener && _w.opener !== _w) {
+          try {
+            _w.opener.postMessage(
+              { type: "COMPETITOR_DATA_READY", data: result },
+              "*",
+            );
+            log("✅ 竞品数据 postMessage 已发送");
+          } catch (e) {}
+        }
+
+        // API 直写
+        try {
+          _w.fetch(APP_URL + "/api/save-competitor-data", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result),
+          })
+            .then(function (r) {
+              if (r.ok) log("✅ 竞品API保存成功");
+              else log("⚠️ 竞品API错误: " + r.status);
+            })
+            .catch(function (e) {});
+        } catch (e) {}
+      } catch (e) {
+        log("⚠️ 竞品提取失败: " + e.message);
+      }
+    }, 5000);
+    return; // 退出，不执行后续爬虫代码
+  }
+
   // ========== 方法1: 拦截 XHR（只捕获含 .key 的有效数据） ==========
   var origOpen = _w.XMLHttpRequest.prototype.open;
   _w.XMLHttpRequest.prototype.open = function () {
@@ -251,97 +343,6 @@
         return;
       }
     }
-  }
-
-  // ========== 竞品数据提取（type=competitor时运行） ==========
-  function extractCompetitorData() {
-    try {
-      var urlParams = new URLSearchParams(_w.location.search);
-      var competitorId = urlParams.get("competitor_id") || "";
-
-      // Extract data from DOM
-      var result = { competitorId: competitorId };
-
-      // 当前售价 - look for the price element
-      var priceEl = _w.document.querySelector(
-        '[class*="ui-pdp-price"] .andes-money-amount__fraction, .ui-pdp-price .andes-money-amount__fraction',
-      );
-      if (priceEl)
-        result.price =
-          parseFloat(priceEl.textContent.replace(/[^0-9.]/g, "")) || 0;
-
-      // 上架时间 - from ljxp-start-time element
-      var listingEl = _w.document.querySelector("#ljxp-start-time .ljxp-value");
-      if (listingEl) result.listingDate = listingEl.textContent.trim();
-
-      // 7天销量
-      var sales7El = _w.document.querySelector("#ljxp-sale7 .ljxp-value");
-      if (sales7El) result.sales7d = parseInt(sales7El.textContent.trim()) || 0;
-
-      // 30天销量
-      var sales30El = _w.document.querySelector("#ljxp-sale30 .ljxp-value");
-      if (sales30El)
-        result.sales30d = parseInt(sales30El.textContent.trim()) || 0;
-
-      // 总销量
-      var totalSalesEl = _w.document.querySelector(
-        "#ljxp-saleTotal .ljxp-value",
-      );
-      if (totalSalesEl)
-        result.totalSales = parseInt(totalSalesEl.textContent.trim()) || 0;
-
-      // 评论数量
-      var reviewCountEl = _w.document.querySelector(
-        '.ui-pdp-reviews__rating__count, [class*="reviews"] [class*="amount"], .ui-review-view__rating__summary',
-      );
-      if (reviewCountEl)
-        result.reviewCount =
-          parseInt(reviewCountEl.textContent.replace(/[^0-9]/g, "")) || 0;
-
-      // 平均评分
-      var ratingEl = _w.document.querySelector(
-        '.ui-pdp-reviews__rating__summary, [class*="rating"] [class*="average"]',
-      );
-      if (ratingEl)
-        result.avgRating = parseFloat(ratingEl.textContent.trim()) || 0;
-
-      log("✅ 竞品数据提取完成: " + JSON.stringify(result));
-
-      // Send back via postMessage and API
-      if (_w.opener && _w.opener !== _w) {
-        try {
-          _w.opener.postMessage(
-            { type: "COMPETITOR_DATA_READY", data: result },
-            "*",
-          );
-          log("✅ 竞品数据 postMessage 已发送");
-        } catch (e) {}
-      }
-
-      // Also via API
-      try {
-        _w.fetch(APP_URL + "/api/save-competitor-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(result),
-        })
-          .then(function (r) {
-            if (r.ok) log("✅ 竞品API保存成功");
-          })
-          .catch(function (e) {});
-      } catch (e) {}
-    } catch (e) {
-      log("⚠️ 竞品提取失败: " + e.message);
-    }
-  }
-
-  // Check if this is a competitor crawl
-  if (_w.location.href.indexOf("type=competitor") >= 0) {
-    log("竞品数据爬取模式");
-    setTimeout(function () {
-      extractCompetitorData();
-    }, 5000);
-    return; // Don't run trend extraction
   }
 
   // 自动点击反查流量词Tab，然后轮询等待数据

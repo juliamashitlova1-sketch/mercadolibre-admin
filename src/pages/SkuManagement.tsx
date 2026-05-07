@@ -582,7 +582,7 @@ export default function SkuManagement() {
     }
   };
 
-  // 导出 SKU 全部数据为 JSON
+  // 导出 SKU 全部数据为 HTML 报表
   const exportSkuData = (skuCode: string) => {
     const skuInfo = skus.find((s: any) => s.sku === skuCode);
     const skuReviews = linkReviews.filter((r) => r.sku === skuCode);
@@ -590,78 +590,153 @@ export default function SkuManagement() {
     const skuCompetitors = competitorData.filter((c: any) => c.sku === skuCode);
     const skuTrend = trendDataMap[skuCode] || [];
     const analytics = getSkuDailyAnalytics(skuCode);
+    const today = new Date().toISOString().slice(0, 10);
 
-    const exportData = {
-      exportTime: new Date().toISOString(),
-      sku: skuCode,
-      skuName: skuInfo?.productName || "",
-      status: skuInfo?.status || "",
-      basicInfo: {
-        inventory: skuInfo?.inventory || 0,
-        priceMXN: skuInfo?.priceMXN || 0,
-        costRMB: skuInfo?.costRMB || 0,
-        listedDate: skuInfo?.listedDate || "",
-        replenishInventory: skuInfo?.replenishInventory || 0,
-      },
-      dailyAnalytics: analytics.map((a: any) => ({
-        date: a.date,
-        orders: a.orders,
-        units: a.units,
-        sales: a.sales,
-        adSpend: a.adSpend,
-        adOrders: a.adOrders,
-        profit: a.profit,
-        roas: a.roas,
-        acos: a.acos,
-      })),
-      blueWhaleData: skuTrend.map((t: any) => ({
-        date: t.crawl_date,
-        keyword: t.keyword,
-        keyword_cn: t.keyword_cn,
-        trafficShare: t.traffic_share,
-        impressions: t.impressions,
-        ranking: t.ranking,
-        searchRank: t.search_rank,
-        sales30d: t.sales_30d,
-        search30d: t.search_30d,
-        competitors: t.competitors,
-        competition: t.competition,
-      })),
-      operationLogs: skuLogs.map((l: any) => ({
-        date: l.date,
-        action: l.action,
-        actionType: l.actionType,
-        description: l.description,
-        createdAt: l.createdAt,
-      })),
-      linkReviews: skuReviews.map((r) => ({
-        reviewTime: r.reviewTime,
-        reviewScore: r.reviewScore,
-        reviewContent: r.reviewContent,
-      })),
-      competitors: skuCompetitors.map((c: any) => ({
-        title: c.competitor_title,
-        url: c.competitor_url,
-        listedAt: c.competitor_listed_at,
-        dailyRecords: (competitorDailyMap[c.id] || []).map((r: any) => ({
-          date: r.date,
-          price: r.price,
-          sales: r.sales,
-          reviewScore: r.reviewScore,
-          sales7d: r.sales7d,
-          sales30d: r.sales30d,
-          reviewCount: r.reviewCount,
-          listingDate: r.listingDate,
-        })),
-      })),
-    };
+    function td(v: any) {
+      return `<td style="padding:4px 8px;border:1px solid #ddd;text-align:${isNaN(v) ? "left" : "right"};font-size:11px">${v ?? "-"}</td>`;
+    }
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: "application/json",
-    });
+    let html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SKU ${skuCode} 经营分析报表</title>
+<style>
+body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 30px; color: #333; }
+h1 { color: #0ea5e9; border-bottom: 3px solid #0ea5e9; padding-bottom: 8px; }
+h2 { color: #475569; margin-top: 28px; border-left: 4px solid #0ea5e9; padding-left: 10px; }
+table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+th { background: #f1f5f9; padding: 6px 8px; border: 1px solid #ddd; font-size: 11px; text-align: center; font-weight: bold; }
+.summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.summary-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; text-align: center; min-width: 100px; }
+.summary-item .label { font-size: 10px; color: #94a3b8; }
+.summary-item .value { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 2px; }
+.footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+`;
+
+    html += `<h1>📊 SKU ${skuCode} 深度经营分析报表</h1>`;
+    html += `<p style="color:#64748b;font-size:13px">导出时间: ${today} ｜ SKU名称: ${skuInfo?.productName || "-"} ｜ 状态: ${skuInfo?.status || "-"}</p>`;
+
+    // 基本信息
+    html += `<div class="summary">`;
+    html += `<div class="summary-item"><div class="label">库存</div><div class="value">${skuInfo?.inventory || 0}</div></div>`;
+    html += `<div class="summary-item"><div class="label">售价(MXN)</div><div class="value">$${skuInfo?.priceMXN || 0}</div></div>`;
+    html += `<div class="summary-item"><div class="label">采购成本(CNY)</div><div class="value">¥${skuInfo?.costRMB || 0}</div></div>`;
+    html += `<div class="summary-item"><div class="label">上架日期</div><div class="value">${skuInfo?.listedDate || "-"}</div></div>`;
+    const totalProfit = analytics.reduce(
+      (s: number, a: any) => s + (a.profit || 0),
+      0,
+    ) as number;
+    const totalSales = analytics.reduce(
+      (s: number, a: any) => s + (a.sales || 0),
+      0,
+    ) as number;
+    const totalOrders = analytics.reduce(
+      (s: number, a: any) => s + (a.orders || 0),
+      0,
+    ) as number;
+    html += `<div class="summary-item"><div class="label">累计订单</div><div class="value">${totalOrders}</div></div>`;
+    html += `<div class="summary-item"><div class="label">总销售额</div><div class="value">$${totalSales.toFixed(0)}</div></div>`;
+    html += `<div class="summary-item"><div class="label">累计利润</div><div class="value">¥${totalProfit.toFixed(0)}</div></div>`;
+    html += `</div>`;
+
+    // 每日经营明细
+    if (analytics.length > 0) {
+      html += `<h2>📋 每日经营明细 (${analytics.length}天)</h2><table><thead><tr>`;
+      const cols = [
+        "日期",
+        "订单",
+        "销量",
+        "销售额",
+        "广告费",
+        "广告订单",
+        "利润",
+        "ROAS",
+        "ACOS",
+      ];
+      cols.forEach((c) => (html += `<th>${c}</th>`));
+      html += `</tr></thead><tbody>`;
+      analytics.forEach((a: any) => {
+        html += `<tr>${td(a.date)}${td(a.orders)}${td(a.units)}${td("$" + Number(a.sales).toFixed(0))}${td("$" + Number(a.adSpend).toFixed(1))}${td(a.adOrders)}${td("¥" + Number(a.profit).toFixed(0))}${td(Number(a.roas).toFixed(2))}${td(Number(a.acos).toFixed(1) + "%")}</tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+
+    // 蓝鲸数据
+    if (skuTrend.length > 0) {
+      html += `<h2>🐋 蓝鲸关键词数据 (${skuTrend.length}条)</h2><table><thead><tr>`;
+      [
+        "日期",
+        "热搜词",
+        "中文",
+        "流量占比",
+        "曝光",
+        "排名",
+        "搜索排名",
+        "30天销量",
+        "30天搜索",
+        "竞品数",
+        "竞争度",
+      ].forEach((c) => (html += `<th>${c}</th>`));
+      html += `</tr></thead><tbody>`;
+      skuTrend.forEach((t: any) => {
+        html += `<tr>${td(t.crawl_date)}${td(t.keyword)}${td(t.keyword_cn)}${td(t.traffic_share)}${td(t.impressions)}${td(t.ranking)}${td(t.search_rank)}${td(t.sales_30d)}${td(t.search_30d)}${td(t.competitors)}${td(t.competition)}</tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+
+    // 运营日志
+    if (skuLogs.length > 0) {
+      html += `<h2>📝 运营日志 (${skuLogs.length}条)</h2><table><thead><tr>`;
+      ["日期", "类型", "描述"].forEach((c) => (html += `<th>${c}</th>`));
+      html += `</tr></thead><tbody>`;
+      skuLogs.slice(0, 50).forEach((l: any) => {
+        html += `<tr>${td(l.date)}${td(l.actionType)}${td(l.description)}</tr>`;
+      });
+      if (skuLogs.length > 50)
+        html += `<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:8px">...仅显示最近50条</td></tr>`;
+      html += `</tbody></table>`;
+    }
+
+    // 链接评价
+    if (skuReviews.length > 0) {
+      html += `<h2>⭐ 链接评价 (${skuReviews.length}条)</h2><table><thead><tr>`;
+      ["时间", "评分", "内容"].forEach((c) => (html += `<th>${c}</th>`));
+      html += `</tr></thead><tbody>`;
+      skuReviews.forEach((r: any) => {
+        html += `<tr>${td(r.reviewTime)}${td(r.reviewScore + "/5")}${td(r.reviewContent)}</tr>`;
+      });
+      html += `</tbody></table>`;
+    }
+
+    // 竞品数据
+    if (skuCompetitors.length > 0) {
+      html += `<h2>🏆 竞品数据 (${skuCompetitors.length}个竞品)</h2>`;
+      skuCompetitors.forEach((c: any) => {
+        const recs = competitorDailyMap[c.id] || [];
+        html += `<h3>🔹 ${c.competitor_title || c.competitor_url?.split("/").pop() || "竞品"}</h3>`;
+        if (recs.length > 0) {
+          html += `<table><thead><tr><th>日期</th><th>价格</th><th>总销量</th><th>7天</th><th>30天</th><th>评分</th><th>评论数</th><th>上架时间</th></tr></thead><tbody>`;
+          recs.forEach((r: any) => {
+            html += `<tr>${td(r.date)}${td("$" + Number(r.price).toFixed(2))}${td(r.sales)}${td(r.sales7d ?? "-")}${td(r.sales30d ?? "-")}${td(Number(r.reviewScore).toFixed(1))}${td(r.reviewCount ?? "-")}${td(r.listingDate || "-")}</tr>`;
+          });
+          html += `</tbody></table>`;
+        } else {
+          html += `<p style="color:#94a3b8;font-size:12px">暂无每日记录</p>`;
+        }
+      });
+    }
+
+    html += `<div class="footer">由 MILYFLY 系统生成 ｜ 报告时间: ${new Date().toLocaleString("zh-CN")}</div>`;
+    html += `</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `SKU_${skuCode}_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `SKU_${skuCode}_${today}.html`;
     a.click();
     URL.revokeObjectURL(a.href);
   };

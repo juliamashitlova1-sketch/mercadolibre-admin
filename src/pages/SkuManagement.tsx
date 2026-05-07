@@ -582,107 +582,148 @@ export default function SkuManagement() {
     }
   };
 
-  // 导出 SKU 全部数据为 HTML 报表
+  // 导出 SKU 全部数据为 HTML 报表（与UI展示完全一致）
   const exportSkuData = (skuCode: string) => {
     const skuInfo = skus.find((s: any) => s.sku === skuCode);
     const skuReviews = linkReviews.filter((r) => r.sku === skuCode);
     const skuLogs = operationLogs.filter((r: any) => r.sku === skuCode);
     const skuCompetitors = competitorData.filter((c: any) => c.sku === skuCode);
     const skuTrend = trendDataMap[skuCode] || [];
-    const rawAnalytics = getSkuDailyAnalytics(skuCode);
-    // 增强数据：合并广告数据（与UI展示逻辑一致）
-    const analytics = rawAnalytics.map((row: any) => {
+    const rawAnalytics = getSkuDailyAnalytics(skuCode) as any[];
+    const today = new Date().toISOString().slice(0, 10);
+
+    // === 增强数据（与UI逻辑完全一致） ===
+    const enrichedAnalytics = (rawAnalytics || []).map((row: any) => {
       const ads = getSkuAdsForDate(skuCode, row.date);
+      const visitInfo = getSkuVisitForDate(skuCode, row.date);
+      const adUnits = ads ? parseInt(ads.adOrders, 10) || 0 : 0;
       const adSpend = ads ? parseFloat(ads.adSpend) || 0 : 0;
-      const adOrders = ads ? parseInt(ads.adOrders, 10) || 0 : 0;
+      const visits = visitInfo ? visitInfo.uniqueVisits : 0;
+      const clicks = ads ? parseInt(ads.clicks, 10) || 0 : 0;
+      const impressions = ads ? parseInt(ads.impressions, 10) || 0 : 0;
       const price = parseFloat(String(skuInfo?.priceMXN || 0));
-      const adRevenue = (adOrders * price) / USD_TO_MXN;
+      const adRevenue = (adUnits * price) / USD_TO_MXN;
       const roas = adSpend > 0 ? adRevenue / adSpend : 0;
+      const cpc = clicks > 0 ? adSpend / clicks : 0;
       const acos = adRevenue > 0 ? (adSpend / adRevenue) * 100 : 0;
+      const naturalUnits = Math.max(0, (row.unitsCount || 0) - adUnits);
+      const naturalVisits = Math.max(0, visits - clicks);
+      const naturalCV =
+        naturalVisits > 0 ? (naturalUnits / naturalVisits) * 100 : 0;
+      const adCV = clicks > 0 ? (adUnits / clicks) * 100 : 0;
       return {
         date: row.date,
-        orders: row.salesCount || 0,
-        units: row.unitsCount || 0,
-        sales: row.salesMxn || 0,
+        unitsCount: row.unitsCount || 0,
+        adUnits,
+        naturalUnits,
         adSpend,
-        adOrders,
-        profit: 0,
+        visits,
+        clicks,
+        impressions,
         roas,
+        cpc,
         acos,
+        naturalVisits,
+        naturalCV,
+        adCV,
+        dateShort: row.date?.slice(5),
       };
     });
-    const today = new Date().toISOString().slice(0, 10);
+
+    // === 汇总统计（与UI一致） ===
+    const totalUnitsCount = rawAnalytics.reduce(
+      (a: number, r: any) => a + (r.unitsCount || 0),
+      0,
+    );
+    const totalAdSpend = enrichedAnalytics.reduce(
+      (a: number, r: any) => a + r.adSpend,
+      0,
+    );
+    const totalVisits = enrichedAnalytics.reduce(
+      (a: number, r: any) => a + r.visits,
+      0,
+    );
+    const totalClicks = enrichedAnalytics.reduce(
+      (a: number, r: any) => a + r.clicks,
+      0,
+    );
+    const totalImps = enrichedAnalytics.reduce(
+      (a: number, r: any) => a + r.impressions,
+      0,
+    );
+    const totalAdUnits = enrichedAnalytics.reduce(
+      (a: number, r: any) => a + r.adUnits,
+      0,
+    );
+    const avgNaturalCV =
+      enrichedAnalytics.filter((r: any) => r.naturalVisits > 0).length > 0
+        ? enrichedAnalytics
+            .filter((r: any) => r.naturalVisits > 0)
+            .reduce((a: number, r: any) => a + r.naturalCV, 0) /
+          enrichedAnalytics.filter((r: any) => r.naturalVisits > 0).length
+        : 0;
+    const avgAdCV =
+      enrichedAnalytics.filter((r: any) => r.clicks > 0).length > 0
+        ? enrichedAnalytics
+            .filter((r: any) => r.clicks > 0)
+            .reduce((a: number, r: any) => a + r.adCV, 0) /
+          enrichedAnalytics.filter((r: any) => r.clicks > 0).length
+        : 0;
+    const skuReviewsForSku = linkReviews.filter((r: any) => r.sku === skuCode);
+    const avgReview =
+      skuReviewsForSku.length > 0
+        ? (
+            skuReviewsForSku.reduce(
+              (a: number, r: any) => a + r.reviewScore,
+              0,
+            ) / skuReviewsForSku.length
+          ).toFixed(1)
+        : null;
 
     function td(v: any) {
       return `<td style="padding:4px 8px;border:1px solid #ddd;text-align:${isNaN(v) ? "left" : "right"};font-size:11px">${v ?? "-"}</td>`;
     }
 
-    let html = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>SKU ${skuCode} 经营分析报表</title>
-<style>
-body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 30px; color: #333; }
-h1 { color: #0ea5e9; border-bottom: 3px solid #0ea5e9; padding-bottom: 8px; }
-h2 { color: #475569; margin-top: 28px; border-left: 4px solid #0ea5e9; padding-left: 10px; }
-table { border-collapse: collapse; width: 100%; margin-top: 8px; }
-th { background: #f1f5f9; padding: 6px 8px; border: 1px solid #ddd; font-size: 11px; text-align: center; font-weight: bold; }
-.summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
-.summary-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; text-align: center; min-width: 100px; }
-.summary-item .label { font-size: 10px; color: #94a3b8; }
-.summary-item .value { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 2px; }
-.footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
-</style>
-</head>
-<body>
-`;
+    let html = `<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<title>SKU ${skuCode} 经营分析报表</title>\n<style>\nbody { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 30px; color: #333; }\nh1 { color: #0ea5e9; border-bottom: 3px solid #0ea5e9; padding-bottom: 8px; }\nh2 { color: #475569; margin-top: 28px; border-left: 4px solid #0ea5e9; padding-left: 10px; }\ntable { border-collapse: collapse; width: 100%; margin-top: 8px; }\nth { background: #f1f5f9; padding: 6px 8px; border: 1px solid #ddd; font-size: 11px; text-align: center; font-weight: bold; }\n.summary { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }\n.summary-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 18px; text-align: center; min-width: 90px; }\n.summary-item .label { font-size: 10px; color: #94a3b8; }\n.summary-item .value { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 2px; }\n.footer { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }\n</style>\n</head>\n<body>\n`;
 
     html += `<h1>📊 SKU ${skuCode} 深度经营分析报表</h1>`;
     html += `<p style="color:#64748b;font-size:13px">导出时间: ${today} ｜ SKU名称: ${skuInfo?.productName || "-"} ｜ 状态: ${skuInfo?.status || "-"}</p>`;
 
-    // 基本信息
-    html += `<div class="summary">`;
-    html += `<div class="summary-item"><div class="label">库存</div><div class="value">${skuInfo?.inventory || 0}</div></div>`;
-    html += `<div class="summary-item"><div class="label">售价(MXN)</div><div class="value">$${skuInfo?.priceMXN || 0}</div></div>`;
-    html += `<div class="summary-item"><div class="label">采购成本(CNY)</div><div class="value">¥${skuInfo?.costRMB || 0}</div></div>`;
-    html += `<div class="summary-item"><div class="label">上架日期</div><div class="value">${skuInfo?.listedDate || "-"}</div></div>`;
-    const totalProfit = analytics.reduce(
-      (s: number, a: any) => s + (a.profit || 0),
-      0,
-    ) as number;
-    const totalSales = analytics.reduce(
-      (s: number, a: any) => s + (a.sales || 0),
-      0,
-    ) as number;
-    const totalOrders = analytics.reduce(
-      (s: number, a: any) => s + (a.orders || 0),
-      0,
-    ) as number;
-    html += `<div class="summary-item"><div class="label">累计订单</div><div class="value">${totalOrders}</div></div>`;
-    html += `<div class="summary-item"><div class="label">总销售额</div><div class="value">$${totalSales.toFixed(0)}</div></div>`;
-    html += `<div class="summary-item"><div class="label">累计利润</div><div class="value">¥${totalProfit.toFixed(0)}</div></div>`;
+    // 第一行汇总卡片（与UI完全一致）
+    html += `<h2>📈 经营汇总</h2><div class="summary">`;
+    html += `<div class="summary-item"><div class="label">广告曝光</div><div class="value">${totalImps.toLocaleString()}</div></div>`;
+    html += `<div class="summary-item"><div class="label">广告点击</div><div class="value">${totalClicks.toLocaleString()}</div></div>`;
+    html += `<div class="summary-item"><div class="label">进店访客</div><div class="value">${totalVisits.toLocaleString()}</div></div>`;
+    html += `<div class="summary-item"><div class="label">广告消耗</div><div class="value">$${totalAdSpend.toFixed(1)}</div></div>`;
+    html += `<div class="summary-item"><div class="label">成交总件</div><div class="value">${totalUnitsCount}</div></div>`;
+    html += `<div class="summary-item"><div class="label">广告订单</div><div class="value">${totalAdUnits}</div></div>`;
+    html += `<div class="summary-item"><div class="label">自然转化</div><div class="value">${avgNaturalCV.toFixed(2)}%</div></div>`;
+    html += `<div class="summary-item"><div class="label">广告转化</div><div class="value">${avgAdCV.toFixed(2)}%</div></div>`;
+    if (avgReview)
+      html += `<div class="summary-item"><div class="label">累计评分</div><div class="value">${avgReview} / 5.0</div></div>`;
     html += `</div>`;
 
-    // 每日经营明细
-    if (analytics.length > 0) {
-      html += `<h2>📋 每日经营明细 (${analytics.length}天)</h2><table><thead><tr>`;
-      const cols = [
+    // 每日经营明细表（与UI完全一致：流量/销量/广告/净损益）
+    if (enrichedAnalytics.length > 0) {
+      html += `<h2>📋 每日经营明细 (${enrichedAnalytics.length}天)</h2><table><thead><tr>`;
+      [
         "日期",
-        "订单",
-        "销量",
-        "销售额",
-        "广告费",
-        "广告订单",
-        "利润",
-        "ROAS",
-        "ACOS",
-      ];
-      cols.forEach((c) => (html += `<th>${c}</th>`));
+        "流量 (访/点/曝)",
+        "销量 (总/广/自)",
+        "广告 (CPC/ROAS/ACOS)",
+        "净损益 (USD)",
+      ].forEach((c) => (html += `<th>${c}</th>`));
       html += `</tr></thead><tbody>`;
-      analytics.forEach((a: any) => {
-        html += `<tr>${td(a.date)}${td(a.orders)}${td(a.units)}${td("$" + Number(a.sales).toFixed(0))}${td("$" + Number(a.adSpend).toFixed(1))}${td(a.adOrders)}${td("¥" + Number(a.profit).toFixed(0))}${td(Number(a.roas).toFixed(2))}${td(Number(a.acos).toFixed(1) + "%")}</tr>`;
-      });
+      enrichedAnalytics
+        .slice()
+        .reverse()
+        .forEach((a: any) => {
+          const traffic = `${a.visits} / ${a.clicks} / ${a.impressions}`;
+          const sales = `${a.unitsCount}/${a.adUnits}/${a.naturalUnits}`;
+          const ad = `$${a.adSpend.toFixed(1)}|${a.roas.toFixed(2)}|${a.acos.toFixed(1)}%`;
+          const cpcDisplay = a.cpc > 0 ? "$" + a.cpc.toFixed(2) : "-";
+          html += `<tr>${td(a.date)}${td(traffic)}${td(sales)}${td(ad)}${td(cpcDisplay)}</tr>`;
+        });
       html += `</tbody></table>`;
     }
 
@@ -751,8 +792,7 @@ th { background: #f1f5f9; padding: 6px 8px; border: 1px solid #ddd; font-size: 1
       });
     }
 
-    html += `<div class="footer">由 MILYFLY 系统生成 ｜ 报告时间: ${new Date().toLocaleString("zh-CN")}</div>`;
-    html += `</body></html>`;
+    html += `<div class="footer">由 MILYFLY 系统生成 ｜ 报告时间: ${new Date().toLocaleString("zh-CN")}</div></body></html>`;
 
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const a = document.createElement("a");

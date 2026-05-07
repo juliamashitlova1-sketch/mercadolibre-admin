@@ -14,18 +14,18 @@
 (function () {
   "use strict";
 
-  // Only run when triggered by milyfly crawler
+  var _w = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+  var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
+  var captured = false;
+
+  // Only run when triggered by milyfly crawler（使用 _w 代替 window，兼容脚本猫沙箱）
   try {
-    if (window.location.href.indexOf("milyfly=1") < 0) {
-      return; // Not triggered by our crawler, don't run
+    if (_w.location.href.indexOf("milyfly=1") < 0) {
+      return;
     }
   } catch (e) {
     return;
   }
-
-  var APP_URL = "https://mercadolibre-admin-v2.vercel.app";
-  var captured = false;
-  var _w = unsafeWindow || window;
 
   function log(msg) {
     try {

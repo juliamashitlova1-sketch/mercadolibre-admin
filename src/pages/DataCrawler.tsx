@@ -86,6 +86,28 @@ export default function DataCrawler() {
     return () => window.removeEventListener("message", handler);
   }, [selectedDate]);
 
+  // Listen for URL hash data (fallback when postMessage fails)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#data=")) {
+      try {
+        const raw = decodeURIComponent(hash.slice(6));
+        const d = JSON.parse(raw);
+        if (d.rows && d.rows.length > 0) {
+          const sku = d.sku || "";
+          if (sku) {
+            setCrawlingSkus((prev) => ({ ...prev, [sku]: false }));
+            saveTrendData(sku, d.rows);
+          }
+          setTimeout(() => {
+            window.location.hash = "";
+            history.replaceState(null, "", window.location.pathname);
+          }, 500);
+        }
+      } catch {}
+    }
+  }, []);
+
   const saveTrendData = async (sku: string, rows: string[][]) => {
     setLoading(true);
     try {
@@ -147,6 +169,9 @@ export default function DataCrawler() {
     }
   };
 
+  // Polling refs to track which SKUs are being polled
+  const pollingRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
   const handleCrawl = (sku: string, url: string) => {
     if (!url) {
       alert("请先配置该 SKU 的目标网页 URL");
@@ -156,6 +181,30 @@ export default function DataCrawler() {
     const separator = url.includes("?") ? "&" : "?";
     const targetUrl = `${url}${separator}milyfly=1&sku=${encodeURIComponent(sku)}`;
     window.open(targetUrl, "_blank", "noopener=no");
+
+    // 启动轮询：每隔3秒检查数据库是否有新数据，最多60秒
+    if (pollingRef.current[sku]) clearInterval(pollingRef.current[sku]);
+    let pollCount = 0;
+    pollingRef.current[sku] = setInterval(async () => {
+      pollCount++;
+      if (pollCount > 20) {
+        clearInterval(pollingRef.current[sku]);
+        delete pollingRef.current[sku];
+        return;
+      }
+      const { data } = await supabaseNew
+        .from("sku_trend_data")
+        .select("id")
+        .eq("sku", sku)
+        .eq("crawl_date", selectedDate)
+        .limit(1);
+      if (data && data.length > 0) {
+        clearInterval(pollingRef.current[sku]);
+        delete pollingRef.current[sku];
+        setCrawlingSkus((prev) => ({ ...prev, [sku]: false }));
+        loadTrendData();
+      }
+    }, 3000);
   };
 
   const toggleExpand = (sku: string) => {

@@ -357,19 +357,15 @@
 
       if (!isTrendTable) continue;
 
-      // 只接受足够多行(>20)的数据
-      if (rows.length > 20) {
-        captured = true;
-        log("✅ 通过DOM提取到 " + rows.length + " 行数据");
-        saveAndReturn({ columns: headers, rows: rows });
-        return;
-      }
-      // 如果行数较少但已经等了很久，也接受
-      if (rows.length > 3 && pollCount > 25) {
-        captured = true;
-        log("⚠️ DOM提取到 " + rows.length + " 行(局部)");
-        saveAndReturn({ columns: headers, rows: rows });
-        return;
+      // 只要有数据且列数正常(8-12列)，就接受
+      if (rows.length > 0 && rows[0].length >= 8 && rows[0].length <= 12) {
+        // 5行以上立即接受，5行以下等20秒后才接受
+        if (rows.length >= 5 || pollCount > 20) {
+          captured = true;
+          log("✅ 通过DOM提取到 " + rows.length + " 行数据");
+          saveAndReturn({ columns: headers, rows: rows });
+          return;
+        }
       }
     }
   }
@@ -395,8 +391,8 @@
         clearInterval(pollTimer);
         return;
       }
-      // 前15秒只等XHR/fetch，不触发DOM提取避免抢captured
-      if (pollCount > 15) {
+      // 前8秒只等XHR/fetch，8秒后开始尝试DOM提取
+      if (pollCount > 8) {
         extractFromDOM();
       }
       if (pollCount >= 60) {

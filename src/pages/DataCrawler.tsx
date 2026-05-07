@@ -178,8 +178,12 @@ export default function DataCrawler() {
       return;
     }
     setCrawlingSkus((prev) => ({ ...prev, [sku]: true }));
-    const separator = url.includes("?") ? "&" : "?";
-    const targetUrl = `${url}${separator}milyfly=1&sku=${encodeURIComponent(sku)}`;
+    // 处理带 hash 的 URL：将 hash 移到末尾，确保 milyfly 在 query 中
+    var hashIndex = url.indexOf("#");
+    var baseUrl = hashIndex >= 0 ? url.substring(0, hashIndex) : url;
+    var hashPart = hashIndex >= 0 ? url.substring(hashIndex) : "";
+    var separator = baseUrl.includes("?") ? "&" : "?";
+    var targetUrl = `${baseUrl}${separator}milyfly=1&sku=${encodeURIComponent(sku)}${hashPart}`;
     window.open(targetUrl, "_blank", "noopener=no");
 
     // 启动轮询：每隔3秒检查数据库是否有新数据，最多60秒

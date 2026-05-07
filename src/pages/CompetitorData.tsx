@@ -206,8 +206,12 @@ export default function CompetitorData() {
       return;
     }
     setCrawlingCompetitors((prev) => ({ ...prev, [competitor.id]: true }));
-    const separator = competitor.competitorUrl.includes("?") ? "&" : "?";
-    const targetUrl = `${competitor.competitorUrl}${separator}milyfly=1&type=competitor&competitor_id=${competitor.id}`;
+    var url = competitor.competitorUrl;
+    var hashIndex = url.indexOf("#");
+    var baseUrl = hashIndex >= 0 ? url.substring(0, hashIndex) : url;
+    var hashPart = hashIndex >= 0 ? url.substring(hashIndex) : "";
+    var separator = baseUrl.includes("?") ? "&" : "?";
+    var targetUrl = `${baseUrl}${separator}milyfly=1&type=competitor&competitor_id=${competitor.id}${hashPart}`;
     window.open(targetUrl, "_blank", "noopener=no");
 
     // Poll for data every 3 seconds for up to 60 seconds

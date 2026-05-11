@@ -1,35 +1,41 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { LogIn, ShieldCheck, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { LogIn, ShieldCheck, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     // Hardcoded credentials as requested by USER
-    if (username === 'MILYFLY' && password === 'MILYFLY134888') {
+    if (username === "admin" && password === "admin888") {
       setTimeout(() => {
-        sessionStorage.setItem('milyfly_auth', 'true');
+        sessionStorage.setItem("milyfly_auth", "true");
         onLogin();
       }, 800);
     } else {
       setTimeout(() => {
-        setError('账号或密码错误，请查验后重试');
+        setError("账号或密码错误，请查验后重试");
         setLoading(false);
       }, 500);
     }
@@ -70,7 +76,12 @@ export default function Login({ onLogin }: LoginProps) {
           <CardContent className="pt-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-xs text-slate-300 ml-1">管理账号</Label>
+                <Label
+                  htmlFor="username"
+                  className="text-xs text-slate-300 ml-1"
+                >
+                  管理账号
+                </Label>
                 <Input
                   id="username"
                   type="text"
@@ -82,7 +93,12 @@ export default function Login({ onLogin }: LoginProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs text-slate-300 ml-1">身份密钥</Label>
+                <Label
+                  htmlFor="password"
+                  className="text-xs text-slate-300 ml-1"
+                >
+                  身份密钥
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -98,7 +114,7 @@ export default function Login({ onLogin }: LoginProps) {
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 flex items-center gap-2"
                   >
@@ -119,7 +135,7 @@ export default function Login({ onLogin }: LoginProps) {
                     验证中...
                   </div>
                 ) : (
-                  '立即登录'
+                  "立即登录"
                 )}
               </Button>
             </form>
